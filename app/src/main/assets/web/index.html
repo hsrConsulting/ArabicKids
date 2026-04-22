@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
+  <title>Arabic Kids - تعلّم العربية</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Fredoka:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Android-specific overrides -->
+  <style>
+    /* Remove any tap highlight */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+    }
+    
+    /* Prevent text selection in app mode */
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+      overscroll-behavior-x: none;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Allow text selection in inputs */
+    input, textarea {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    
+    /* Safe area insets for notched devices */
+    .app {
+      padding-top: max(16px, env(safe-area-inset-top));
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
+    }
+    
+    /* Smoother scrolling on Android */
+    html {
+      scroll-behavior: smooth;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      height: 100%;
+    }
+
+    /* Propagate height for proper centering */
+    #root {
+      min-height: 100%;
+    }
+    
+    /* Larger touch targets for mobile */
+    .ltile {
+      min-width: 70px;
+      min-height: 70px;
+    }
+    
+    .qopt {
+      min-height: 56px;
+    }
+    
+    .menu-item {
+      min-height: 100px;
+    }
+    
+    .mcard {
+      min-width: 60px;
+      min-height: 60px;
+    }
+    
+    /* Bottom safe area for gesture navigation */
+    .menu-grid, .alpha-grid, .word-grid, .cat-grid, .badge-grid, .mem-grid {
+      padding-bottom: env(safe-area-inset-bottom, 16px);
+    }
+
+    /* Learning path list */
+    .path-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 16px 0 24px;
+    }
+    .path-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .path-item .path-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .path-item .path-label { font-size: 1rem; color: #2d3748; font-weight: 500; }
+    .path-done { background: #f0fff4; border-color: #9ae6b4; }
+    .path-done .path-label { color: #276749; }
+    .path-current {
+      background: linear-gradient(135deg, #fff7e6, #ffe8a1);
+      border-color: #f6ad55;
+      box-shadow: 0 4px 10px rgba(246,173,85,0.25);
+      cursor: pointer;
+    }
+    .path-current:active { transform: scale(0.98); }
+    .path-locked {
+      opacity: 0.5;
+      background: #f7fafc;
+      cursor: not-allowed;
+    }
+    .path-item:not(.path-locked):active { transform: scale(0.98); }
+    .menu-item-path {
+      background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+      border: 1.5px solid #7dd3fc;
+    }
+
+    /* Stories */
+    .story-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+      margin: 16px 0 24px;
+    }
+    .story-card {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border: 2px solid #f59e0b40;
+      border-radius: 18px;
+      padding: 18px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .story-card:active { transform: scale(0.97); }
+    .story-emoji { font-size: 2.8rem; margin-bottom: 8px; }
+    .story-title { font-weight: 600; color: #78350f; font-size: 0.95rem; line-height: 1.3; }
+    .story-body {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 20px 18px;
+      margin: 16px 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      line-height: 2;
+    }
+    .story-line {
+      font-family: var(--font-arabic);
+      font-size: 1.35rem;
+      color: var(--text-dark);
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    .story-line:hover { color: var(--primary); }
+    .story-translation {
+      color: var(--text-light);
+      font-style: italic;
+      padding: 0 12px;
+      line-height: 1.5;
+    }
+    /* Toddler mode (3-5 yo): bigger touch targets and less visual density */
+    body.mode-toddler .menu-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+    body.mode-toddler .menu-item {
+      padding: 28px 18px;
+      border-radius: 24px;
+    }
+    body.mode-toddler .menu-icon { font-size: 3rem !important; }
+    body.mode-toddler .menu-lbl { font-size: 1.15rem !important; font-weight: 700; }
+    body.mode-toddler .qopt { font-size: 1.5rem !important; padding: 22px !important; }
+    body.mode-toddler .stats-row .stat-val { font-size: 2rem; }
+    body.mode-toddler .lbig { font-size: 10rem !important; }
+    body.mode-toddler .qprompt { font-size: 4rem !important; }
+
+    /* Floating "Complete daily challenge" button */
+    .daily-float {
+      position: fixed;
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 26px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: inherit;
+      box-shadow: 0 6px 16px rgba(16,185,129,0.45);
+      z-index: 80;
+      cursor: pointer;
+      transition: transform 0.12s;
+    }
+    .daily-float:active { transform: translateX(-50%) scale(0.96); }
+
+    .menu-item-stories {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border: 1.5px solid #fbbf24;
+    }
+    body.theme-dark .story-card { background: linear-gradient(135deg, #78350f, #92400e) !important; border-color: #f59e0b; }
+    body.theme-dark .story-title { color: #fde68a; }
+    body.theme-dark .story-body { background: var(--bg-card); }
+    body.theme-dark .menu-item-stories { background: linear-gradient(135deg, #78350f, #92400e) !important; border-color: #f59e0b; }
+    .qoptions-emoji { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+    /* Privacy policy footer link — rendered in document flow, after #root,
+       so it sits at the bottom of the page instead of overlapping buttons. */
+    .privacy-footer {
+      text-align: center;
+      font-size: 0.78rem;
+      padding: 16px 12px calc(16px + env(safe-area-inset-bottom, 0px));
+    }
+    .privacy-footer a {
+      color: #718096;
+      text-decoration: underline;
+      opacity: 0.75;
+      padding: 6px 10px;
+    }
+    .privacy-footer a:active { opacity: 1; }
+    
+    /* Tablet optimizations */
+    @media (min-width: 768px) {
+      .app {
+        max-width: 900px;
+      }
+      
+      .menu-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      
+      .alpha-grid {
+        grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+      }
+      
+      .word-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      }
+      
+      .mem-grid {
+        grid-template-columns: repeat(4, 1fr);
+        max-width: 520px;
+      }
+      
+      .qoptions {
+        grid-template-columns: 1fr 1fr;
+      }
+      
+      .lbig {
+        font-size: 9rem;
+      }
+      
+      .qprompt {
+        font-size: 5rem;
+      }
+      
+      .results {
+        max-width: 520px;
+      }
+      
+      .auth-card {
+        max-width: 460px;
+      }
+      
+      .stat-val {
+        font-size: 2rem;
+      }
+    }
+    
+    /* Large tablet (10"+) */
+    @media (min-width: 1024px) {
+      .app {
+        max-width: 1000px;
+      }
+      
+      .menu-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+      
+      .menu-item {
+        padding: 28px 24px;
+      }
+      
+      .menu-icon {
+        font-size: 3.2rem;
+      }
+      
+      .menu-lbl {
+        font-size: 1.15rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Main App Container -->
+  <div id="root">
+    <div class="welcome" style="min-height:100%">
+      <div class="w-chars">
+        <span>🌟</span><span>📚</span><span>✨</span><span>🎮</span><span>🏆</span>
+      </div>
+      <h1 class="w-title">Arabic Kids</h1>
+      <p class="w-arabic">تعلّم العربية</p>
+    </div>
+  </div>
+
+  <!-- Privacy policy link (multilingual label set at runtime).
+       Hidden by default; navigate() in app.js reveals it only on the dashboard. -->
+  <div class="privacy-footer" id="privacyFooter" style="display:none">
+    <a href="https://hsrconsulting.github.io/hsrConsulting-privacy-policy/"
+       target="_blank"
+       rel="noopener">Politique de confidentialité</a>
+  </div>
+
+  <!-- JavaScript -->
+  <!-- audio_manifest.js is generated by tools/generate_audio.py.
+       Missing file means "no MP3s bundled yet" — audio.js gracefully falls
+       back to TTS, so the onerror handler keeps the app working. -->
+  <script src="js/audio_manifest.js" onerror="window._AUDIO_DICT={};"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    // Notify Android that web content is ready
+    function onAndroidReady() {
+      console.log('Android bridge connected');
+      // Update AudioSystem to use native features
+      AudioSystem.isAndroid = true;
+      localizePrivacyFooter();
+    }
+
+    // Localize the privacy-policy footer using the device language (set by MainActivity)
+    function localizePrivacyFooter() {
+      var labels = {
+        fr: 'Politique de confidentialité',
+        en: 'Privacy Policy',
+        ar: 'سياسة الخصوصية',
+        es: 'Política de privacidad',
+        de: 'Datenschutzerklärung',
+        tr: 'Gizlilik Politikası',
+        hi: 'गोपनीयता नीति',
+        id: 'Kebijakan Privasi',
+        it: 'Informativa sulla privacy',
+        nl: 'Privacybeleid',
+        pt: 'Política de Privacidade'
+      };
+      var lang = (window.deviceLanguage || 'fr').slice(0, 2);
+      var a = document.querySelector('#privacyFooter a');
+      if (a && labels[lang]) a.textContent = labels[lang];
+    }
+    
+    // Prevent overscroll/bounce
+    document.addEventListener('touchmove', function(e) {
+      if (e.target.closest('.alpha-grid, .word-grid, .cat-grid, .badge-grid, .mem-grid, .quiz-c, .app')) {
+        return; // Allow scrolling in content areas
+      }
+    }, { passive: true });
+    
+    // Handle back gesture
+    document.addEventListener('backbutton', function(e) {
+      e.preventDefault();
+      if (typeof handleAndroidBack === 'function') {
+        handleAndroidBack();
+      }
+    });
+  </script>
+
+</body>
+</html>

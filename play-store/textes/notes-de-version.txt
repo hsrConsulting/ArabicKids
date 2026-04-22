@@ -1,0 +1,67 @@
+══════════════════════════════════════════════════════════════
+          NOTES DE VERSION — ARABIC KIDS
+══════════════════════════════════════════════════════════════
+
+Utilisez ces textes dans Google Play Console > Release > Release notes
+
+
+📌 VERSION 1.2.0 — Audio, harakat et UX
+─────────────────────────────────────
+
+🇫🇷 Français :
+• Son corrigé sur certains appareils Samsung (plus besoin du mode développeur)
+• Harakat (voyelles) affichés sur les mots arabes — lecture et prononciation plus claires
+• Changement de lettre : la page revient en haut automatiquement
+• Lien de politique de confidentialité déplacé proprement en bas de page
+• Message d'accueil personnalisé à la première inscription
+• Petits ajustements d'espacement sur le tableau de bord
+
+🇬🇧 English:
+• Fixed audio on some Samsung devices (no longer requires developer mode)
+• Harakat (vowel marks) now shown on Arabic words for clearer reading and pronunciation
+• Switching between letters now scrolls the page back to top
+• Privacy policy link moved to the bottom of the page (no more overlap)
+• New first-time welcome message on sign-up
+• Minor spacing improvements on the dashboard
+
+🇸🇦 العربية:
+• تم إصلاح الصوت على بعض أجهزة سامسونغ (لم يعد يتطلب وضع المطور)
+• إظهار الحركات على الكلمات العربية لقراءة ونطق أوضح
+• العودة إلى أعلى الصفحة تلقائياً عند تغيير الحرف
+• نقل رابط سياسة الخصوصية إلى أسفل الصفحة
+• رسالة ترحيب خاصة عند التسجيل لأول مرة
+• تحسينات طفيفة في التباعد على لوحة التحكم
+
+
+📌 VERSION 1.0.0 — Lancement initial
+─────────────────────────────────────
+
+🇫🇷 Français :
+Bienvenue dans Arabic Kids ! 🎉
+• Apprenez les 28 lettres de l'alphabet arabe avec prononciation
+• +300 mots de vocabulaire dans 13 catégories
+• 7 types de quiz interactifs
+• Jeu de mémoire amusant
+• Système de badges et de progression
+• Interface disponible en 8 langues
+• Fonctionne hors ligne
+
+🇬🇧 English:
+Welcome to Arabic Kids! 🎉
+• Learn all 28 Arabic alphabet letters with pronunciation
+• 300+ vocabulary words across 13 categories
+• 7 interactive quiz types
+• Fun memory card game
+• Badge and progression system
+• Interface available in 8 languages
+• Works offline
+
+🇸🇦 العربية:
+مرحباً بكم في Arabic Kids! 🎉
+• تعلّم جميع الحروف العربية الـ 28 مع النطق
+• أكثر من 300 كلمة في 13 فئة
+• 7 أنواع من الاختبارات التفاعلية
+• لعبة ذاكرة ممتعة
+• نظام شارات وتقدّم
+• واجهة متاحة بـ 8 لغات
+• يعمل بدون إنترنت

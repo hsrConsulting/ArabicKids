@@ -1,0 +1,120 @@
+══════════════════════════════════════════════════════════════
+     ✅ CHECKLIST DE PUBLICATION — ARABIC KIDS SUR GOOGLE PLAY
+══════════════════════════════════════════════════════════════
+
+
+📌 ÉTAPE 1 : COMPTE GOOGLE PLAY DEVELOPER
+──────────────────────────────────────────
+☐ Créer un compte sur https://play.google.com/console/
+☐ Payer les frais d'inscription (25$ USD, une seule fois)
+☐ Vérifier votre identité (peut prendre 48h)
+
+
+📌 ÉTAPE 2 : PRÉPARER LES ASSETS (ce dossier)
+───────────────────────────────────────────────
+☐ Icône 512x512 (exporter depuis le projet)
+☐ Feature Graphic 1024x500 (créer avec Canva/Figma)
+☐ Minimum 2 screenshots téléphone (voir screenshots/GUIDE)
+☐ Screenshots tablette (recommandé)
+☐ Descriptions FR/EN/AR (voir dossier textes/)
+☐ Politique de confidentialité publiée en ligne (URL publique)
+
+
+📌 ÉTAPE 3 : CONFIGURATION DE L'APP (Play Console)
+───────────────────────────────────────────────────
+☐ App name : Arabic Kids - Apprends l'arabe
+☐ Default language : Français (ou Anglais)
+☐ App type : Application
+☐ Free / Paid : Gratuite
+☐ Category : Education
+☐ Email de contact : [votre email]
+
+
+📌 ÉTAPE 4 : FICHE STORE (Store Listing)
+─────────────────────────────────────────
+☐ Titre (30 car. max)
+☐ Description courte (80 car. max)
+☐ Description complète (4000 car. max)
+☐ Icône de l'app (512x512)
+☐ Feature Graphic (1024x500)
+☐ Screenshots téléphone (min 2)
+☐ Ajouter les traductions (EN, AR) si souhaité
+
+
+📌 ÉTAPE 5 : CLASSIFICATION DU CONTENU
+───────────────────────────────────────
+☐ Remplir le questionnaire IARC (voir questionnaire-classification-contenu.txt)
+☐ Résultat attendu : PEGI 3 / Everyone
+
+
+📌 ÉTAPE 6 : PUBLIC CIBLE ET CONTENU
+─────────────────────────────────────
+☐ Tranche d'âge cible : cocher "5-8 ans" et "8-12 ans" (ou custom 4-10)
+☐ L'app est-elle destinée aux enfants ? → OUI
+☐ L'app contient-elle des publicités ? → OUI
+☐ Les pubs sont-elles conformes aux Families Ads ? → OUI
+☐ Politique de confidentialité : renseigner l'URL
+
+
+📌 ÉTAPE 7 : SÉCURITÉ DES DONNÉES (Data Safety)
+────────────────────────────────────────────────
+☐ L'app collecte-t-elle des données ? → OUI (via AdMob)
+☐ Device identifiers : Collecté (AdMob)
+☐ Partagé avec des tiers : OUI (Google pour les pubs)
+☐ Données chiffrées en transit : OUI
+☐ Suppression possible : OUI (désinstallation)
+
+
+📌 ÉTAPE 8 : CONFIGURATION TECHNIQUE
+─────────────────────────────────────
+☐ Remplacer les IDs AdMob test par les vrais IDs de production :
+   - AndroidManifest.xml : APPLICATION_ID
+   - MainActivity.java : INTERSTITIAL_AD_UNIT_ID
+☐ Changer le mot de passe du keystore (actuellement 'arabickids2024')
+☐ Mettre à jour build.gradle si le mot de passe change
+
+
+📌 ÉTAPE 9 : UPLOAD DU BUILD
+─────────────────────────────
+☐ Fichier AAB : app/build/outputs/bundle/release/app-release.aab
+☐ Aller dans Release > Production > Create new release
+☐ Uploader le fichier .aab
+☐ Ajouter les notes de version (voir notes-de-version.txt)
+☐ Google Play App Signing : accepter (recommandé)
+
+
+📌 ÉTAPE 10 : REVUE ET PUBLICATION
+───────────────────────────────────
+☐ Vérifier tous les avertissements dans "Publishing overview"
+☐ Soumettre pour revue
+☐ Délai de revue : généralement 1-3 jours (peut aller jusqu'à 7 jours)
+☐ Vous recevrez un email quand l'app sera approuvée
+
+
+══════════════════════════════════════════════════════════════
+📁 STRUCTURE DU DOSSIER play-store/
+══════════════════════════════════════════════════════════════
+
+play-store/
+├── CHECKLIST-PUBLICATION.txt          ← Ce fichier
+├── graphiques/
+│   ├── GUIDE-GRAPHIQUES.txt           ← Guide pour les éléments visuels
+│   ├── icone-512x512.png              ← À créer
+│   └── feature-graphic-1024x500.png   ← À créer
+├── screenshots/
+│   ├── GUIDE-SCREENSHOTS.txt          ← Guide pour les captures
+│   ├── 01-dashboard.png               ← À capturer
+│   ├── 02-alphabet.png                ← À capturer
+│   ├── 03-lettre-detail.png           ← À capturer
+│   ├── 04-vocabulaire.png             ← À capturer
+│   ├── 05-quiz.png                    ← À capturer
+│   ├── 06-memory.png                  ← À capturer
+│   ├── 07-resultats.png               ← À capturer
+│   └── 08-badges.png                  ← À capturer
+└── textes/
+    ├── fiche-play-store-FR.txt        ← Description française
+    ├── fiche-play-store-EN.txt        ← Description anglaise
+    ├── fiche-play-store-AR.txt        ← Description arabe
+    ├── politique-confidentialite.txt   ← Privacy policy
+    ├── questionnaire-classification-contenu.txt
+    └── notes-de-version.txt           ← Release notes v1.0.0

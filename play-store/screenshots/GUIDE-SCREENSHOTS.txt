@@ -1,0 +1,80 @@
+══════════════════════════════════════════════════════════════
+          GUIDE DE CAPTURES D'ÉCRAN — GOOGLE PLAY STORE
+══════════════════════════════════════════════════════════════
+
+📌 EXIGENCES GOOGLE PLAY
+─────────────────────────
+• Format : JPEG ou PNG 24 bits (pas d'alpha/transparence)
+• Dimensions : min 320px, max 3840px, ratio max 2:1
+• Téléphone : minimum 2, maximum 8 screenshots
+• Tablette 7"  : recommandé (minimum 2 si fournis)
+• Tablette 10" : recommandé (minimum 2 si fournis)
+
+
+📌 SCREENSHOTS RECOMMANDÉS (dans cet ordre)
+────────────────────────────────────────────
+
+Placez vos captures dans ce dossier avec les noms suivants :
+
+1. 01-dashboard.png
+   → L'écran d'accueil / Dashboard avec le menu des activités
+   → Montre : grille de menu, barre de progression, stats
+   → C'est la première chose que les parents voient !
+
+2. 02-alphabet.png
+   → La grille des 28 lettres arabes colorées
+   → Montre : toutes les lettres, couleurs vives, lettres apprises
+
+3. 03-lettre-detail.png
+   → L'écran de détail d'une lettre (ex: ب - Ba)
+   → Montre : les 4 formes, mot d'exemple, bouton écouter
+
+4. 04-vocabulaire.png
+   → Une catégorie de vocabulaire (ex: Animaux 🦁)
+   → Montre : les cartes de mots avec emoji + arabe + traduction
+
+5. 05-quiz.png
+   → Un quiz en cours (ex: Quiz des lettres)
+   → Montre : question, 4 choix, barre de progression
+
+6. 06-memory.png
+   → Le jeu de mémoire en cours
+   → Montre : les cartes retournées, quelques paires trouvées
+
+7. 07-resultats.png
+   → L'écran de résultats d'un quiz (score élevé)
+   → Montre : score, message de félicitations, confetti
+
+8. 08-badges.png
+   → La collection de badges
+   → Montre : badges débloqués et verrouillés
+
+
+📌 COMMENT PRENDRE LES SCREENSHOTS
+────────────────────────────────────
+
+Option A — Depuis l'émulateur Android Studio :
+1. Lancez l'app dans l'émulateur
+2. Naviguez vers l'écran souhaité
+3. Cliquez sur l'icône caméra dans la barre d'outils de l'émulateur
+4. Sauvegardez dans ce dossier
+
+Option B — Depuis un appareil physique :
+1. Installez l'APK : adb install app-release.apk
+2. Naviguez vers l'écran souhaité
+3. Bouton Power + Volume Bas pour capturer
+4. Transférez les captures sur votre PC
+
+Option C — Via ADB :
+   adb shell screencap /sdcard/screenshot.png
+   adb pull /sdcard/screenshot.png ./01-dashboard.png
+
+
+📌 CONSEILS POUR DES SCREENSHOTS ATTRACTIFS
+────────────────────────────────────────────
+• Utilisez un profil avec de la progression (quelques badges, score)
+• Montrez des données réalistes (pas un profil vide)
+• Prenez les screenshots sur un écran haute résolution (1080x1920 min)
+• Assurez-vous que la barre de statut est propre (WiFi, batterie pleine)
+• Vous pouvez ajouter du texte promotionnel autour des screenshots
+  avec des outils comme Canva, Figma, ou App Screenshot Maker

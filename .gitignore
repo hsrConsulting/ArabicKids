@@ -1,0 +1,29 @@
+# Keystore & secrets
+*.jks
+*.keystore
+keystore.properties
+
+# Firebase
+google-services.json
+
+# Android build outputs
+build/
+.gradle/
+local.properties
+*.apk
+*.aab
+
+# IDE
+.idea/
+*.iml
+.vscode/
+captures/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup & generated
+*.bak
+app/src/main/assets/audio/
+app/src/main/assets/web/js/audio_manifest.js

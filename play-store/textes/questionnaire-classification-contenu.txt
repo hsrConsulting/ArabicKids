@@ -1,0 +1,88 @@
+══════════════════════════════════════════════════════════════
+     QUESTIONNAIRE DE CLASSIFICATION DU CONTENU — GOOGLE PLAY
+══════════════════════════════════════════════════════════════
+
+Ce fichier vous guide pour remplir le questionnaire de classification
+dans la Google Play Console (Policy > App content > Content rating).
+
+
+📌 TYPE D'APPLICATION
+─────────────────────
+Catégorie : Utility, Productivity, Communication, or Other
+Sous-catégorie : Reference, Educational, or Other (choisir "Educational")
+
+
+📌 RÉPONSES AU QUESTIONNAIRE IARC
+──────────────────────────────────
+
+Violence :
+→ L'app contient-elle de la violence ? NON
+
+Sexualité :
+→ L'app contient-elle du contenu sexuel ? NON
+
+Langage :
+→ L'app contient-elle du langage grossier ? NON
+
+Substances contrôlées :
+→ L'app fait-elle référence à des drogues/alcool/tabac ? NON
+
+Contenu généré par les utilisateurs :
+→ Les utilisateurs peuvent-ils interagir ou partager du contenu ? NON
+
+Partage de localisation :
+→ L'app partage-t-elle la localisation ? NON
+
+Achats numériques :
+→ L'app propose-t-elle des achats intégrés ? NON
+
+Publicités :
+→ L'app contient-elle des publicités ? OUI
+→ Les publicités sont-elles adaptées aux enfants ? OUI (non personnalisées)
+
+
+📌 RÉSULTAT ATTENDU
+───────────────────
+• PEGI : 3
+• ESRB : Everyone
+• USK : 0
+• GRAC : All
+• ClassInd : Livre
+
+
+📌 PROGRAMME FAMILLES (Families Policy)
+───────────────────────────────────────
+Si vous ciblez les enfants, vous DEVEZ :
+
+1. ☐ Déclarer la tranche d'âge cible (4-10 ans)
+2. ☐ Utiliser des publicités certifiées Families (AdMob le supporte)
+3. ☐ Fournir une politique de confidentialité
+4. ☐ Se conformer à COPPA / GDPR-K
+5. ☐ Pas de collecte de données personnelles
+6. ☐ Pas de fonctionnalités sociales
+
+Arabic Kids remplit TOUTES ces conditions ✅
+
+
+📌 SECTION "DATA SAFETY" (Sécurité des données)
+────────────────────────────────────────────────
+
+Dans la Google Play Console > App content > Data safety :
+
+L'app collecte-t-elle des données ?
+→ OUI (à cause d'AdMob qui collecte des données techniques)
+
+Types de données collectées :
+→ Identifiants de l'appareil (par AdMob uniquement)
+
+Les données sont-elles partagées avec des tiers ?
+→ OUI — Google AdMob (pour l'affichage publicitaire)
+
+Les données sont-elles chiffrées en transit ?
+→ OUI (HTTPS via AdMob)
+
+L'utilisateur peut-il demander la suppression de ses données ?
+→ OUI (désinstaller l'app supprime tout)
+
+L'app est-elle conforme à la Families Policy ?
+→ OUI

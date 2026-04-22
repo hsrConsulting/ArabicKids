@@ -1,0 +1,100 @@
+══════════════════════════════════════════════════════════════
+                    FICHE GOOGLE PLAY STORE — FRANÇAIS
+══════════════════════════════════════════════════════════════
+
+📌 NOM DE L'APPLICATION (30 caractères max)
+──────────────────────────────────────────
+Arabic Kids - Apprends l'arabe
+
+
+📌 DESCRIPTION COURTE (80 caractères max)
+──────────────────────────────────────────
+Apprends l'alphabet arabe, les mots et les quiz en t'amusant ! 🎓🇸🇦
+
+
+📌 DESCRIPTION COMPLÈTE (4000 caractères max)
+──────────────────────────────────────────────
+🌟 Arabic Kids — L'application ludique pour apprendre l'arabe aux enfants !
+
+Votre enfant veut découvrir la langue arabe ? Arabic Kids transforme l'apprentissage en aventure avec des leçons interactives, des jeux et des quiz adaptés aux plus jeunes.
+
+📖 ALPHABET COMPLET
+• Les 28 lettres arabes avec prononciation native
+• Chaque lettre dans ses 4 formes : isolée, initiale, médiane, finale
+• Mots d'exemple illustrés avec des emojis pour chaque lettre
+• Écoute et répète grâce à la synthèse vocale arabe
+
+📚 +300 MOTS DE VOCABULAIRE
+Apprenez du vocabulaire dans 13 catégories thématiques :
+🦁 Animaux • 🍎 Fruits • 🥬 Légumes • 🍕 Nourriture
+👨‍👩‍👧‍👦 Famille • 🎨 Couleurs • 🔢 Chiffres • 🧍 Corps humain
+🏫 École • 🌳 Nature • 🏠 Maison • 👕 Vêtements • 🚗 Transports
+
+Chaque mot est accompagné d'une illustration emoji, d'une traduction et d'une prononciation audio.
+
+🎯 7 TYPES DE QUIZ
+• Quiz des lettres : reconnaître les lettres arabes
+• Quiz des mots : associer un mot arabe à sa traduction
+• Quiz des formes : identifier les différentes formes d'une lettre
+• Quiz audio : écouter et identifier le mot prononcé
+• Quiz catégories : classer les mots dans la bonne catégorie
+• Quiz phrases : compléter des phrases simples en arabe
+• Quiz d'association : relier les mots arabes à leur traduction
+
+🧠 JEU DE MÉMOIRE
+Un jeu de memory amusant pour associer les lettres arabes à leurs images !
+
+🏆 SYSTÈME DE PROGRESSION
+• Gagnez des points à chaque leçon et quiz
+• Montez de niveau : Débutant → Explorateur → Champion → Maître
+• Débloquez 15 badges de réussite
+• Suivez votre progression sur l'alphabet (X/28 lettres apprises)
+
+🌍 MULTILINGUE
+L'interface est disponible en 8 langues :
+🇫🇷 Français • 🇬🇧 Anglais • 🇪🇸 Espagnol • 🇩🇪 Allemand
+🇹🇷 Turc • 🇮🇳 Hindi • 🇮🇩 Indonésien • 🇮🇹 Italien
+
+👶 CONÇU POUR LES ENFANTS
+• Interface colorée et ludique adaptée aux 4-10 ans
+• Aucune inscription en ligne requise
+• Données stockées localement sur l'appareil
+• Profils multiples pour les familles
+• Fonctionne hors ligne (pas besoin d'internet)
+
+📱 COMPATIBLE TOUS ÉCRANS
+• Smartphones et tablettes
+• Mode portrait et paysage
+• Support des encoches et de la navigation gestuelle
+
+Téléchargez Arabic Kids et offrez à votre enfant les clés de la langue arabe ! 🚀
+
+
+📌 CATÉGORIE
+────────────
+Éducation
+
+
+📌 TAGS / MOTS-CLÉS
+────────────────────
+arabe, apprendre arabe, alphabet arabe, enfants, éducation, quiz arabe,
+lettres arabes, vocabulaire arabe, jeux éducatifs, langue arabe, kids arabic,
+learn arabic, تعلم العربية, حروف عربية
+
+
+📌 COORDONNÉES DÉVELOPPEUR
+──────────────────────────
+Nom du développeur : [VOTRE NOM OU NOM D'ENTREPRISE]
+Email de contact   : [VOTRE EMAIL]
+Site web           : [VOTRE SITE WEB — optionnel]
+Politique de confidentialité : [URL OBLIGATOIRE — voir fichier politique-confidentialite.txt]
+
+
+📌 CLASSIFICATION DU CONTENU
+─────────────────────────────
+• Audience cible : Enfants de 4 à 10 ans
+• Classification PEGI : PEGI 3 / Everyone
+• Publicités : Oui (interstitielles, non personnalisées recommandé pour enfants)
+• Achats intégrés : Non
+• Partage de données : Non
+• Programme "Approuvé par les enseignants" : Eligible (à demander)

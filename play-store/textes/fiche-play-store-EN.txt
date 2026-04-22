@@ -1,0 +1,100 @@
+══════════════════════════════════════════════════════════════
+                    GOOGLE PLAY STORE LISTING — ENGLISH
+══════════════════════════════════════════════════════════════
+
+📌 APP NAME (30 characters max)
+───────────────────────────────
+Arabic Kids - Learn Arabic
+
+
+📌 SHORT DESCRIPTION (80 characters max)
+────────────────────────────────────────
+Learn the Arabic alphabet, words & quizzes — fun learning for kids! 🎓🇸🇦
+
+
+📌 FULL DESCRIPTION (4000 characters max)
+─────────────────────────────────────────
+🌟 Arabic Kids — The fun way for children to learn Arabic!
+
+Want your child to discover the Arabic language? Arabic Kids turns learning into an adventure with interactive lessons, games, and quizzes designed for young learners.
+
+📖 COMPLETE ALPHABET
+• All 28 Arabic letters with native pronunciation
+• Each letter in 4 forms: isolated, initial, medial, final
+• Illustrated example words with emojis for every letter
+• Listen and repeat with Arabic text-to-speech
+
+📚 300+ VOCABULARY WORDS
+Learn vocabulary across 13 themed categories:
+🦁 Animals • 🍎 Fruits • 🥬 Vegetables • 🍕 Food & Drink
+👨‍👩‍👧‍👦 Family • 🎨 Colors • 🔢 Numbers • 🧍 Human Body
+🏫 School • 🌳 Nature • 🏠 House • 👕 Clothes • 🚗 Transport
+
+Every word comes with an emoji illustration, translation, and audio pronunciation.
+
+🎯 7 QUIZ TYPES
+• Letter Quiz: recognize Arabic letters
+• Word Quiz: match Arabic words to their translation
+• Forms Quiz: identify the different forms of a letter
+• Audio Quiz: listen and identify the spoken word
+• Categories Quiz: sort words into the right category
+• Phrases Quiz: complete simple Arabic sentences
+• Match Quiz: connect Arabic words to their translations
+
+🧠 MEMORY GAME
+A fun memory game to match Arabic letters with their images!
+
+🏆 PROGRESSION SYSTEM
+• Earn points with every lesson and quiz
+• Level up: Beginner → Explorer → Champion → Master
+• Unlock 15 achievement badges
+• Track your alphabet progress (X/28 letters learned)
+
+🌍 MULTILINGUAL
+The interface is available in 8 languages:
+🇫🇷 French • 🇬🇧 English • 🇪🇸 Spanish • 🇩🇪 German
+🇹🇷 Turkish • 🇮🇳 Hindi • 🇮🇩 Indonesian • 🇮🇹 Italian
+
+👶 DESIGNED FOR KIDS
+• Colorful, playful interface for ages 4-10
+• No online registration required
+• Data stored locally on device
+• Multiple profiles for families
+• Works offline (no internet needed)
+
+📱 ALL SCREEN SIZES
+• Phones and tablets
+• Portrait and landscape mode
+• Notch and gesture navigation support
+
+Download Arabic Kids and give your child the keys to the Arabic language! 🚀
+
+
+📌 CATEGORY
+───────────
+Education
+
+
+📌 TAGS / KEYWORDS
+──────────────────
+arabic, learn arabic, arabic alphabet, kids, education, arabic quiz,
+arabic letters, arabic vocabulary, educational games, arabic language,
+تعلم العربية, حروف عربية, children, preschool, elementary
+
+
+📌 DEVELOPER DETAILS
+────────────────────
+Developer name : [YOUR NAME OR COMPANY NAME]
+Contact email  : [YOUR EMAIL]
+Website        : [YOUR WEBSITE — optional]
+Privacy policy : [REQUIRED URL — see privacy-policy.txt]
+
+
+📌 CONTENT RATING
+─────────────────
+• Target audience: Children ages 4-10
+• Rating: PEGI 3 / Everyone
+• Ads: Yes (interstitial, non-personalized recommended for children)
+• In-app purchases: No
+• Data sharing: No
+• "Teacher Approved" program: Eligible (apply separately)

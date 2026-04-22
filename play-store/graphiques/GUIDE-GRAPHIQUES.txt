@@ -1,0 +1,87 @@
+══════════════════════════════════════════════════════════════
+          GUIDE DES ÉLÉMENTS GRAPHIQUES — GOOGLE PLAY STORE
+══════════════════════════════════════════════════════════════
+
+Placez les fichiers graphiques finaux dans ce dossier.
+
+
+📌 1. ICÔNE DE L'APPLICATION (App Icon)
+───────────────────────────────────────
+Fichier  : icone-512x512.png
+Format   : PNG 32 bits (avec alpha)
+Taille   : 512 x 512 px
+Statut   : ✅ Déjà configurée dans le projet (ic_launcher)
+
+→ L'icône actuelle : livre ouvert avec la lettre ع et A, étoile jaune
+→ Exportez-la en 512x512 depuis Android Studio :
+  1. Clic droit sur app > New > Image Asset
+  2. Ou utilisez : res/mipmap-xxxhdpi/ic_launcher.png (la plus grande)
+  3. Redimensionnez à 512x512 si nécessaire
+
+
+📌 2. FEATURE GRAPHIC (Image mise en avant) — OBLIGATOIRE
+─────────────────────────────────────────────────────────
+Fichier  : feature-graphic-1024x500.png
+Format   : JPEG ou PNG 24 bits (PAS de transparence)
+Taille   : 1024 x 500 px exactement
+
+→ C'est la grande bannière affichée en haut de votre fiche Play Store
+→ À CRÉER avec Canva, Figma, ou Photoshop
+
+Suggestions de design :
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│   [Logo]   Arabic Kids                              │
+│            تعلّم العربية                              │
+│                                                     │
+│   📖 أ ب ت ث     "Apprends l'arabe                 │
+│   🦁 🍎 🎨        en t'amusant !"                   │
+│                                                     │
+│   Fond : dégradé #FFF8F0 → #FFE8E0 (couleurs app)  │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+
+Éléments à inclure :
+• Le logo/icône de l'app
+• Le nom "Arabic Kids" en police Baloo 2 ou similaire
+• Le sous-titre "تعلّم العربية" en Noto Naskh Arabic
+• Quelques lettres arabes colorées flottantes
+• Des emojis représentatifs (📖 🦁 🎨 ⭐)
+• Le fond chaud crème de l'app (#FFF8F0)
+• Palette de couleurs : #FF6B6B (corail), #4ECDC4 (teal), #FFE66D (jaune)
+
+
+📌 3. PROMO VIDEO (Vidéo promotionnelle) — OPTIONNEL
+────────────────────────────────────────────────────
+Format   : URL YouTube
+Durée    : 30 secondes à 2 minutes recommandé
+
+Si vous souhaitez en créer une, montrez :
+• L'écran splash animé
+• Navigation dans le dashboard
+• Apprentissage d'une lettre avec TTS
+• Un quiz rapide
+• Le jeu de mémoire
+• Déblocage d'un badge
+
+Outils recommandés : enregistrement d'écran Android Studio ou ADB
+   adb shell screenrecord /sdcard/demo.mp4
+   adb pull /sdcard/demo.mp4
+
+
+📌 4. TV BANNER — NON REQUIS
+────────────────────────────
+L'app ne cible pas Android TV, pas besoin de bannière TV.
+
+
+📌 RÉSUMÉ DES FICHIERS À PRÉPARER
+──────────────────────────────────
+
+| Fichier                        | Taille         | Obligatoire |
+|--------------------------------|----------------|-------------|
+| icone-512x512.png              | 512 x 512 px   | ✅ OUI      |
+| feature-graphic-1024x500.png   | 1024 x 500 px  | ✅ OUI      |
+| screenshots/01-dashboard.png   | 1080 x 1920+   | ✅ OUI (x2 min) |
+| screenshots/02-alphabet.png    | 1080 x 1920+   | ✅ OUI      |
+| screenshots/03 à 08           | 1080 x 1920+   | Recommandé  |
+| video-promo (YouTube URL)      | -               | ❌ Optionnel |

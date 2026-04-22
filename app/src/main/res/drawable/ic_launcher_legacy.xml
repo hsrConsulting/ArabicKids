@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Pre-API 26 launcher fallback (48dp, full-bleed).
+  Includes the blue gradient background + scaled-down smiley ب so devices
+  on Android 7 (minSdk 24) still get a branded icon.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- Rounded-square background (3-stop blue gradient, top → bottom) -->
+    <path
+        android:pathData="M10,0 L38,0 A10,10 0 0 1 48,10 L48,38 A10,10 0 0 1 38,48 L10,48 A10,10 0 0 1 0,38 L0,10 A10,10 0 0 1 10,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="24" android:startY="0"
+                android:endX="24" android:endY="48">
+                <item android:color="#5FD3FF" android:offset="0.0" />
+                <item android:color="#3AA9F5" android:offset="0.5" />
+                <item android:color="#1565C0" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Soft shadow -->
+    <path
+        android:fillColor="#33000000"
+        android:pathData="M24,36.44 m-12.44,0 a12.44,2.67 0 1 1 24.88,0 a12.44,2.67 0 1 1 -24.88,0" />
+
+    <!-- Yellow body -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M9.78,23.11 C17.78,13.33 30.22,13.33 38.22,23.11 C36.44,31.11 12.44,31.11 9.78,23.11 Z" />
+
+    <!-- Glossy highlight -->
+    <path
+        android:fillColor="#80FFFFFF"
+        android:pathData="M13.33,21.33 C20,15.56 28.89,15.56 34.67,21.33 C28.89,20 20,20 13.33,21.33 Z" />
+
+    <!-- Yellow dot -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M24,35.56 m-2.67,0 a2.67,2.67 0 1 1 5.34,0 a2.67,2.67 0 1 1 -5.34,0" />
+
+    <!-- Eyes -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M18.67,21.33 m-4.89,0 a4.89,4.89 0 1 1 9.78,0 a4.89,4.89 0 1 1 -9.78,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M29.33,21.33 m-4.89,0 a4.89,4.89 0 1 1 9.78,0 a4.89,4.89 0 1 1 -9.78,0" />
+
+    <!-- Pupils -->
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M18.67,22.22 m-2.22,0 a2.22,2.22 0 1 1 4.44,0 a2.22,2.22 0 1 1 -4.44,0" />
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M29.33,22.22 m-2.22,0 a2.22,2.22 0 1 1 4.44,0 a2.22,2.22 0 1 1 -4.44,0" />
+
+    <!-- Highlights -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M17.33,20 m-0.89,0 a0.89,0.89 0 1 1 1.78,0 a0.89,0.89 0 1 1 -1.78,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M28,20 m-0.89,0 a0.89,0.89 0 1 1 1.78,0 a0.89,0.89 0 1 1 -1.78,0" />
+
+    <!-- Mouth -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#5D4037"
+        android:strokeWidth="1.55"
+        android:strokeLineCap="round"
+        android:pathData="M18.67,30.22 Q24,36.44 29.33,30.22" />
+</vector>

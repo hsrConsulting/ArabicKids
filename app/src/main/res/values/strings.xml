@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Arabic Kids</string>
+    <string name="app_name_ar">تعلّم العربية</string>
+    <string name="tagline_fr">Apprends l\'arabe en t\'amusant !</string>
+    <string name="tagline_en">Learn Arabic while having fun!</string>
+
+    <!-- AdMob — TEST IDs by default. Override in google-services or replace before production release -->
+    <string name="admob_app_id" translatable="false">ca-app-pub-8422872428591836~4724928854</string>
+    <string name="admob_interstitial_id" translatable="false">ca-app-pub-8422872428591836/2074714781</string>
+</resources>

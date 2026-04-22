@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive-icon foreground: smiley ب with glossy highlight and soft shadow.
+  Source uses <circle>/<ellipse>; Android Vector only supports <path>, so
+  every ellipse/circle is expressed as a pair of half-circle arcs.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Soft shadow under the letter (ellipse rx=28 ry=6 @54,82) -->
+    <path
+        android:fillColor="#33000000"
+        android:pathData="M54,82 m-28,0 a28,6 0 1 1 56,0 a28,6 0 1 1 -56,0" />
+
+    <!-- Yellow main body (smooth bezier) -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M22,52 C40,30 68,30 86,52 C82,70 28,70 22,52 Z" />
+
+    <!-- Glossy highlight -->
+    <path
+        android:fillColor="#80FFFFFF"
+        android:pathData="M30,48 C45,35 65,35 78,48 C65,45 45,45 30,48 Z" />
+
+    <!-- Yellow dot (r=6 @54,80) -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M54,80 m-6,0 a6,6 0 1 1 12,0 a6,6 0 1 1 -12,0" />
+
+    <!-- Eye sclera (r=11 @42,48 and @66,48) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M42,48 m-11,0 a11,11 0 1 1 22,0 a11,11 0 1 1 -22,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M66,48 m-11,0 a11,11 0 1 1 22,0 a11,11 0 1 1 -22,0" />
+
+    <!-- Pupils (r=5 @42,50 and @66,50) -->
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M42,50 m-5,0 a5,5 0 1 1 10,0 a5,5 0 1 1 -10,0" />
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M66,50 m-5,0 a5,5 0 1 1 10,0 a5,5 0 1 1 -10,0" />
+
+    <!-- Eye highlights (r=2 @39,45 and @63,45) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M39,45 m-2,0 a2,2 0 1 1 4,0 a2,2 0 1 1 -4,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M63,45 m-2,0 a2,2 0 1 1 4,0 a2,2 0 1 1 -4,0" />
+
+    <!-- Expressive mouth -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#5D4037"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M42,68 Q54,82 66,68" />
+</vector>

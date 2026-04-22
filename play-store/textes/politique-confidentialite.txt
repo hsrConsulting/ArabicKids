@@ -1,0 +1,137 @@
+POLITIQUE DE CONFIDENTIALITÉ — ARABIC KIDS
+Dernière mise à jour : 18 février 2026
+
+══════════════════════════════════════════════════════════════
+IMPORTANT : Publiez ce texte sur une page web accessible publiquement
+et renseignez l'URL dans la fiche Google Play Console.
+Vous pouvez utiliser GitHub Pages, Google Sites, ou votre propre site.
+══════════════════════════════════════════════════════════════
+
+
+PRIVACY POLICY — ARABIC KIDS
+Last updated: February 18, 2026
+
+---
+
+1. INTRODUCTION
+
+Arabic Kids ("the App") is an educational application designed for children
+aged 4-10 to learn the Arabic language. This privacy policy explains how we
+handle information when you use our App.
+
+Developer: [YOUR NAME OR COMPANY NAME]
+Contact: [YOUR EMAIL ADDRESS]
+
+
+2. INFORMATION WE COLLECT
+
+Arabic Kids does NOT collect, store, or transmit any personal information.
+
+• No account creation on external servers
+• No email addresses collected
+• No names sent to any server
+• No location data collected
+• No device identifiers collected or shared
+• No analytics or tracking tools
+
+All user data (child name, avatar, progress, scores) is stored LOCALLY
+on the device using the browser's localStorage. This data never leaves
+the device.
+
+
+3. CHILDREN'S PRIVACY (COPPA & GDPR-K COMPLIANCE)
+
+Arabic Kids is designed with children's privacy as a priority:
+
+• We do NOT collect personal information from children
+• We do NOT require online registration
+• We do NOT have social features, chat, or user-generated content
+• We do NOT share any data with third parties
+• All learning data stays on the device
+• Parents can delete all app data by clearing the app's storage
+  or uninstalling the app
+
+
+4. ADVERTISING
+
+Arabic Kids displays interstitial advertisements provided by Google AdMob.
+
+• Ads are shown periodically between quiz sessions
+• We use NON-PERSONALIZED ads only (no ad tracking for children)
+• Google AdMob may collect limited device information for ad serving
+  as described in Google's privacy policy:
+  https://policies.google.com/privacy
+
+We recommend that the ads comply with Google's Families Policy:
+https://support.google.com/googleplay/android-developer/answer/9893335
+
+
+5. THIRD-PARTY SERVICES
+
+The App uses the following third-party service:
+
+• Google AdMob (for advertising)
+  - Privacy policy: https://policies.google.com/privacy
+  - We request non-personalized ads to protect children's privacy
+
+The App does NOT use:
+• Analytics services
+• Social media SDKs
+• Crash reporting tools
+• Any other third-party data collection
+
+
+6. DATA STORAGE AND SECURITY
+
+• All user data is stored locally on the device
+• No data is transmitted over the internet (except for ad loading)
+• The App works fully offline (except for ad display)
+• Data can be deleted by clearing app data or uninstalling
+
+
+7. INTERNET PERMISSIONS
+
+The App requires internet access solely for:
+• Loading advertisements (Google AdMob)
+• Loading web fonts on first use (Google Fonts)
+
+No user data is ever transmitted.
+
+
+8. PARENTAL CONTROLS
+
+Parents can:
+• Delete their child's profile and progress by clearing app data
+• Restrict internet access to disable ads (the app works offline)
+• Uninstall the app to remove all local data completely
+
+
+9. CHANGES TO THIS POLICY
+
+We may update this privacy policy from time to time. Changes will be
+reflected in the "Last updated" date above. Continued use of the App
+after changes constitutes acceptance of the updated policy.
+
+
+10. CONTACT US
+
+If you have questions about this privacy policy, please contact us at:
+
+Email: [YOUR EMAIL ADDRESS]
+Developer: [YOUR NAME OR COMPANY NAME]
+
+
+---
+
+POLITIQUE DE CONFIDENTIALITÉ — VERSION FRANÇAISE
+
+Voir la version anglaise ci-dessus pour la politique complète.
+
+Résumé en français :
+• Arabic Kids ne collecte AUCUNE donnée personnelle
+• Toutes les données (nom, progression, scores) restent sur l'appareil
+• Les publicités sont non personnalisées (pas de suivi publicitaire)
+• L'application fonctionne hors ligne
+• Les parents peuvent supprimer toutes les données en désinstallant l'app
+• Conforme COPPA (protection des enfants en ligne)
+• Contact : [VOTRE EMAIL]

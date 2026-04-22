@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/splash_bg_gradient">
+
+    <!-- Decorative circle top-right (teal) -->
+    <View
+        android:layout_width="350dp"
+        android:layout_height="350dp"
+        android:background="@drawable/circle_teal"
+        android:alpha="0.10"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:translationX="120dp"
+        android:translationY="-120dp" />
+
+    <!-- Decorative circle bottom-left (red) -->
+    <View
+        android:layout_width="280dp"
+        android:layout_height="280dp"
+        android:background="@drawable/circle_red"
+        android:alpha="0.08"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:translationX="-100dp"
+        android:translationY="100dp" />
+
+    <!-- Decorative circle mid-left (purple) -->
+    <View
+        android:layout_width="180dp"
+        android:layout_height="180dp"
+        android:background="@drawable/circle_purple"
+        android:alpha="0.07"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:translationX="-40dp"
+        android:translationY="180dp" />
+
+    <!-- Decorative circle bottom-right (yellow) -->
+    <View
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:background="@drawable/circle_yellow"
+        android:alpha="0.12"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:translationX="30dp"
+        android:translationY="-60dp" />
+
+    <!-- Floating Arabic letters (decorative) -->
+    <TextView
+        android:id="@+id/splash_float1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ب"
+        android:textSize="36sp"
+        android:alpha="0"
+        android:textColor="#FF6B6B"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="60dp"
+        android:layout_marginStart="30dp" />
+
+    <TextView
+        android:id="@+id/splash_float2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ع"
+        android:textSize="30sp"
+        android:alpha="0"
+        android:textColor="#4ECDC4"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="100dp"
+        android:layout_marginEnd="40dp" />
+
+    <TextView
+        android:id="@+id/splash_float3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="م"
+        android:textSize="28sp"
+        android:alpha="0"
+        android:textColor="#A78BFA"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginBottom="140dp"
+        android:layout_marginStart="50dp" />
+
+    <TextView
+        android:id="@+id/splash_float4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ن"
+        android:textSize="32sp"
+        android:alpha="0"
+        android:textColor="#FFE66D"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="180dp"
+        android:layout_marginEnd="35dp" />
+
+    <!-- Logo ring (outer glow) -->
+    <View
+        android:id="@+id/splash_ring"
+        android:layout_width="140dp"
+        android:layout_height="140dp"
+        android:background="@drawable/splash_logo_ring"
+        android:alpha="0"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.30" />
+
+    <!-- Logo circle background -->
+    <View
+        android:id="@+id/splash_logo_bg"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:background="@drawable/splash_logo_bg"
+        android:elevation="8dp"
+        android:alpha="0"
+        app:layout_constraintTop_toTopOf="@id/splash_ring"
+        app:layout_constraintBottom_toBottomOf="@id/splash_ring"
+        app:layout_constraintStart_toStartOf="@id/splash_ring"
+        app:layout_constraintEnd_toEndOf="@id/splash_ring" />
+
+    <!-- Logo emoji (book + star) -->
+    <TextView
+        android:id="@+id/splash_logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="📚"
+        android:textSize="52sp"
+        android:alpha="0"
+        android:elevation="12dp"
+        app:layout_constraintTop_toTopOf="@id/splash_logo_bg"
+        app:layout_constraintBottom_toBottomOf="@id/splash_logo_bg"
+        app:layout_constraintStart_toStartOf="@id/splash_logo_bg"
+        app:layout_constraintEnd_toEndOf="@id/splash_logo_bg" />
+
+    <!-- Sparkle left -->
+    <TextView
+        android:id="@+id/splash_sparkle1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="✨"
+        android:textSize="22sp"
+        android:alpha="0"
+        app:layout_constraintBottom_toTopOf="@id/splash_logo_bg"
+        app:layout_constraintEnd_toStartOf="@id/splash_logo_bg"
+        android:layout_marginEnd="-16dp"
+        android:layout_marginBottom="-8dp" />
+
+    <!-- Sparkle right -->
+    <TextView
+        android:id="@+id/splash_sparkle2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🌟"
+        android:textSize="20sp"
+        android:alpha="0"
+        app:layout_constraintTop_toTopOf="@id/splash_logo_bg"
+        app:layout_constraintStart_toEndOf="@id/splash_logo_bg"
+        android:layout_marginStart="-12dp"
+        android:layout_marginTop="-4dp" />
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/splash_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Arabic Kids"
+        android:textSize="38sp"
+        android:textStyle="bold"
+        android:textColor="#FF6B6B"
+        android:alpha="0"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="-0.02"
+        app:layout_constraintTop_toBottomOf="@id/splash_ring"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="20dp" />
+
+    <!-- Arabic text -->
+    <TextView
+        android:id="@+id/splash_arabic"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="تعلّم العربية"
+        android:textSize="26sp"
+        android:textColor="#4ECDC4"
+        android:alpha="0"
+        app:layout_constraintTop_toBottomOf="@id/splash_title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="4dp" />
+
+    <!-- Tagline pill -->
+    <TextView
+        android:id="@+id/splash_tagline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="  🔤  🎮  🎯  🏆  🃏  "
+        android:textSize="20sp"
+        android:alpha="0"
+        android:background="@drawable/splash_pill_bg"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:elevation="4dp"
+        app:layout_constraintTop_toBottomOf="@id/splash_arabic"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="24dp" />
+
+    <!-- Loading dots area -->
+    <LinearLayout
+        android:id="@+id/splash_dots"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="52dp">
+
+        <View
+            android:id="@+id/dot1"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:background="@drawable/circle_red"
+            android:layout_margin="5dp"
+            android:alpha="0.3" />
+
+        <View
+            android:id="@+id/dot2"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:background="@drawable/circle_teal"
+            android:layout_margin="5dp"
+            android:alpha="0.3" />
+
+        <View
+            android:id="@+id/dot3"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:background="@drawable/circle_purple"
+            android:layout_margin="5dp"
+            android:alpha="0.3" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
