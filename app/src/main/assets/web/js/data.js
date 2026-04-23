@@ -30,6 +30,8 @@ const TRANSLATIONS = {
     dailyChallenge: "Défi du jour",
     doneToday: "Terminé aujourd'hui",
     completeDaily: "Terminer le défi",
+    letterHunt: "Chasse aux lettres",
+    huntTapAll: "Touche toutes les occurrences de",
     appName: "Arabic Kids",
     tagline: "Apprends l'arabe en t'amusant !",
     start: "Commencer",
@@ -210,6 +212,8 @@ const TRANSLATIONS = {
     dailyChallenge: "Daily challenge",
     doneToday: "Done today",
     completeDaily: "Complete challenge",
+    letterHunt: "Letter hunt",
+    huntTapAll: "Tap every occurrence of",
     appName: "Arabic Kids",
     tagline: "Learn Arabic while having fun!",
     start: "Start",
@@ -390,6 +394,8 @@ const TRANSLATIONS = {
     dailyChallenge: "Desafío diario",
     doneToday: "Hecho hoy",
     completeDaily: "Completar desafío",
+    letterHunt: "Caza de letras",
+    huntTapAll: "Toca cada aparición de",
     appName: "Arabic Kids",
     tagline: "¡Aprende árabe divirtiéndote!",
     start: "Empezar",
@@ -570,6 +576,8 @@ const TRANSLATIONS = {
     dailyChallenge: "Tägliche Aufgabe",
     doneToday: "Heute erledigt",
     completeDaily: "Aufgabe abschließen",
+    letterHunt: "Buchstabenjagd",
+    huntTapAll: "Tippe jedes Vorkommen von",
     appName: "Arabic Kids",
     tagline: "Lerne Arabisch mit Spaß!",
     start: "Starten",
@@ -750,6 +758,8 @@ const TRANSLATIONS = {
     dailyChallenge: "Günlük görev",
     doneToday: "Bugün tamamlandı",
     completeDaily: "Görevi bitir",
+    letterHunt: "Harf avı",
+    huntTapAll: "Tüm örneklerine dokun:",
     appName: "Arabic Kids",
     tagline: "Eğlenerek Arapça öğren!",
     start: "Başla",
@@ -930,6 +940,8 @@ const TRANSLATIONS = {
     dailyChallenge: "आज की चुनौती",
     doneToday: "आज पूर्ण",
     completeDaily: "चुनौती पूरी करें",
+    letterHunt: "अक्षर खोज",
+    huntTapAll: "हर घटना को स्पर्श करें:",
     appName: "Arabic Kids",
     tagline: "मज़े से अरबी सीखो!",
     start: "शुरू करें",
@@ -1110,6 +1122,8 @@ const TRANSLATIONS = {
     dailyChallenge: "Tantangan harian",
     doneToday: "Selesai hari ini",
     completeDaily: "Selesaikan tantangan",
+    letterHunt: "Berburu huruf",
+    huntTapAll: "Ketuk setiap kemunculan:",
     appName: "Arabic Kids",
     tagline: "Belajar bahasa Arab dengan menyenangkan!",
     start: "Mulai",
@@ -1290,6 +1304,8 @@ const TRANSLATIONS = {
     dailyChallenge: "Sfida del giorno",
     doneToday: "Fatto oggi",
     completeDaily: "Termina la sfida",
+    letterHunt: "Caccia alle lettere",
+    huntTapAll: "Tocca ogni occorrenza di",
     appName: "Arabic Kids",
     tagline: "Impara l'arabo divertendoti!",
     start: "Inizia",
@@ -1470,6 +1486,8 @@ const TRANSLATIONS = {
     dailyChallenge: "Dagelijkse uitdaging",
     doneToday: "Vandaag klaar",
     completeDaily: "Uitdaging voltooien",
+    letterHunt: "Letterjacht",
+    huntTapAll: "Tik elke letter aan:",
     appName: "Arabic Kids",
     tagline: "Leer Arabisch met plezier!",
     start: "Starten",
@@ -1650,6 +1668,8 @@ const TRANSLATIONS = {
     dailyChallenge: "Desafio diário",
     doneToday: "Feito hoje",
     completeDaily: "Concluir desafio",
+    letterHunt: "Caça às letras",
+    huntTapAll: "Toca em cada ocorrência de",
     appName: "Arabic Kids",
     tagline: "Aprende árabe a brincar!",
     start: "Começar",
@@ -1969,15 +1989,25 @@ const TRACE_STROKES = [
 ];
 
 const ALPHABET = [
-  { l: "أ", n: "Alif", na: "ألف", w: "أرنب", wm: { fr: "Lapin", en: "Rabbit", es: "Conejo", de: "Kaninchen", tr: "Tavşan", hi: "खरगोश", id: "Kelinci", it: "Coniglio", nl: "Konijn", pt: "Coelho" }, e: "🐰", c: "#FF6B6B",
+  { l: "أ", n: "Alif", na: "ألف", w: "أسد", wm: { fr: "Lion", en: "Lion", es: "León", de: "Löwe", tr: "Aslan", hi: "शेर", id: "Singa", it: "Leone", nl: "Leeuw", pt: "Leão" }, e: "🦁", c: "#FF6B6B",
+    extra: [
+      { ar: "أُم",    e: "👩", tr: { fr: "Mère",   en: "Mother" } },
+      { ar: "أَب",    e: "👨", tr: { fr: "Père",   en: "Father" } },
+      { ar: "أَحْمَر", e: "🔴", tr: { fr: "Rouge",  en: "Red" } }
+    ],
     forms: {
       isolated: { f: "ا", ex: "أنا", exm: { fr: "Moi", en: "Me", es: "Yo", de: "Ich", tr: "Ben", hi: "मैं", id: "Saya", it: "Io", nl: "Ik", pt: "Eu" } },
-      initial: { f: "أ", ex: "أرنب", exm: { fr: "Lapin", en: "Rabbit", es: "Conejo", de: "Kaninchen", tr: "Tavşan", hi: "खरगोश", id: "Kelinci", it: "Coniglio", nl: "Konijn", pt: "Coelho" } },
+      initial: { f: "أ", ex: "أسد", exm: { fr: "Lion", en: "Lion", es: "León", de: "Löwe", tr: "Aslan", hi: "शेर", id: "Singa", it: "Leone", nl: "Leeuw", pt: "Leão" } },
       medial: { f: "ـا", ex: "كتاب", exm: { fr: "Livre", en: "Book", es: "Libro", de: "Buch", tr: "Kitap", hi: "किताब", id: "Buku", it: "Libro", nl: "Boek", pt: "Livro" } },
       final: { f: "ـا", ex: "ماما", exm: { fr: "Maman", en: "Mom", es: "Mamá", de: "Mama", tr: "Anne", hi: "माँ", id: "Mama", it: "Mamma", nl: "Mama", pt: "Mamã" } }
     }
   },
   { l: "ب", n: "Ba", na: "باء", w: "بطة", wm: { fr: "Canard", en: "Duck", es: "Pato", de: "Ente", tr: "Ördek", hi: "बत्तख", id: "Bebek", it: "Anatra", nl: "Eend", pt: "Pato" }, e: "🦆", c: "#4ECDC4",
+    extra: [
+      { ar: "بَاب",  e: "🚪", tr: { fr: "Porte",  en: "Door" } },
+      { ar: "بَيْت", e: "🏠", tr: { fr: "Maison", en: "House" } },
+      { ar: "بَحْر", e: "🌊", tr: { fr: "Mer",    en: "Sea" } }
+    ],
     forms: {
       isolated: { f: "ب", ex: "باب", exm: { fr: "Porte", en: "Door", es: "Puerta", de: "Tür", tr: "Kapı", hi: "दरवाज़ा", id: "Pintu", it: "Porta", nl: "Deur", pt: "Porta" } },
       initial: { f: "بـ", ex: "بيت", exm: { fr: "Maison", en: "House", es: "Casa", de: "Haus", tr: "Ev", hi: "घर", id: "Rumah", it: "Casa", nl: "Huis", pt: "Casa" } },
@@ -1986,6 +2016,11 @@ const ALPHABET = [
     }
   },
   { l: "ت", n: "Ta", na: "تاء", w: "تفاحة", wm: { fr: "Pomme", en: "Apple", es: "Manzana", de: "Apfel", tr: "Elma", hi: "सेब", id: "Apel", it: "Mela", nl: "Appel", pt: "Maçã" }, e: "🍎", c: "#45B7D1",
+    extra: [
+      { ar: "تُوت",      e: "🫐", tr: { fr: "Mûre",     en: "Berry" } },
+      { ar: "تَاج",      e: "👑", tr: { fr: "Couronne", en: "Crown" } },
+      { ar: "تِلْمِيذ", e: "🧒", tr: { fr: "Élève",    en: "Pupil" } }
+    ],
     forms: {
       isolated: { f: "ت", ex: "تمر", exm: { fr: "Dattes", en: "Dates", es: "Dátiles", de: "Datteln", tr: "Hurma", hi: "खजूर", id: "Kurma", it: "Datteri", nl: "Dadels", pt: "Tâmaras" } },
       initial: { f: "تـ", ex: "تفاحة", exm: { fr: "Pomme", en: "Apple", es: "Manzana", de: "Apfel", tr: "Elma", hi: "सेब", id: "Apel", it: "Mela", nl: "Appel", pt: "Maçã" } },
@@ -1994,6 +2029,11 @@ const ALPHABET = [
     }
   },
   { l: "ث", n: "Tha", na: "ثاء", w: "ثعلب", wm: { fr: "Renard", en: "Fox", es: "Zorro", de: "Fuchs", tr: "Tilki", hi: "लोमड़ी", id: "Rubah" , it: "Volpe", nl: "Vos", pt: "Raposa" }, e: "🦊", c: "#F7DC6F",
+    extra: [
+      { ar: "ثَلْج",    e: "❄️", tr: { fr: "Neige",    en: "Snow" } },
+      { ar: "ثَوْب",    e: "👘", tr: { fr: "Vêtement", en: "Garment" } },
+      { ar: "ثَانِيَة", e: "⏱️", tr: { fr: "Seconde",  en: "Second" } }
+    ],
     forms: {
       isolated: { f: "ث", ex: "ثوب", exm: { fr: "Robe", en: "Dress", es: "Vestido", de: "Kleid", tr: "Elbise", hi: "कपड़ा", id: "Gaun" , it: "Vestito", nl: "Jurk", pt: "Vestido" } },
       initial: { f: "ثـ", ex: "ثعلب", exm: { fr: "Renard", en: "Fox", es: "Zorro", de: "Fuchs", tr: "Tilki", hi: "लोमड़ी", id: "Rubah" , it: "Volpe", nl: "Vos", pt: "Raposa" } },
@@ -2002,6 +2042,11 @@ const ALPHABET = [
     }
   },
   { l: "ج", n: "Jim", na: "جيم", w: "جَمَل", wm: { fr: "Chameau", en: "Camel", es: "Camello", de: "Kamel", tr: "Deve", hi: "ऊँट", id: "Unta" , it: "Cammello", nl: "Kameel", pt: "Camelo" }, e: "🐪", c: "#BB8FCE",
+    extra: [
+      { ar: "جَبَل", e: "⛰️", tr: { fr: "Montagne", en: "Mountain" } },
+      { ar: "جَزَر", e: "🥕", tr: { fr: "Carotte",  en: "Carrot" } },
+      { ar: "جُبْن", e: "🧀", tr: { fr: "Fromage",  en: "Cheese" } }
+    ],
     forms: {
       isolated: { f: "ج", ex: "جبل", exm: { fr: "Montagne", en: "Mountain", es: "Montaña", de: "Berg", tr: "Dağ", hi: "पहाड़", id: "Gunung" , it: "Montagna", nl: "Berg", pt: "Montanha" } },
       initial: { f: "جـ", ex: "جَمَل", exm: { fr: "Chameau", en: "Camel", es: "Camello", de: "Kamel", tr: "Deve", hi: "ऊँट", id: "Unta" , it: "Cammello", nl: "Kameel", pt: "Camelo" } },
@@ -2010,6 +2055,11 @@ const ALPHABET = [
     }
   },
   { l: "ح", n: "Ha", na: "حاء", w: "حصان", wm: { fr: "Cheval", en: "Horse", es: "Caballo", de: "Pferd", tr: "At", hi: "घोड़ा", id: "Kuda" , it: "Cavallo", nl: "Paard", pt: "Cavalo" }, e: "🐴", c: "#F1948A",
+    extra: [
+      { ar: "حَلِيب",   e: "🥛", tr: { fr: "Lait",    en: "Milk" } },
+      { ar: "حَدِيقَة", e: "🌳", tr: { fr: "Jardin",  en: "Garden" } },
+      { ar: "حَقِيبَة", e: "🎒", tr: { fr: "Cartable", en: "Bag" } }
+    ],
     forms: {
       isolated: { f: "ح", ex: "حب", exm: { fr: "Amour", en: "Love", es: "Amor", de: "Liebe", tr: "Aşk", hi: "प्यार", id: "Cinta" , it: "Amore", nl: "Liefde", pt: "Amor" } },
       initial: { f: "حـ", ex: "حليب", exm: { fr: "Lait", en: "Milk", es: "Leche", de: "Milch", tr: "Süt", hi: "दूध", id: "Susu" , it: "Latte", nl: "Melk", pt: "Leite" } },
@@ -2018,6 +2068,11 @@ const ALPHABET = [
     }
   },
   { l: "خ", n: "Kha", na: "خاء", w: "خروف", wm: { fr: "Mouton", en: "Sheep", es: "Oveja", de: "Schaf", tr: "Koyun", hi: "भेड़", id: "Domba" , it: "Pecora", nl: "Schaap", pt: "Ovelha" }, e: "🐑", c: "#82E0AA",
+    extra: [
+      { ar: "خُبْز",  e: "🍞", tr: { fr: "Pain",  en: "Bread" } },
+      { ar: "خَاتَم", e: "💍", tr: { fr: "Bague", en: "Ring" } },
+      { ar: "خَوْخ",  e: "🍑", tr: { fr: "Pêche", en: "Peach" } }
+    ],
     forms: {
       isolated: { f: "خ", ex: "خبز", exm: { fr: "Pain", en: "Bread", es: "Pan", de: "Brot", tr: "Ekmek", hi: "रोटी", id: "Roti" , it: "Pane", nl: "Brood", pt: "Pão" } },
       initial: { f: "خـ", ex: "خروف", exm: { fr: "Mouton", en: "Sheep", es: "Oveja", de: "Schaf", tr: "Koyun", hi: "भेड़", id: "Domba" , it: "Pecora", nl: "Schaap", pt: "Ovelha" } },
@@ -2026,6 +2081,11 @@ const ALPHABET = [
     }
   },
   { l: "د", n: "Dal", na: "دال", w: "ديك", wm: { fr: "Coq", en: "Rooster", es: "Gallo", de: "Hahn", tr: "Horoz", hi: "मुर्गा", id: "Ayam jantan" , it: "Gallo", nl: "Haan", pt: "Galo" }, e: "🐓", c: "#F8C471",
+    extra: [
+      { ar: "دُبّ",     e: "🐻", tr: { fr: "Ours",   en: "Bear" } },
+      { ar: "دَفْتَر",  e: "📓", tr: { fr: "Cahier", en: "Notebook" } },
+      { ar: "دَجَاجَة", e: "🐔", tr: { fr: "Poule",  en: "Hen" } }
+    ],
     forms: {
       isolated: { f: "د", ex: "دب", exm: { fr: "Ours", en: "Bear", es: "Oso", de: "Bär", tr: "Ayı", hi: "भालू", id: "Beruang" , it: "Orso", nl: "Beer", pt: "Urso" } },
       initial: { f: "د", ex: "ديك", exm: { fr: "Coq", en: "Rooster", es: "Gallo", de: "Hahn", tr: "Horoz", hi: "मुर्गा", id: "Ayam jantan" , it: "Gallo", nl: "Haan", pt: "Galo" } },
@@ -2034,6 +2094,11 @@ const ALPHABET = [
     }
   },
   { l: "ذ", n: "Dhal", na: "ذال", w: "ذئب", wm: { fr: "Loup", en: "Wolf", es: "Lobo", de: "Wolf", tr: "Kurt", hi: "भेड़िया", id: "Serigala" , it: "Lupo", nl: "Wolf", pt: "Lobo" }, e: "🐺", c: "#85C1E9",
+    extra: [
+      { ar: "ذَرَّة", e: "⚛️", tr: { fr: "Atome",  en: "Atom" } },
+      { ar: "ذُرَة",  e: "🌽", tr: { fr: "Maïs",   en: "Corn" } },
+      { ar: "ذِرَاع", e: "💪", tr: { fr: "Bras",   en: "Arm" } }
+    ],
     forms: {
       isolated: { f: "ذ", ex: "ذهب", exm: { fr: "Or", en: "Gold", es: "Oro", de: "Gold", tr: "Altın", hi: "सोना", id: "Emas" , it: "Oro", nl: "Goud", pt: "Ouro" } },
       initial: { f: "ذ", ex: "ذئب", exm: { fr: "Loup", en: "Wolf", es: "Lobo", de: "Wolf", tr: "Kurt", hi: "भेड़िया", id: "Serigala" , it: "Lupo", nl: "Wolf", pt: "Lobo" } },
@@ -2041,7 +2106,12 @@ const ALPHABET = [
       final: { f: "ـذ", ex: "تلميذ", exm: { fr: "Élève", en: "Student", es: "Alumno", de: "Schüler", tr: "Öğrenci", hi: "छात्र", id: "Murid" , it: "Studente", nl: "Leerling", pt: "Estudante" } }
     }
   },
-  { l: "ر", n: "Ra", na: "راء", w: "رمان", wm: { fr: "Grenade", en: "Pomegranate", es: "Granada", de: "Granatapfel", tr: "Nar", hi: "अनार", id: "Delima" , it: "Melograno", nl: "Granaatappel", pt: "Romã" }, e: "🥭", c: "#E74C3C",
+  { l: "ر", n: "Ra", na: "راء", w: "ريش", wm: { fr: "Plume", en: "Feather", es: "Pluma", de: "Feder", tr: "Tüy", hi: "पंख", id: "Bulu" , it: "Piuma", nl: "Veer", pt: "Pena" }, e: "🪶", c: "#E74C3C",
+    extra: [
+      { ar: "رَأْس", e: "🙂", tr: { fr: "Tête",   en: "Head" } },
+      { ar: "رَسْم", e: "🎨", tr: { fr: "Dessin", en: "Drawing" } },
+      { ar: "رِيح",  e: "💨", tr: { fr: "Vent",   en: "Wind" } }
+    ],
     forms: {
       isolated: { f: "ر", ex: "رجل", exm: { fr: "Homme", en: "Man", es: "Hombre", de: "Mann", tr: "Adam", hi: "आदमी", id: "Pria" , it: "Uomo", nl: "Man", pt: "Homem" } },
       initial: { f: "ر", ex: "رمان", exm: { fr: "Grenade", en: "Pomegranate", es: "Granada", de: "Granatapfel", tr: "Nar", hi: "अनार", id: "Delima" , it: "Melograno", nl: "Granaatappel", pt: "Romã" } },
@@ -2050,6 +2120,11 @@ const ALPHABET = [
     }
   },
   { l: "ز", n: "Zay", na: "زاي", w: "زهرة", wm: { fr: "Fleur", en: "Flower", es: "Flor", de: "Blume", tr: "Çiçek", hi: "फूल", id: "Bunga" , it: "Fiore", nl: "Bloem", pt: "Flor" }, e: "🌸", c: "#FF69B4",
+    extra: [
+      { ar: "زَيْت",    e: "🫒", tr: { fr: "Huile",  en: "Oil" } },
+      { ar: "زَرَافَة", e: "🦒", tr: { fr: "Girafe", en: "Giraffe" } },
+      { ar: "زَيْتُون", e: "🫒", tr: { fr: "Olive",  en: "Olive" } }
+    ],
     forms: {
       isolated: { f: "ز", ex: "زيت", exm: { fr: "Huile", en: "Oil", es: "Aceite", de: "Öl", tr: "Yağ", hi: "तेल", id: "Minyak" , it: "Olio", nl: "Olie", pt: "Azeite" } },
       initial: { f: "ز", ex: "زهرة", exm: { fr: "Fleur", en: "Flower", es: "Flor", de: "Blume", tr: "Çiçek", hi: "फूल", id: "Bunga" , it: "Fiore", nl: "Bloem", pt: "Flor" } },
@@ -2058,6 +2133,11 @@ const ALPHABET = [
     }
   },
   { l: "س", n: "Sin", na: "سين", w: "سمكة", wm: { fr: "Poisson", en: "Fish", es: "Pez", de: "Fisch", tr: "Balık", hi: "मछली", id: "Ikan" , it: "Pesce", nl: "Vis", pt: "Peixe" }, e: "🐟", c: "#3498DB",
+    extra: [
+      { ar: "سَاعَة",    e: "⌚", tr: { fr: "Horloge", en: "Clock" } },
+      { ar: "سَمَاء",   e: "🌤️", tr: { fr: "Ciel",    en: "Sky" } },
+      { ar: "سَيَّارَة", e: "🚗", tr: { fr: "Voiture", en: "Car" } }
+    ],
     forms: {
       isolated: { f: "س", ex: "سلام", exm: { fr: "Paix", en: "Peace", es: "Paz", de: "Frieden", tr: "Barış", hi: "शांति", id: "Damai" , it: "Pace", nl: "Vrede", pt: "Paz" } },
       initial: { f: "سـ", ex: "سمكة", exm: { fr: "Poisson", en: "Fish", es: "Pez", de: "Fisch", tr: "Balık", hi: "मछली", id: "Ikan" , it: "Pesce", nl: "Vis", pt: "Peixe" } },
@@ -2066,6 +2146,11 @@ const ALPHABET = [
     }
   },
   { l: "ش", n: "Shin", na: "شين", w: "شمس", wm: { fr: "Soleil", en: "Sun", es: "Sol", de: "Sonne", tr: "Güneş", hi: "सूरज", id: "Matahari" , it: "Sole", nl: "Zon", pt: "Sol" }, e: "☀️", c: "#F4D03F",
+    extra: [
+      { ar: "شَجَرَة", e: "🌳", tr: { fr: "Arbre", en: "Tree" } },
+      { ar: "شَاي",    e: "🍵", tr: { fr: "Thé",   en: "Tea" } },
+      { ar: "شَعْر",   e: "💇", tr: { fr: "Cheveux", en: "Hair" } }
+    ],
     forms: {
       isolated: { f: "ش", ex: "شجرة", exm: { fr: "Arbre", en: "Tree", es: "Árbol", de: "Baum", tr: "Ağaç", hi: "पेड़", id: "Pohon" , it: "Albero", nl: "Boom", pt: "Árvore" } },
       initial: { f: "شـ", ex: "شمس", exm: { fr: "Soleil", en: "Sun", es: "Sol", de: "Sonne", tr: "Güneş", hi: "सूरज", id: "Matahari" , it: "Sole", nl: "Zon", pt: "Sol" } },
@@ -2074,6 +2159,11 @@ const ALPHABET = [
     }
   },
   { l: "ص", n: "Sad", na: "صاد", w: "صقر", wm: { fr: "Faucon", en: "Falcon", es: "Halcón", de: "Falke", tr: "Şahin", hi: "बाज़", id: "Elang" , it: "Falco", nl: "Valk", pt: "Falcão" }, e: "🦅", c: "#935116",
+    extra: [
+      { ar: "صَبَاح",   e: "🌅", tr: { fr: "Matin",    en: "Morning" } },
+      { ar: "صَحْن",    e: "🍽️", tr: { fr: "Assiette", en: "Plate" } },
+      { ar: "صَدِيق",   e: "🧑‍🤝‍🧑", tr: { fr: "Ami", en: "Friend" } }
+    ],
     forms: {
       isolated: { f: "ص", ex: "صوت", exm: { fr: "Son", en: "Sound", es: "Sonido", de: "Klang", tr: "Ses", hi: "आवाज़", id: "Suara" , it: "Suono", nl: "Geluid", pt: "Som" } },
       initial: { f: "صـ", ex: "صقر", exm: { fr: "Faucon", en: "Falcon", es: "Halcón", de: "Falke", tr: "Şahin", hi: "बाज़", id: "Elang" , it: "Falco", nl: "Valk", pt: "Falcão" } },
@@ -2082,6 +2172,11 @@ const ALPHABET = [
     }
   },
   { l: "ض", n: "Dad", na: "ضاد", w: "ضفدع", wm: { fr: "Grenouille", en: "Frog", es: "Rana", de: "Frosch", tr: "Kurbağa", hi: "मेंढक", id: "Katak" , it: "Rana", nl: "Kikker", pt: "Sapo" }, e: "🐸", c: "#27AE60",
+    extra: [
+      { ar: "ضَوْء",   e: "💡", tr: { fr: "Lumière", en: "Light" } },
+      { ar: "ضَيْف",   e: "🙋", tr: { fr: "Invité",  en: "Guest" } },
+      { ar: "ضَحِك",   e: "😂", tr: { fr: "Rire",    en: "Laugh" } }
+    ],
     forms: {
       isolated: { f: "ض", ex: "ضوء", exm: { fr: "Lumière", en: "Light", es: "Luz", de: "Licht", tr: "Işık", hi: "रोशनी", id: "Cahaya" , it: "Luce", nl: "Licht", pt: "Luz" } },
       initial: { f: "ضـ", ex: "ضفدع", exm: { fr: "Grenouille", en: "Frog", es: "Rana", de: "Frosch", tr: "Kurbağa", hi: "मेंढक", id: "Katak" , it: "Rana", nl: "Kikker", pt: "Sapo" } },
@@ -2090,6 +2185,11 @@ const ALPHABET = [
     }
   },
   { l: "ط", n: "Taa", na: "طاء", w: "طائر", wm: { fr: "Oiseau", en: "Bird", es: "Pájaro", de: "Vogel", tr: "Kuş", hi: "पक्षी", id: "Burung" , it: "Uccello", nl: "Vogel", pt: "Pássaro" }, e: "🐦", c: "#2980B9",
+    extra: [
+      { ar: "طَبْل",    e: "🥁", tr: { fr: "Tambour", en: "Drum" } },
+      { ar: "طَاوِلَة", e: "🍽️", tr: { fr: "Table",   en: "Table" } },
+      { ar: "طِفْل",    e: "👶", tr: { fr: "Enfant",  en: "Child" } }
+    ],
     forms: {
       isolated: { f: "ط", ex: "طبل", exm: { fr: "Tambour", en: "Drum", es: "Tambor", de: "Trommel", tr: "Davul", hi: "ढोल", id: "Drum" , it: "Tamburo", nl: "Trommel", pt: "Tambor" } },
       initial: { f: "طـ", ex: "طائر", exm: { fr: "Oiseau", en: "Bird", es: "Pájaro", de: "Vogel", tr: "Kuş", hi: "पक्षी", id: "Burung" , it: "Uccello", nl: "Vogel", pt: "Pássaro" } },
@@ -2098,6 +2198,11 @@ const ALPHABET = [
     }
   },
   { l: "ظ", n: "Dhaa", na: "ظاء", w: "ظرف", wm: { fr: "Enveloppe", en: "Envelope", es: "Sobre", de: "Umschlag", tr: "Zarf", hi: "लिफ़ाफ़ा", id: "Amplop" , it: "Busta", nl: "Envelop", pt: "Envelope" }, e: "✉️", c: "#8E44AD",
+    extra: [
+      { ar: "ظَفَر",   e: "💅", tr: { fr: "Ongle", en: "Nail" } },
+      { ar: "ظَهْر",   e: "🧍", tr: { fr: "Dos",   en: "Back" } },
+      { ar: "ظُهْر",   e: "🕛", tr: { fr: "Midi",  en: "Noon" } }
+    ],
     forms: {
       isolated: { f: "ظ", ex: "ظل", exm: { fr: "Ombre", en: "Shadow", es: "Sombra", de: "Schatten", tr: "Gölge", hi: "छाया", id: "Bayangan" , it: "Ombra", nl: "Schaduw", pt: "Sombra" } },
       initial: { f: "ظـ", ex: "ظرف", exm: { fr: "Enveloppe", en: "Envelope", es: "Sobre", de: "Umschlag", tr: "Zarf", hi: "लिफ़ाफ़ा", id: "Amplop" , it: "Busta", nl: "Envelop", pt: "Envelope" } },
@@ -2106,6 +2211,11 @@ const ALPHABET = [
     }
   },
   { l: "ع", n: "Ayn", na: "عين", w: "عنب", wm: { fr: "Raisin", en: "Grape", es: "Uva", de: "Traube", tr: "Üzüm", hi: "अंगूर", id: "Anggur" , it: "Uva", nl: "Druif", pt: "Uva" }, e: "🍇", c: "#6C3483",
+    extra: [
+      { ar: "عَيْن",  e: "👁️", tr: { fr: "Œil",  en: "Eye" } },
+      { ar: "عَصِير", e: "🧃", tr: { fr: "Jus",  en: "Juice" } },
+      { ar: "عَسَل",  e: "🍯", tr: { fr: "Miel", en: "Honey" } }
+    ],
     forms: {
       isolated: { f: "ع", ex: "عين", exm: { fr: "Œil", en: "Eye", es: "Ojo", de: "Auge", tr: "Göz", hi: "आँख", id: "Mata" , it: "Occhio", nl: "Oog", pt: "Olho" } },
       initial: { f: "عـ", ex: "عنب", exm: { fr: "Raisin", en: "Grape", es: "Uva", de: "Traube", tr: "Üzüm", hi: "अंगूर", id: "Anggur" , it: "Uva", nl: "Druif", pt: "Uva" } },
@@ -2114,6 +2224,11 @@ const ALPHABET = [
     }
   },
   { l: "غ", n: "Ghayn", na: "غين", w: "غزال", wm: { fr: "Gazelle", en: "Gazelle", es: "Gacela", de: "Gazelle", tr: "Ceylan", hi: "हिरण", id: "Kijang" , it: "Gazzella", nl: "Gazelle", pt: "Gazela" }, e: "🦌", c: "#D4AC0D",
+    extra: [
+      { ar: "غَابَة",  e: "🌲", tr: { fr: "Forêt",  en: "Forest" } },
+      { ar: "غُرْفَة", e: "🛏️", tr: { fr: "Chambre", en: "Room" } },
+      { ar: "غَيْم",   e: "☁️", tr: { fr: "Nuage",  en: "Cloud" } }
+    ],
     forms: {
       isolated: { f: "غ", ex: "غابة", exm: { fr: "Forêt", en: "Forest", es: "Bosque", de: "Wald", tr: "Orman", hi: "जंगल", id: "Hutan" , it: "Foresta", nl: "Bos", pt: "Floresta" } },
       initial: { f: "غـ", ex: "غزال", exm: { fr: "Gazelle", en: "Gazelle", es: "Gacela", de: "Gazelle", tr: "Ceylan", hi: "हिरण", id: "Kijang" , it: "Gazzella", nl: "Gazelle", pt: "Gazela" } },
@@ -2122,6 +2237,11 @@ const ALPHABET = [
     }
   },
   { l: "ف", n: "Fa", na: "فاء", w: "فيل", wm: { fr: "Éléphant", en: "Elephant", es: "Elefante", de: "Elefant", tr: "Fil", hi: "हाथी", id: "Gajah" , it: "Elefante", nl: "Olifant", pt: "Elefante" }, e: "🐘", c: "#7F8C8D",
+    extra: [
+      { ar: "فَرَاشَة", e: "🦋", tr: { fr: "Papillon", en: "Butterfly" } },
+      { ar: "فَم",      e: "👄", tr: { fr: "Bouche",   en: "Mouth" } },
+      { ar: "فَأْر",    e: "🐭", tr: { fr: "Souris",   en: "Mouse" } }
+    ],
     forms: {
       isolated: { f: "ف", ex: "فم", exm: { fr: "Bouche", en: "Mouth", es: "Boca", de: "Mund", tr: "Ağız", hi: "मुँह", id: "Mulut" , it: "Bocca", nl: "Mond", pt: "Boca" } },
       initial: { f: "فـ", ex: "فيل", exm: { fr: "Éléphant", en: "Elephant", es: "Elefante", de: "Elefant", tr: "Fil", hi: "हाथी", id: "Gajah" , it: "Elefante", nl: "Olifant", pt: "Elefante" } },
@@ -2130,6 +2250,11 @@ const ALPHABET = [
     }
   },
   { l: "ق", n: "Qaf", na: "قاف", w: "قطة", wm: { fr: "Chat", en: "Cat", es: "Gato", de: "Katze", tr: "Kedi", hi: "बिल्ली", id: "Kucing" , it: "Gatto", nl: "Kat", pt: "Gato" }, e: "🐱", c: "#E67E22",
+    extra: [
+      { ar: "قَمَر", e: "🌙", tr: { fr: "Lune",  en: "Moon" } },
+      { ar: "قَلْب", e: "❤️", tr: { fr: "Cœur",  en: "Heart" } },
+      { ar: "قَلَم", e: "✏️", tr: { fr: "Stylo", en: "Pen" } }
+    ],
     forms: {
       isolated: { f: "ق", ex: "قمر", exm: { fr: "Lune", en: "Moon", es: "Luna", de: "Mond", tr: "Ay", hi: "चाँद", id: "Bulan" , it: "Luna", nl: "Maan", pt: "Lua" } },
       initial: { f: "قـ", ex: "قطة", exm: { fr: "Chat", en: "Cat", es: "Gato", de: "Katze", tr: "Kedi", hi: "बिल्ली", id: "Kucing" , it: "Gatto", nl: "Kat", pt: "Gato" } },
@@ -2138,6 +2263,11 @@ const ALPHABET = [
     }
   },
   { l: "ك", n: "Kaf", na: "كاف", w: "كلب", wm: { fr: "Chien", en: "Dog", es: "Perro", de: "Hund", tr: "Köpek", hi: "कुत्ता", id: "Anjing" , it: "Cane", nl: "Hond", pt: "Cão" }, e: "🐶", c: "#D35400",
+    extra: [
+      { ar: "كِتَاب",  e: "📖", tr: { fr: "Livre",  en: "Book" } },
+      { ar: "كَعْكَة", e: "🎂", tr: { fr: "Gâteau", en: "Cake" } },
+      { ar: "كُرْسِي", e: "🪑", tr: { fr: "Chaise", en: "Chair" } }
+    ],
     forms: {
       isolated: { f: "ك", ex: "كتاب", exm: { fr: "Livre", en: "Book", es: "Libro", de: "Buch", tr: "Kitap", hi: "किताब", id: "Buku" , it: "Libro", nl: "Boek", pt: "Livro" } },
       initial: { f: "كـ", ex: "كلب", exm: { fr: "Chien", en: "Dog", es: "Perro", de: "Hund", tr: "Köpek", hi: "कुत्ता", id: "Anjing" , it: "Cane", nl: "Hond", pt: "Cão" } },
@@ -2146,6 +2276,11 @@ const ALPHABET = [
     }
   },
   { l: "ل", n: "Lam", na: "لام", w: "ليمون", wm: { fr: "Citron", en: "Lemon", es: "Limón", de: "Zitrone", tr: "Limon", hi: "नींबू", id: "Lemon" , it: "Limone", nl: "Citroen", pt: "Limão" }, e: "🍋", c: "#F9E79F",
+    extra: [
+      { ar: "لَبَن",    e: "🥛", tr: { fr: "Yaourt", en: "Yogurt" } },
+      { ar: "لِسَان",   e: "👅", tr: { fr: "Langue", en: "Tongue" } },
+      { ar: "لَعِبَ",   e: "🎮", tr: { fr: "Jouer",  en: "Play" } }
+    ],
     forms: {
       isolated: { f: "ل", ex: "لون", exm: { fr: "Couleur", en: "Color", es: "Color", de: "Farbe", tr: "Renk", hi: "रंग", id: "Warna" , it: "Colore", nl: "Kleur", pt: "Cor" } },
       initial: { f: "لـ", ex: "ليمون", exm: { fr: "Citron", en: "Lemon", es: "Limón", de: "Zitrone", tr: "Limon", hi: "नींबू", id: "Lemon" , it: "Limone", nl: "Citroen", pt: "Limão" } },
@@ -2154,6 +2289,11 @@ const ALPHABET = [
     }
   },
   { l: "م", n: "Mim", na: "ميم", w: "موز", wm: { fr: "Banane", en: "Banana", es: "Plátano", de: "Banane", tr: "Muz", hi: "केला", id: "Pisang" , it: "Banana", nl: "Banaan", pt: "Banana" }, e: "🍌", c: "#F5B041",
+    extra: [
+      { ar: "مِفْتَاح", e: "🔑", tr: { fr: "Clé",  en: "Key" } },
+      { ar: "مَاء",     e: "💧", tr: { fr: "Eau",  en: "Water" } },
+      { ar: "مَدْرَسَة", e: "🏫", tr: { fr: "École", en: "School" } }
+    ],
     forms: {
       isolated: { f: "م", ex: "ماء", exm: { fr: "Eau", en: "Water", es: "Agua", de: "Wasser", tr: "Su", hi: "पानी", id: "Air" , it: "Acqua", nl: "Water", pt: "Água" } },
       initial: { f: "مـ", ex: "موز", exm: { fr: "Banane", en: "Banana", es: "Plátano", de: "Banane", tr: "Muz", hi: "केला", id: "Pisang" , it: "Banana", nl: "Banaan", pt: "Banana" } },
@@ -2162,6 +2302,11 @@ const ALPHABET = [
     }
   },
   { l: "ن", n: "Nun", na: "نون", w: "نحلة", wm: { fr: "Abeille", en: "Bee", es: "Abeja", de: "Biene", tr: "Arı", hi: "मधुमक्खी", id: "Lebah" , it: "Ape", nl: "Bij", pt: "Abelha" }, e: "🐝", c: "#F4D03F",
+    extra: [
+      { ar: "نَجْمَة", e: "⭐", tr: { fr: "Étoile", en: "Star" } },
+      { ar: "نَار",    e: "🔥", tr: { fr: "Feu",    en: "Fire" } },
+      { ar: "نَخْلَة", e: "🌴", tr: { fr: "Palmier", en: "Palm tree" } }
+    ],
     forms: {
       isolated: { f: "ن", ex: "نار", exm: { fr: "Feu", en: "Fire", es: "Fuego", de: "Feuer", tr: "Ateş", hi: "आग", id: "Api" , it: "Fuoco", nl: "Vuur", pt: "Fogo" } },
       initial: { f: "نـ", ex: "نحلة", exm: { fr: "Abeille", en: "Bee", es: "Abeja", de: "Biene", tr: "Arı", hi: "मधुमक्खी", id: "Lebah" , it: "Ape", nl: "Bij", pt: "Abelha" } },
@@ -2170,6 +2315,11 @@ const ALPHABET = [
     }
   },
   { l: "هـ", n: "Ha", na: "هاء", w: "هرة", wm: { fr: "Chaton", en: "Kitten", es: "Gatito", de: "Kätzchen", tr: "Kedi yavrusu", hi: "बिल्ली का बच्चा", id: "Anak kucing" , it: "Gattino", nl: "Katje", pt: "Gatinho" }, e: "🐈", c: "#AF7AC5",
+    extra: [
+      { ar: "هَاتِف", e: "📱", tr: { fr: "Téléphone", en: "Phone" } },
+      { ar: "هَوَاء", e: "🌬️", tr: { fr: "Air",       en: "Air" } },
+      { ar: "هَدِيَّة", e: "🎁", tr: { fr: "Cadeau",  en: "Gift" } }
+    ],
     forms: {
       isolated: { f: "ه", ex: "هواء", exm: { fr: "Air", en: "Air", es: "Aire", de: "Luft", tr: "Hava", hi: "हवा", id: "Udara" , it: "Aria", nl: "Lucht", pt: "Ar" } },
       initial: { f: "هـ", ex: "هرة", exm: { fr: "Chaton", en: "Kitten", es: "Gatito", de: "Kätzchen", tr: "Kedi yavrusu", hi: "बिल्ली का बच्चा", id: "Anak kucing" , it: "Gattino", nl: "Katje", pt: "Gatinho" } },
@@ -2178,6 +2328,11 @@ const ALPHABET = [
     }
   },
   { l: "و", n: "Waw", na: "واو", w: "وردة", wm: { fr: "Rose", en: "Rose", es: "Rosa", de: "Rose", tr: "Gül", hi: "गुलाब", id: "Mawar" , it: "Rosa", nl: "Roos", pt: "Rosa" }, e: "🌹", c: "#E91E63",
+    extra: [
+      { ar: "وَجْه",    e: "😊", tr: { fr: "Visage", en: "Face" } },
+      { ar: "وَلَد",    e: "👦", tr: { fr: "Garçon", en: "Boy" } },
+      { ar: "وَرَقَة", e: "🍃", tr: { fr: "Feuille", en: "Leaf" } }
+    ],
     forms: {
       isolated: { f: "و", ex: "ورد", exm: { fr: "Roses", en: "Roses", es: "Rosas", de: "Rosen", tr: "Güller", hi: "गुलाब", id: "Mawar" , it: "Rose", nl: "Rozen", pt: "Rosas" } },
       initial: { f: "و", ex: "وردة", exm: { fr: "Rose", en: "Rose", es: "Rosa", de: "Rose", tr: "Gül", hi: "गुलाब", id: "Mawar" , it: "Rosa", nl: "Roos", pt: "Rosa" } },
@@ -2186,6 +2341,11 @@ const ALPHABET = [
     }
   },
   { l: "ي", n: "Ya", na: "ياء", w: "يد", wm: { fr: "Main", en: "Hand", es: "Mano", de: "Hand", tr: "El", hi: "हाथ", id: "Tangan" , it: "Mano", nl: "Hand", pt: "Mão" }, e: "✋", c: "#FFAB91",
+    extra: [
+      { ar: "يَوْم",    e: "📅", tr: { fr: "Jour",   en: "Day" } },
+      { ar: "يَمَامَة", e: "🕊️", tr: { fr: "Colombe", en: "Dove" } },
+      { ar: "يَقْطِين", e: "🎃", tr: { fr: "Citrouille", en: "Pumpkin" } }
+    ],
     forms: {
       isolated: { f: "ي", ex: "يوم", exm: { fr: "Jour", en: "Day", es: "Día", de: "Tag", tr: "Gün", hi: "दिन", id: "Hari" , it: "Giorno", nl: "Dag", pt: "Dia" } },
       initial: { f: "يـ", ex: "يد", exm: { fr: "Main", en: "Hand", es: "Mano", de: "Hand", tr: "El", hi: "हाथ", id: "Tangan" , it: "Mano", nl: "Hand", pt: "Mão" } },
@@ -2204,7 +2364,6 @@ const WORD_CATEGORIES = {
       { ar: "كلب", fr: "Chien", en: "Dog", es: "Perro", de: "Hund", tr: "Köpek", hi: "कुत्ता", id: "Anjing", it: "Cane", emoji: "🐶" },
       { ar: "أسد", fr: "Lion", en: "Lion", es: "León", de: "Löwe", tr: "Aslan", hi: "शेर", id: "Singa", it: "Leone", emoji: "🦁" },
       { ar: "فيل", fr: "Éléphant", en: "Elephant", es: "Elefante", de: "Elefant", tr: "Fil", hi: "हाथी", id: "Gajah", it: "Elefante", emoji: "🐘" },
-      { ar: "أرنب", fr: "Lapin", en: "Rabbit", es: "Conejo", de: "Kaninchen", tr: "Tavşan", hi: "खरगोश", id: "Kelinci", it: "Coniglio", emoji: "🐰" },
       { ar: "سمكة", fr: "Poisson", en: "Fish", es: "Pez", de: "Fisch", tr: "Balık", hi: "मछली", id: "Ikan", it: "Pesce", emoji: "🐟" },
       { ar: "طائر", fr: "Oiseau", en: "Bird", es: "Pájaro", de: "Vogel", tr: "Kuş", hi: "पक्षी", id: "Burung", it: "Uccello", emoji: "🐦" },
       { ar: "بقرة", fr: "Vache", en: "Cow", es: "Vaca", de: "Kuh", tr: "İnek", hi: "गाय", id: "Sapi", it: "Mucca", emoji: "🐄" },
@@ -2212,7 +2371,6 @@ const WORD_CATEGORIES = {
       { ar: "خروف", fr: "Mouton", en: "Sheep", es: "Oveja", de: "Schaf", tr: "Koyun", hi: "भेड़", id: "Domba", it: "Pecora", emoji: "🐑" },
       { ar: "دجاجة", fr: "Poule", en: "Chicken", es: "Gallina", de: "Huhn", tr: "Tavuk", hi: "मुर्गी", id: "Ayam", it: "Pollo", emoji: "🐔" },
       { ar: "قرد", fr: "Singe", en: "Monkey", es: "Mono", de: "Affe", tr: "Maymun", hi: "बंदर", id: "Monyet", it: "Scimmia", emoji: "🐒" },
-      { ar: "ثعبان", fr: "Serpent", en: "Snake", es: "Serpiente", de: "Schlange", tr: "Yılan", hi: "साँप", id: "Ular", it: "Serpente", emoji: "🐍" },
       { ar: "نحلة", fr: "Abeille", en: "Bee", es: "Abeja", de: "Biene", tr: "Arı", hi: "मधुमक्खी", id: "Lebah", it: "Ape", emoji: "🐝" },
       { ar: "فراشة", fr: "Papillon", en: "Butterfly", es: "Mariposa", de: "Schmetterling", tr: "Kelebek", hi: "तितली", id: "Kupu-kupu", it: "Farfalla", emoji: "🦋" },
       { ar: "سلحفاة", fr: "Tortue", en: "Turtle", es: "Tortuga", de: "Schildkröte", tr: "Kaplumbağa", hi: "कछुआ", id: "Kura-kura", it: "Tartaruga", emoji: "🐢" },
@@ -2222,24 +2380,20 @@ const WORD_CATEGORIES = {
       { ar: "جَمَل", fr: "Chameau", en: "Camel", es: "Camello", de: "Kamel", tr: "Deve", hi: "ऊँट", id: "Unta", it: "Cammello", emoji: "🐪" },
       { ar: "غزال", fr: "Gazelle", en: "Gazelle", es: "Gacela", de: "Gazelle", tr: "Ceylan", hi: "हिरण", id: "Kijang", it: "Gazzella", emoji: "🦌" },
       { ar: "زرافة", fr: "Girafe", en: "Giraffe", es: "Jirafa", de: "Giraffe", tr: "Zürafa", hi: "जिराफ़", id: "Jerapah", it: "Giraffa", emoji: "🦒" },
-      { ar: "نمر", fr: "Tigre", en: "Tiger", es: "Tigre", de: "Tiger", tr: "Kaplan", hi: "बाघ", id: "Harimau", it: "Tigre", emoji: "🐯" },
       { ar: "بطة", fr: "Canard", en: "Duck", es: "Pato", de: "Ente", tr: "Ördek", hi: "बत्तख", id: "Bebek", it: "Anatra", emoji: "🦆" },
       { ar: "ديك", fr: "Coq", en: "Rooster", es: "Gallo", de: "Hahn", tr: "Horoz", hi: "मुर्गा", id: "Ayam jantan", it: "Gallo", emoji: "🐓" },
       { ar: "حمار", fr: "Âne", en: "Donkey", es: "Burro", de: "Esel", tr: "Eşek", hi: "गधा", id: "Keledai", it: "Asino", emoji: "🫏" },
       { ar: "ضفدع", fr: "Grenouille", en: "Frog", es: "Rana", de: "Frosch", tr: "Kurbağa", hi: "मेंढक", id: "Katak", it: "Rana", emoji: "🐸" },
       { ar: "نسر", fr: "Aigle", en: "Eagle", es: "Águila", de: "Adler", tr: "Kartal", hi: "चील", id: "Elang", it: "Aquila", emoji: "🦅" },
-      { ar: "حوت", fr: "Baleine", en: "Whale", es: "Ballena", de: "Wal", tr: "Balina", hi: "व्हेल", id: "Paus", it: "Balena", emoji: "🐋" },
       { ar: "دلفين", fr: "Dauphin", en: "Dolphin", es: "Delfín", de: "Delfin", tr: "Yunus", hi: "डॉल्फ़िन", id: "Lumba-lumba", it: "Delfino", emoji: "🐬" },
       { ar: "أخطبوط", fr: "Pieuvre", en: "Octopus", es: "Pulpo", de: "Oktopus", tr: "Ahtapot", hi: "ऑक्टोपस", id: "Gurita", it: "Polpo", emoji: "🐙" },
       { ar: "عنكبوت", fr: "Araignée", en: "Spider", es: "Araña", de: "Spinne", tr: "Örümcek", hi: "मकड़ी", id: "Laba-laba", it: "Ragno", emoji: "🕷️" },
       { ar: "نملة", fr: "Fourmi", en: "Ant", es: "Hormiga", de: "Ameise", tr: "Karınca", hi: "चींटी", id: "Semut", it: "Formica", emoji: "🐜" },
-      { ar: "ببغاء", fr: "Perroquet", en: "Parrot", es: "Loro", de: "Papagei", tr: "Papağan", hi: "तोता", id: "Burung beo", it: "Pappagallo", emoji: "🦜" },
       { ar: "بومة", fr: "Hibou", en: "Owl", es: "Búho", de: "Eule", tr: "Baykuş", hi: "उल्लू", id: "Burung hantu", it: "Gufo", emoji: "🦉" },
       { ar: "تمساح", fr: "Crocodile", en: "Crocodile", es: "Cocodrilo", de: "Krokodil", tr: "Timsah", hi: "मगरमच्छ", id: "Buaya", it: "Coccodrillo", emoji: "🐊" },
       { ar: "فهد", fr: "Guépard", en: "Cheetah", es: "Guepardo", de: "Gepard", tr: "Çita", hi: "चीता", id: "Citah", it: "Ghepardo", emoji: "🐆" },
       { ar: "وحيد القرن", fr: "Rhinocéros", en: "Rhinoceros", es: "Rinoceronte", de: "Nashorn", tr: "Gergedan", hi: "गैंडा", id: "Badak", it: "Rinoceronte", emoji: "🦏" },
       { ar: "فرس النهر", fr: "Hippopotame", en: "Hippopotamus", es: "Hipopótamo", de: "Nilpferd", tr: "Su aygırı", hi: "दरियाई घोड़ा", id: "Kuda nil", it: "Ippopotamo", emoji: "🦛" },
-      { ar: "بطريق", fr: "Pingouin", en: "Penguin", es: "Pingüino", de: "Pinguin", tr: "Penguen", hi: "पेंगुइन", id: "Penguin", it: "Pinguino", emoji: "🐧" },
       { ar: "قنفذ", fr: "Hérisson", en: "Hedgehog", es: "Erizo", de: "Igel", tr: "Kirpi", hi: "साही", id: "Landak", it: "Riccio", emoji: "🦔" },
       { ar: "خفاش", fr: "Chauve-souris", en: "Bat", es: "Murciélago", de: "Fledermaus", tr: "Yarasa", hi: "चमगादड़", id: "Kelelawar", it: "Pipistrello", emoji: "🦇" },
       { ar: "سنجاب", fr: "Écureuil", en: "Squirrel", es: "Ardilla", de: "Eichhörnchen", tr: "Sincap", hi: "गिलहरी", id: "Tupai", it: "Scoiattolo", emoji: "🐿️" },
@@ -2276,9 +2430,7 @@ const WORD_CATEGORIES = {
       { ar: "جزر", fr: "Carotte", en: "Carrot", es: "Zanahoria", de: "Karotte", tr: "Havuç", hi: "गाजर", id: "Wortel", it: "Carota", emoji: "🥕" },
       { ar: "بطاطا", fr: "Pomme de terre", en: "Potato", es: "Patata", de: "Kartoffel", tr: "Patates", hi: "आलू", id: "Kentang", it: "Patata", emoji: "🥔" },
       { ar: "بصل", fr: "Oignon", en: "Onion", es: "Cebolla", de: "Zwiebel", tr: "Soğan", hi: "प्याज़", id: "Bawang", it: "Cipolla", emoji: "🧅" },
-      { ar: "ثوم", fr: "Ail", en: "Garlic", es: "Ajo", de: "Knoblauch", tr: "Sarımsak", hi: "लहसुन", id: "Bawang putih", it: "Aglio", emoji: "🧄" },
       { ar: "خيار", fr: "Concombre", en: "Cucumber", es: "Pepino", de: "Gurke", tr: "Salatalık", hi: "खीरा", id: "Mentimun", it: "Cetriolo", emoji: "🥒" },
-      { ar: "فلفل", fr: "Poivron", en: "Pepper", es: "Pimiento", de: "Paprika", tr: "Biber", hi: "शिमला मिर्च", id: "Paprika", it: "Peperone", emoji: "🫑" },
       { ar: "باذنجان", fr: "Aubergine", en: "Eggplant", es: "Berenjena", de: "Aubergine", tr: "Patlıcan", hi: "बैंगन", id: "Terong", it: "Melanzana", emoji: "🍆" },
       { ar: "ذرة", fr: "Maïs", en: "Corn", es: "Maíz", de: "Mais", tr: "Mısır", hi: "मक्का", id: "Jagung", it: "Mais", emoji: "🌽" },
       { ar: "خس", fr: "Laitue", en: "Lettuce", es: "Lechuga", de: "Salat", tr: "Marul", hi: "सलाद पत्ता", id: "Selada", it: "Lattuga", emoji: "🥬" },
@@ -2302,7 +2454,6 @@ const WORD_CATEGORIES = {
       { ar: "أرز", fr: "Riz", en: "Rice", es: "Arroz", de: "Reis", tr: "Pirinç", hi: "चावल", id: "Nasi", it: "Riso", emoji: "🍚" },
       { ar: "دجاج", fr: "Poulet", en: "Chicken", es: "Pollo", de: "Hähnchen", tr: "Tavuk", hi: "चिकन", id: "Ayam", it: "Pollo", emoji: "🍗" },
       { ar: "جبن", fr: "Fromage", en: "Cheese", es: "Queso", de: "Käse", tr: "Peynir", hi: "पनीर", id: "Keju", it: "Formaggio", emoji: "🧀" },
-      { ar: "سكر", fr: "Sucre", en: "Sugar", es: "Azúcar", de: "Zucker", tr: "Şeker", hi: "चीनी", id: "Gula", it: "Zucchero", emoji: "🍬" },
       { ar: "شاي", fr: "Thé", en: "Tea", es: "Té", de: "Tee", tr: "Çay", hi: "चाय", id: "Teh", it: "Tè", emoji: "🍵" },
       { ar: "قهوة", fr: "Café", en: "Coffee", es: "Café", de: "Kaffee", tr: "Kahve", hi: "कॉफ़ी", id: "Kopi", it: "Caffè", emoji: "☕" },
       { ar: "لحم", fr: "Viande", en: "Meat", es: "Carne", de: "Fleisch", tr: "Et", hi: "मांस", id: "Daging", it: "Carne", emoji: "🥩" },
@@ -2323,7 +2474,6 @@ const WORD_CATEGORIES = {
       { ar: "عصير", fr: "Jus", en: "Juice", es: "Zumo", de: "Saft", tr: "Meyve suyu", hi: "जूस", id: "Jus", it: "Succo", emoji: "🧃" },
       { ar: "حساء", fr: "Bouillon", en: "Broth", es: "Caldo", de: "Brühe", tr: "Et suyu", hi: "शोरबा", id: "Kaldu", it: "Brodo", emoji: "🥣" },
       { ar: "سندويش", fr: "Sandwich", en: "Sandwich", es: "Sándwich", de: "Sandwich", tr: "Sandviç", hi: "सैंडविच", id: "Sandwich", it: "Panino", emoji: "🥪" },
-      { ar: "دقيق", fr: "Farine", en: "Flour", es: "Harina", de: "Mehl", tr: "Un", hi: "आटा", id: "Tepung", it: "Farina", emoji: "🌾" },
       { ar: "مربى", fr: "Confiture", en: "Jam", es: "Mermelada", de: "Marmelade", tr: "Reçel", hi: "जैम", id: "Selai", it: "Marmellata", emoji: "🫙" }
     ]
   },
@@ -2348,7 +2498,6 @@ const WORD_CATEGORIES = {
       { ar: "جار", fr: "Voisin", en: "Neighbor", es: "Vecino", de: "Nachbar", tr: "Komşu", hi: "पड़ोसी", id: "Tetangga", it: "Vicino", emoji: "🏘️" },
       { ar: "زوج", fr: "Mari", en: "Husband", es: "Esposo", de: "Ehemann", tr: "Koca", hi: "पति", id: "Suami", it: "Marito", emoji: "🤵" },
       { ar: "زوجة", fr: "Femme", en: "Wife", es: "Esposa", de: "Ehefrau", tr: "Karı", hi: "पत्नी", id: "Istri", it: "Moglie", emoji: "👰" },
-      { ar: "خال", fr: "Oncle maternel", en: "Maternal uncle", es: "Tío materno", de: "Onkel mütterlicherseits", tr: "Dayı", hi: "मामा", id: "Paman dari ibu", it: "Zio materno", emoji: "👨‍🦰" },
       { ar: "خالة", fr: "Tante maternelle", en: "Maternal aunt", es: "Tía materna", de: "Tante mütterlicherseits", tr: "Teyze", hi: "मामी", id: "Bibi dari ibu", it: "Zia materna", emoji: "👩‍🦰" },
       { ar: "ابن العم", fr: "Cousin", en: "Cousin", es: "Primo", de: "Cousin", tr: "Kuzen", hi: "चचेरा भाई", id: "Sepupu", it: "Cugino", emoji: "🧑" },
       { ar: "رضيع", fr: "Nourrisson", en: "Infant", es: "Lactante", de: "Säugling", tr: "Bebek", hi: "शिशु", id: "Bayi", it: "Neonato", emoji: "🍼" }
@@ -2411,7 +2560,6 @@ const WORD_CATEGORIES = {
       { ar: "لسان", fr: "Langue", en: "Tongue", es: "Lengua", de: "Zunge", tr: "Dil", hi: "जीभ", id: "Lidah", it: "Lingua", emoji: "👅" },
       { ar: "قلب", fr: "Cœur", en: "Heart", es: "Corazón", de: "Herz", tr: "Kalp", hi: "दिल", id: "Jantung", it: "Cuore", emoji: "❤️" },
       { ar: "ركبة", fr: "Genou", en: "Knee", es: "Rodilla", de: "Knie", tr: "Diz", hi: "घुटना", id: "Lutut", it: "Ginocchio", emoji: "🦿" },
-      { ar: "رقبة", fr: "Cou", en: "Neck", es: "Cuello", de: "Hals", tr: "Boyun", hi: "गर्दन", id: "Leher", it: "Collo", emoji: "🦒" },
       { ar: "وجه", fr: "Visage", en: "Face", es: "Cara", de: "Gesicht", tr: "Yüz", hi: "चेहरा", id: "Wajah", it: "Viso", emoji: "😊" },
       { ar: "جلد", fr: "Peau", en: "Skin", es: "Piel", de: "Haut", tr: "Cilt", hi: "त्वचा", id: "Kulit", it: "Pelle", emoji: "🤲" },
       { ar: "عظم", fr: "Os", en: "Bone", es: "Hueso", de: "Knochen", tr: "Kemik", hi: "हड्डी", id: "Tulang", it: "Osso", emoji: "🦴" },
@@ -2430,7 +2578,6 @@ const WORD_CATEGORIES = {
       { ar: "حقيبة", fr: "Cartable", en: "Schoolbag", es: "Mochila", de: "Schultasche", tr: "Çanta", hi: "बस्ता", id: "Tas sekolah", it: "Zaino", emoji: "🎒" },
       { ar: "دفتر", fr: "Cahier", en: "Notebook", es: "Cuaderno", de: "Heft", tr: "Defter", hi: "कॉपी", id: "Buku tulis", it: "Quaderno", emoji: "📓" },
       { ar: "مدرسة", fr: "École", en: "School", es: "Escuela", de: "Schule", tr: "Okul", hi: "स्कूल", id: "Sekolah", it: "Scuola", emoji: "🏫" },
-      { ar: "صف", fr: "Classe", en: "Classroom", es: "Aula", de: "Klassenzimmer", tr: "Sınıf", hi: "कक्षा", id: "Kelas", it: "Aula", emoji: "🪑" },
       { ar: "سبورة", fr: "Tableau", en: "Blackboard", es: "Pizarra", de: "Tafel", tr: "Tahta", hi: "श्यामपट्ट", id: "Papan tulis", it: "Lavagna", emoji: "📋" },
       { ar: "معلمة", fr: "Maîtresse", en: "Teacher (f)", es: "Maestra", de: "Lehrerin", tr: "Öğretmen", hi: "शिक्षिका", id: "Guru wanita", it: "Maestra", emoji: "👩‍🏫" },
       { ar: "تلميذ", fr: "Élève", en: "Student", es: "Alumno", de: "Schüler", tr: "Öğrenci", hi: "छात्र", id: "Murid", it: "Studente", emoji: "🧑‍🎓" },
@@ -2761,6 +2908,7 @@ const READING_TEXTS = [
 const STORIES = [
   {
     id: 'rabbit',
+    level: 1,
     emoji: '🐰',
     title: { fr: "Le lapin dans le jardin", en: "The rabbit in the garden", es: "El conejo en el jardín", de: "Das Kaninchen im Garten", tr: "Bahçedeki tavşan", hi: "बगीचे में खरगोश", id: "Kelinci di taman", it: "Il coniglio nel giardino", nl: "Het konijn in de tuin", pt: "O coelho no jardim" },
     lines: [
@@ -2811,6 +2959,7 @@ const STORIES = [
   },
   {
     id: 'school',
+    level: 1,
     emoji: '🏫',
     title: { fr: "Un jour à l'école", en: "A day at school", es: "Un día en la escuela", de: "Ein Tag in der Schule", tr: "Okulda bir gün", hi: "स्कूल में एक दिन", id: "Satu hari di sekolah", it: "Un giorno a scuola", nl: "Een dag op school", pt: "Um dia na escola" },
     lines: [
@@ -2853,6 +3002,7 @@ const STORIES = [
   },
   {
     id: 'market',
+    level: 2,
     emoji: '🛒',
     title: { fr: "Au marché avec maman", en: "At the market with mom", es: "En el mercado con mamá", de: "Auf dem Markt mit Mama", tr: "Annemle pazarda", hi: "माँ के साथ बाज़ार में", id: "Di pasar bersama ibu", it: "Al mercato con la mamma", nl: "Op de markt met mama", pt: "No mercado com a mamã" },
     lines: [
@@ -2889,6 +3039,110 @@ const STORIES = [
           { ar: "أَصْفَر", emoji: "🟡", correct: true },
           { ar: "أَحْمَر", emoji: "🔴", correct: false },
           { ar: "أَخْضَر", emoji: "🟢", correct: false }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'garden',
+    level: 3,
+    emoji: '🌻',
+    title: { fr: "La forêt enchantée", en: "The enchanted forest", es: "El bosque encantado", de: "Der verzauberte Wald", tr: "Büyülü orman", hi: "जादुई जंगल", id: "Hutan ajaib", it: "La foresta incantata", nl: "Het betoverde bos", pt: "A floresta encantada" },
+    lines: [
+      "كَانَتْ هُنَاكَ غَابَةٌ سَاحِرَةٌ بَعِيدًا عَنِ المَدِينَةِ.",
+      "فِيهَا أَشْجَارٌ طَوِيلَةٌ وَزُهُورٌ مُلَوَّنَةٌ تَمْلَأُ الأَرْضَ.",
+      "فِي الصَّبَاحِ تَأْتِي الفَرَاشَاتُ لِتَشْرَبَ رَحِيقَ الأَزْهَارِ.",
+      "فِي المَسَاءِ تَخْرُجُ الحَيَوَانَاتُ الصَّغِيرَةُ لِتَلْعَبَ بَيْنَ الأَغْصَانِ.",
+      "الأَطْفَالُ يَسْتَمِعُونَ إِلَى أَصْوَاتِ الطَّبِيعَةِ بِدَهْشَةٍ وَفَرَحٍ.",
+      "كُلُّ زِيَارَةٍ لِلْغَابَةِ تَتْرُكُ فِي القَلْبِ ذِكْرَى جَمِيلَةً."
+    ],
+    translation: {
+      fr: "Il y avait une forêt enchantée loin de la ville. On y trouvait de grands arbres et des fleurs colorées couvrant le sol. Le matin, les papillons venaient boire le nectar des fleurs. Le soir, les petits animaux sortaient jouer entre les branches. Les enfants écoutaient les bruits de la nature avec émerveillement et joie. Chaque visite laissait dans le cœur un beau souvenir.",
+      en: "There was a magical forest far from the city. It had tall trees and colorful flowers covering the ground. In the morning, butterflies came to drink the nectar of flowers. In the evening, small animals came out to play among the branches. The children listened to the sounds of nature with wonder and joy. Every visit left a beautiful memory in the heart.",
+      es: "Había un bosque mágico lejos de la ciudad. Tenía árboles altos y flores coloridas que cubrían el suelo. Por la mañana, las mariposas venían a beber el néctar de las flores. Por la tarde, los pequeños animales salían a jugar entre las ramas. Los niños escuchaban los sonidos de la naturaleza con asombro y alegría. Cada visita dejaba un bonito recuerdo en el corazón.",
+      de: "Es gab einen verzauberten Wald weit weg von der Stadt. Dort wuchsen hohe Bäume und bunte Blumen bedeckten den Boden. Am Morgen kamen Schmetterlinge, um den Nektar der Blumen zu trinken. Am Abend kamen kleine Tiere heraus, um zwischen den Ästen zu spielen. Die Kinder lauschten den Geräuschen der Natur mit Staunen und Freude. Jeder Besuch hinterließ eine schöne Erinnerung im Herzen.",
+      tr: "Şehirden uzakta büyülü bir orman vardı. Uzun ağaçları ve yeri kaplayan renkli çiçekleri vardı. Sabahları kelebekler çiçeklerin nektarını içmeye gelirdi. Akşamları küçük hayvanlar dallar arasında oynamak için çıkardı. Çocuklar doğanın seslerini hayranlık ve sevinçle dinlerdi. Her ziyaret yürekte güzel bir hatıra bırakırdı.",
+      hi: "शहर से दूर एक जादुई जंगल था। उसमें लंबे पेड़ और रंगीन फूल ज़मीन को ढके रहते थे। सुबह तितलियाँ फूलों का रस पीने आतीं। शाम को छोटे जानवर शाखाओं के बीच खेलने निकलते। बच्चे प्रकृति की आवाज़ें विस्मय और आनंद से सुनते। हर यात्रा दिल में एक सुंदर याद छोड़ देती।",
+      id: "Ada sebuah hutan ajaib jauh dari kota. Pohon-pohonnya tinggi dan bunga-bunga berwarna-warni menutupi tanah. Di pagi hari, kupu-kupu datang meminum nektar bunga. Di sore hari, hewan-hewan kecil keluar bermain di antara ranting. Anak-anak mendengarkan suara alam dengan kagum dan gembira. Setiap kunjungan meninggalkan kenangan indah di hati.",
+      it: "C'era una foresta incantata lontano dalla città. Aveva alberi alti e fiori colorati che coprivano il terreno. Al mattino le farfalle venivano a bere il nettare dei fiori. Alla sera i piccoli animali uscivano a giocare fra i rami. I bambini ascoltavano i suoni della natura con meraviglia e gioia. Ogni visita lasciava nel cuore un bel ricordo.",
+      nl: "Er was een betoverd bos ver van de stad. Er stonden hoge bomen en kleurrijke bloemen bedekten de grond. 's Ochtends kwamen vlinders om nectar uit de bloemen te drinken. 's Avonds kwamen kleine dieren naar buiten om tussen de takken te spelen. De kinderen luisterden vol verwondering en vreugde naar de geluiden van de natuur. Elk bezoek liet een mooie herinnering achter in het hart.",
+      pt: "Havia uma floresta encantada longe da cidade. Tinha árvores altas e flores coloridas cobrindo o chão. De manhã, as borboletas vinham beber o néctar das flores. À noite, os pequenos animais saíam para brincar entre os ramos. As crianças ouviam os sons da natureza com admiração e alegria. Cada visita deixava no coração uma linda lembrança."
+    },
+    questions: [
+      {
+        q: { fr: "Où se trouve la forêt ?", en: "Where is the forest?", es: "¿Dónde está el bosque?", de: "Wo liegt der Wald?", tr: "Orman nerede?", hi: "जंगल कहाँ है?", id: "Di mana hutannya?", it: "Dov'è la foresta?", nl: "Waar is het bos?", pt: "Onde fica a floresta?" },
+        options: [
+          { ar: "بَعِيدًا عَنِ المَدِينَةِ", emoji: "🏞️", correct: true },
+          { ar: "فِي وَسَطِ المَدْرَسَةِ",    emoji: "🏫", correct: false },
+          { ar: "دَاخِلَ البَيْتِ",            emoji: "🏠", correct: false }
+        ]
+      },
+      {
+        q: { fr: "Que boivent les papillons ?", en: "What do the butterflies drink?", es: "¿Qué beben las mariposas?", de: "Was trinken die Schmetterlinge?", tr: "Kelebekler ne içiyor?", hi: "तितलियाँ क्या पीती हैं?", id: "Apa yang diminum kupu-kupu?", it: "Cosa bevono le farfalle?", nl: "Wat drinken de vlinders?", pt: "O que bebem as borboletas?" },
+        options: [
+          { ar: "رَحِيقَ الأَزْهَارِ", emoji: "🌸", correct: true },
+          { ar: "المَاءَ",              emoji: "💧", correct: false },
+          { ar: "الحَلِيبَ",            emoji: "🥛", correct: false }
+        ]
+      },
+      {
+        q: { fr: "Quand sortent les petits animaux ?", en: "When do the small animals come out?", es: "¿Cuándo salen los animales pequeños?", de: "Wann kommen die kleinen Tiere heraus?", tr: "Küçük hayvanlar ne zaman çıkar?", hi: "छोटे जानवर कब निकलते हैं?", id: "Kapan hewan-hewan kecil keluar?", it: "Quando escono i piccoli animali?", nl: "Wanneer komen de kleine dieren naar buiten?", pt: "Quando saem os pequenos animais?" },
+        options: [
+          { ar: "فِي المَسَاءِ",  emoji: "🌙", correct: true },
+          { ar: "فِي الظَّهْرِ",  emoji: "🕛", correct: false },
+          { ar: "فِي الصَّبَاحِ", emoji: "🌅", correct: false }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'mountain',
+    level: 3,
+    emoji: '⛰️',
+    title: { fr: "Voyage à la montagne", en: "Trip to the mountain", es: "Viaje a la montaña", de: "Reise zum Berg", tr: "Dağa yolculuk", hi: "पहाड़ की यात्रा", id: "Perjalanan ke gunung", it: "Viaggio in montagna", nl: "Reis naar de berg", pt: "Viagem à montanha" },
+    lines: [
+      "خَطَّطَتِ العَائِلَةُ لِرِحْلَةٍ إِلَى قِمَّةِ الجَبَلِ الكَبِيرِ.",
+      "اِسْتَيْقَظُوا مُبَكِّرِينَ وَحَمَلُوا طَعَامَهُمْ وَمَاءَهُمْ.",
+      "تَسَلَّقُوا المَسَارَ الضَّيِّقَ بَيْنَ الصُّخُورِ وَالأَشْجَارِ.",
+      "شَاهَدُوا نَسْرًا كَبِيرًا يُحَلِّقُ عَالِيًا فِي السَّمَاءِ الزَّرْقَاءِ.",
+      "فِي القِمَّةِ شَعَرُوا بِنَسِيمٍ بَارِدٍ وَمَنْظَرٍ رَائِعٍ جَمِيلٍ.",
+      "رَجَعُوا إِلَى البَيْتِ مُتْعَبِينَ لَكِنَّهُمْ سَعِيدُونَ بِمَا رَأَوْا."
+    ],
+    translation: {
+      fr: "La famille a planifié un voyage vers le sommet de la grande montagne. Ils se sont réveillés tôt et ont emporté leur nourriture et leur eau. Ils ont grimpé le chemin étroit entre les rochers et les arbres. Ils ont vu un grand aigle qui planait haut dans le ciel bleu. Au sommet, ils ont senti une brise fraîche et vu un magnifique paysage. Ils sont rentrés à la maison fatigués mais heureux de ce qu'ils avaient vu.",
+      en: "The family planned a trip to the top of the big mountain. They woke up early and carried their food and water. They climbed the narrow path between rocks and trees. They saw a big eagle flying high in the blue sky. At the summit, they felt a cool breeze and saw a magnificent view. They returned home tired but happy with what they had seen.",
+      es: "La familia planeó un viaje a la cima de la gran montaña. Se levantaron temprano y llevaron su comida y agua. Subieron el sendero estrecho entre rocas y árboles. Vieron un águila grande volando alto en el cielo azul. En la cima sintieron una brisa fresca y vieron un paisaje magnífico. Volvieron a casa cansados pero felices con lo que habían visto.",
+      de: "Die Familie plante eine Reise zum Gipfel des großen Berges. Sie wachten früh auf und nahmen ihr Essen und Wasser mit. Sie kletterten den schmalen Pfad zwischen Felsen und Bäumen hinauf. Sie sahen einen großen Adler hoch am blauen Himmel fliegen. Am Gipfel spürten sie eine kühle Brise und sahen eine herrliche Aussicht. Sie kehrten müde, aber glücklich mit dem Gesehenen nach Hause zurück.",
+      tr: "Aile büyük dağın zirvesine bir yolculuk planladı. Erken uyandılar ve yiyeceklerini ve sularını yanlarına aldılar. Kayalar ve ağaçlar arasındaki dar yolu tırmandılar. Mavi gökyüzünde yüksekte uçan büyük bir kartal gördüler. Zirvede serin bir esinti hissettiler ve muhteşem bir manzara gördüler. Yorgun ama gördüklerinden memnun eve döndüler.",
+      hi: "परिवार ने बड़े पहाड़ की चोटी तक यात्रा की योजना बनाई। वे जल्दी उठे और अपना खाना और पानी साथ लिया। उन्होंने चट्टानों और पेड़ों के बीच की संकरी राह चढ़ी। नीले आसमान में ऊँचा उड़ता एक बड़ा गरुड़ देखा। चोटी पर उन्हें ठंडी हवा और शानदार दृश्य मिला। वे थके हुए पर अपनी देखी हुई चीज़ों से खुश होकर घर लौटे।",
+      id: "Keluarga itu merencanakan perjalanan ke puncak gunung besar. Mereka bangun pagi dan membawa makanan dan air. Mereka mendaki jalan sempit di antara bebatuan dan pepohonan. Mereka melihat seekor elang besar terbang tinggi di langit biru. Di puncak mereka merasakan angin sejuk dan pemandangan yang menakjubkan. Mereka pulang ke rumah dengan lelah tetapi senang dengan apa yang telah mereka lihat.",
+      it: "La famiglia ha pianificato un viaggio fino alla cima della grande montagna. Si sono svegliati presto e hanno portato cibo e acqua. Hanno scalato lo stretto sentiero tra rocce e alberi. Hanno visto una grande aquila volare alta nel cielo azzurro. In vetta hanno sentito una brezza fresca e visto un panorama magnifico. Sono tornati a casa stanchi ma felici di ciò che avevano visto.",
+      nl: "Het gezin plande een reis naar de top van de grote berg. Ze stonden vroeg op en namen hun eten en water mee. Ze beklommen het smalle pad tussen rotsen en bomen. Ze zagen een grote adelaar hoog in de blauwe lucht vliegen. Op de top voelden ze een koele bries en zagen een prachtig uitzicht. Ze kwamen moe maar blij thuis met wat ze hadden gezien.",
+      pt: "A família planeou uma viagem ao cume da grande montanha. Acordaram cedo e levaram a sua comida e água. Subiram o caminho estreito entre as rochas e as árvores. Viram uma grande águia a voar alto no céu azul. No cume sentiram uma brisa fresca e viram uma vista magnífica. Voltaram para casa cansados mas felizes com o que tinham visto."
+    },
+    questions: [
+      {
+        q: { fr: "Quand se sont-ils réveillés ?", en: "When did they wake up?", es: "¿Cuándo se despertaron?", de: "Wann sind sie aufgewacht?", tr: "Ne zaman uyandılar?", hi: "वे कब उठे?", id: "Kapan mereka bangun?", it: "Quando si sono svegliati?", nl: "Wanneer werden ze wakker?", pt: "Quando acordaram?" },
+        options: [
+          { ar: "مُبَكِّرِينَ",    emoji: "🌅", correct: true },
+          { ar: "فِي اللَّيْلِ", emoji: "🌙", correct: false },
+          { ar: "فِي الظُّهْرِ", emoji: "🕛", correct: false }
+        ]
+      },
+      {
+        q: { fr: "Qu'ont-ils vu dans le ciel ?", en: "What did they see in the sky?", es: "¿Qué vieron en el cielo?", de: "Was haben sie am Himmel gesehen?", tr: "Gökyüzünde ne gördüler?", hi: "उन्होंने आसमान में क्या देखा?", id: "Apa yang mereka lihat di langit?", it: "Cosa hanno visto nel cielo?", nl: "Wat zagen ze aan de hemel?", pt: "O que viram no céu?" },
+        options: [
+          { ar: "نَسْرًا",    emoji: "🦅", correct: true },
+          { ar: "سَحَابَة",   emoji: "☁️", correct: false },
+          { ar: "طَائِرَة",   emoji: "✈️", correct: false }
+        ]
+      },
+      {
+        q: { fr: "Comment sont-ils rentrés ?", en: "How did they return?", es: "¿Cómo volvieron?", de: "Wie kamen sie zurück?", tr: "Nasıl döndüler?", hi: "वे कैसे लौटे?", id: "Bagaimana mereka pulang?", it: "Come sono tornati?", nl: "Hoe kwamen ze terug?", pt: "Como voltaram?" },
+        options: [
+          { ar: "مُتْعَبِينَ وَسَعِيدِينَ", emoji: "😊", correct: true },
+          { ar: "جَائِعِينَ",              emoji: "🍽️", correct: false },
+          { ar: "خَائِفِينَ",              emoji: "😨", correct: false }
         ]
       }
     ]
@@ -2936,7 +3190,7 @@ const _HARAKAT_DICT = {
   'بقرة':'بَقَرَة','ماعز':'مَاعِز','دجاج':'دَجَاج','دجاجة':'دَجَاجَة','ببغاء':'بَبْغَاء',
   'بومة':'بُومَة','نسر':'نَسْر','خفاش':'خُفَّاش','عنكبوت':'عَنْكَبُوت','نملة':'نَمْلَة',
   'فراشة':'فَرَاشَة','تمساح':'تِمْسَاح','حوت':'حُوت','دلفين':'دَلْفِين','أخطبوط':'أُخْطُبُوط',
-  'سلحفاة':'سُلَحْفَاة','ثعبان':'ثُعْبَان','قنفذ':'قُنْفُذ','سنجاب':'سِنْجَاب','زرافة':'زَرَافَة',
+  'سلحفاة':'سُلْحُفَاة','ثعبان':'ثُعْبَانٌ','قنفذ':'قُنْفُذ','سنجاب':'سِنْجَاب','زرافة':'زَرَافَة',
   'فرس النهر':'فَرَس النَّهْر','وحيد القرن':'وَحِيد القَرْن','بطريق':'بَطْرِيق',
   // Fruits & veg
   'برتقالة':'بُرْتُقَالَة','فراولة':'فَرَاوْلَة','بطيخ':'بَطِّيخ','شمام':'شَمَّام','خوخ':'خَوْخ',

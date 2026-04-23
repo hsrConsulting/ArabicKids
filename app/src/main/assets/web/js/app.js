@@ -8,6 +8,7 @@ const AppState = {
   difficulty: 'normal', premium: false,
   streak: { current: 0, longest: 0, lastActive: null },
   dailyDone: null,
+  letterStats: {}, // { "ب": {views, listens, huntWins}, ... } — per-letter mastery counters
   selectedLetter: null, selectedCategory: null, quizData: null,
   save() {
     if (!this.user) return;
@@ -15,7 +16,8 @@ const AppState = {
       user:this.user,lang:this.lang,score:this.score,level:this.level,
       lessons:this.lessons,quizzes:this.quizzes,learnedLetters:this.learnedLetters,earnedBadges:this.earnedBadges,visitedCategories:this.visitedCategories,ratingDone:this.ratingDone,
       difficulty:this.difficulty, premium:this.premium,
-      streak:this.streak, dailyDone:this.dailyDone
+      streak:this.streak, dailyDone:this.dailyDone,
+      letterStats:this.letterStats
     });
     try { localStorage.setItem('ak_' + this.user.name, json); } catch(e) {}
     // Sync to cloud
@@ -100,7 +102,8 @@ function render() {
     onboarding: renderOnboarding,
     storiesList: renderStoriesList,
     story: renderStory,
-    storyQuiz: renderStoryQuiz
+    storyQuiz: renderStoryQuiz,
+    letterHunt: renderLetterHunt
   };
   const fn = renderers[AppState.screen] || renderWelcome;
   app.innerHTML = fn(t);
@@ -296,6 +299,18 @@ function addQuiz() {
   if(AppState.quizzes===10&&!AppState.ratingDone)setTimeout(showRatingPopup,1800);
   // Mark ad as pending — will show when user leaves results screen
   if(AppState.quizzes%2===0) _adPending = true;
+}
+
+// Per-letter counters. Small, cheap, persisted via AppState.save().
+function bumpLetterStat(letter, field) {
+  if (!AppState.letterStats) AppState.letterStats = {};
+  var s = AppState.letterStats[letter] || { views: 0, listens: 0, huntWins: 0 };
+  s[field] = (s[field] || 0) + 1;
+  AppState.letterStats[letter] = s;
+}
+
+function getLetterStats(letter) {
+  return (AppState.letterStats && AppState.letterStats[letter]) || { views: 0, listens: 0, huntWins: 0 };
 }
 
 function markLetterLearned(l) {
@@ -560,6 +575,7 @@ function renderDashboard(t) {
       <div class="menu-item" onclick="navigate('words')"><span class="menu-icon">📝</span><span class="menu-lbl">${t.words}</span></div>
       <div class="menu-item" onclick="startQuizListen()"><span class="menu-icon">👂</span><span class="menu-lbl">${t.quizListen||'Listen'}</span></div>
       <div class="menu-item menu-item-stories" onclick="navigate('storiesList')"><span class="menu-icon">📖</span><span class="menu-lbl">${t.stories||'Stories'}</span></div>
+      <div class="menu-item" onclick="startLetterHuntFromHome()"><span class="menu-icon">🔍</span><span class="menu-lbl">${t.letterHunt||'Hunt'}</span></div>
       <div class="menu-item" onclick="startMemory()"><span class="menu-icon">🃏</span><span class="menu-lbl">${t.memory}</span></div>
     </div>
     ` : `
@@ -578,6 +594,7 @@ function renderDashboard(t) {
       <div class="menu-item" onclick="startQuizAudio()"><span class="menu-icon">🎧</span><span class="menu-lbl">${t.quizAudio}</span></div>
       <div class="menu-item" onclick="startQuizListen()"><span class="menu-icon">👂</span><span class="menu-lbl">${t.quizListen||'Listen'}</span></div>
       <div class="menu-item menu-item-stories" onclick="navigate('storiesList')"><span class="menu-icon">📖</span><span class="menu-lbl">${t.stories||'Stories'}</span></div>
+      <div class="menu-item" onclick="startLetterHuntFromHome()"><span class="menu-icon">🔍</span><span class="menu-lbl">${t.letterHunt||'Hunt'}</span></div>
       <div class="menu-item" onclick="startQuizHarakat()"><span class="menu-icon">◌َ</span><span class="menu-lbl">${t.quizHarakat||'Quiz Harakat'}</span></div>
       <div class="menu-item" onclick="startQuizCategories()"><span class="menu-icon">📂</span><span class="menu-lbl">${t.quizCategories}</span></div>
       <div class="menu-item" onclick="startQuizPhrases()"><span class="menu-icon">💬</span><span class="menu-lbl">${t.quizPhrases}</span></div>
@@ -628,21 +645,33 @@ var HARAKAT = [
 
 function renderLetterDetail(t) {
   var i=AppState.selectedLetter, d=ALPHABET[i];
+  // Count this view (one per navigation, not per re-render — guard via a flag)
+  if (AppState._lastViewedLetter !== d.l) {
+    bumpLetterStat(d.l, 'views');
+    AppState._lastViewedLetter = d.l;
+    if (AppState.user) AppState.save();
+  }
+  var stats = getLetterStats(d.l);
   var formNames = ['isolated','initial','medial','final'];
   var formsHTML = d.forms ? formNames.map(function(fn) {
     var fm = d.forms[fn];
     if (!fm) return '<div class="lform-card disabled"><div class="lform-label">'+t[fn]+'</div><div class="lform-char">—</div></div>';
-    return '<div class="lform-card"><div class="lform-label">'+t[fn]+'</div><div class="lform-char" style="color:'+d.c+'">'+fm.f+'</div><div class="lform-ex"><div class="lform-ex-ar" data-speak="'+fm.ex+'">'+fm.ex+'</div><div class="lform-ex-tr">'+fm.exm[AppState.lang]+'</div></div></div>';
+    return '<div class="lform-card" data-speak="'+fm.ex+'" style="cursor:pointer"><div class="lform-label">'+t[fn]+'</div><div class="lform-char" style="color:'+d.c+'">'+fm.f+'</div><div class="lform-ex"><div class="lform-ex-ar">'+fm.ex+'</div><div class="lform-ex-tr">'+fm.exm[AppState.lang]+'</div></div></div>';
   }).join('') : '';
 
-  // Build harakat section
+  // Build harakat section. Sukun and Shadda are unvoiceable alone, so the
+  // text passed to TTS gets a helper vowel (alif-fatha prefix for sukun,
+  // fatha suffix for shadda) — display stays the raw combined form.
   var harakatHTML = HARAKAT.map(function(h) {
     var combined = d.l + h.mark;
-    return '<div class="haraka-card" data-speak="'+combined+'" style="border-color:'+h.color+'30;background:'+h.color+'08">' +
+    var speak = combined;
+    if (h.mark === '\u0652') speak = (d.l === 'أ' || d.l === 'ا') ? 'أَا' : 'أَ' + d.l + '\u0652';
+    else if (h.mark === '\u0651') speak = d.l + '\u0651\u064E';
+    return '<div class="haraka-card" data-speak="'+speak+'" style="border-color:'+h.color+'30;background:'+h.color+'08">' +
       '<div class="haraka-char" style="color:'+h.color+'">'+combined+'</div>' +
       '<div class="haraka-name">'+h.nameAr+'</div>' +
       '<div class="haraka-latin">'+h.name+(h.sound?' · '+d.n.charAt(0).toLowerCase()+h.sound:'')+'</div>' +
-      '<div class="haraka-play" data-speak="'+combined+'">🔊</div>' +
+      '<div class="haraka-play" data-speak="'+speak+'">🔊</div>' +
     '</div>';
   }).join('');
 
@@ -650,8 +679,14 @@ function renderLetterDetail(t) {
     secH(t,t.letterOf+' '+(i+1)+'/28',"sectionBack()") +
     '<div class="lbig" style="color:'+d.c+'" data-speak="'+d.l+'">'+d.l+'</div>' +
     '<div class="lname"><span class="arabic" style="font-size:1.2rem">'+d.na+'</span> — '+d.n+'</div>' +
-    '<button class="btn btn-secondary btn-sm" data-speak="'+d.l+'" style="margin:0 auto 14px;display:flex">🔊 '+t.listen+'</button>' +
+    '<div class="lmastery">👀 '+stats.views+' · 🔊 '+stats.listens+(stats.huntWins?' · 🔍 '+stats.huntWins:'')+'</div>' +
+    '<button class="btn btn-secondary btn-sm" onclick="bumpLetterStat(\''+d.l+'\',\'listens\');if(AppState.user)AppState.save();AudioSystem.speakArabic(\''+d.l+'\')" style="margin:0 auto 14px;display:flex">🔊 '+t.listen+'</button>' +
     '<div class="lword-box"><div class="lword-emoji">'+d.e+'</div><div class="lword-ar" data-speak="'+d.w+'">'+d.w+'</div><div class="wphon" style="margin:-2px 0 4px">'+transliterate(d.w)+'</div><div class="lword-mean">'+d.wm[AppState.lang]+'</div><button class="listen-btn" data-speak="'+d.w+'" style="margin:10px auto 0;display:flex">🔊 '+t.listen+'</button></div>' +
+    (d.extra && d.extra.length ? '<div class="lextra-grid">' + d.extra.map(function(x) {
+      var tr = (x.tr && (x.tr[AppState.lang] || x.tr.en)) || '';
+      return '<div class="lextra-card" data-speak="'+x.ar+'" style="cursor:pointer"><div class="lextra-emoji">'+(x.e||'🔤')+'</div><div class="lextra-ar">'+x.ar+'</div><div class="lextra-tr">'+tr+'</div></div>';
+    }).join('') + '</div>' : '') +
+    '<button class="btn btn-ghost btn-sm" onclick="startLetterHunt()" style="margin:0 auto 14px;display:flex;gap:6px">🔍 '+(t.letterHunt||'Chasse aux lettres')+'</button>' +
     '<div class="lforms-title">' + (t.diacritics||'التشكيل · Signes diacritiques') + '</div>' +
     '<div class="harakat-grid">'+harakatHTML+'</div>' +
     (d.forms?'<div class="lforms-title">✍️ '+t.letterForms+'</div><div class="lforms-grid">'+formsHTML+'</div>':'') +
@@ -676,6 +711,119 @@ function letterNext(i) {
   }
   if(i<27){AppState.selectedLetter=i+1;AudioSystem.speakArabic(ALPHABET[i+1].l);render();window.scrollTo(0,0);}
   else navigate('alphabet');
+}
+
+// ==================== LETTER HUNT ====================
+// Show a string built from words containing the current letter; the child
+// taps each occurrence. Matches on base Arabic codepoint (ignoring harakat
+// and, for alif, hamza variants). When all targets are found, award +huntWins.
+
+const _HUNT_ALIF_VARIANTS = { 'أ': 1, 'إ': 1, 'آ': 1, 'ا': 1 };
+
+function _huntMatches(char, target) {
+  if (char === target) return true;
+  if (_HUNT_ALIF_VARIANTS[target] && _HUNT_ALIF_VARIANTS[char]) return true;
+  return false;
+}
+
+function _huntBuildText(letter, data) {
+  // Take main word + all extras + a few category words containing the letter.
+  var words = [data.w];
+  (data.extra || []).forEach(function (x) { if (x.ar) words.push(x.ar); });
+  // Top up with category words containing the letter (bare form check).
+  var bare = letter.replace(/[\u064B-\u0652\u0670]/g, '');
+  Object.keys(WORD_CATEGORIES).some(function (k) {
+    WORD_CATEGORIES[k].words.forEach(function (w) {
+      if (words.length >= 6 || !w.ar) return;
+      var wb = w.ar.replace(/[\u064B-\u0652\u0670]/g, '');
+      if (wb.indexOf(bare) >= 0 && words.indexOf(w.ar) < 0) words.push(w.ar);
+    });
+    return words.length >= 6;
+  });
+  return words.join(' · ');
+}
+
+// Launch hunt from the dashboard (no letter selected yet). Picks a random
+// letter — preferring letters the child has already seen — so the activity
+// reinforces known material rather than throwing a stranger at them.
+function startLetterHuntFromHome() {
+  var diff = DIFFICULTY[AppState.difficulty || 'normal'];
+  var pool = (AppState.learnedLetters && AppState.learnedLetters.length)
+    ? ALPHABET.filter(function (a) { return AppState.learnedLetters.indexOf(a.l) >= 0; })
+    : ALPHABET.slice(0, diff.letterCount);
+  var picked = pool[Math.floor(Math.random() * pool.length)];
+  AppState.selectedLetter = ALPHABET.indexOf(picked);
+  startLetterHunt();
+}
+
+function startLetterHunt() {
+  var i = AppState.selectedLetter;
+  if (i == null) return;
+  var d = ALPHABET[i];
+  var text = _huntBuildText(d.l, d);
+  // Count target occurrences in the built text for the win condition.
+  var target = d.l;
+  var total = 0;
+  for (var k = 0; k < text.length; k++) if (_huntMatches(text[k], target)) total++;
+  AppState._hunt = { target: target, text: text, total: total, found: 0, wrong: 0, taps: {} };
+  navigate('letterHunt');
+}
+
+function renderLetterHunt(t) {
+  var h = AppState._hunt;
+  if (!h) return renderLetterDetail(t);
+  var d = ALPHABET[AppState.selectedLetter];
+  // Render each character as a tappable span. Harakat (combining marks) are
+  // rendered but NOT tappable so they attach to the previous base char.
+  var chars = '';
+  for (var k = 0; k < h.text.length; k++) {
+    var ch = h.text[k];
+    var code = ch.charCodeAt(0);
+    if (code >= 0x064B && code <= 0x0652 || code === 0x0670) {
+      chars += '<span class="hunt-mark">' + ch + '</span>';
+    } else if (ch === ' ' || ch === '·') {
+      chars += '<span class="hunt-sep">' + ch + '</span>';
+    } else {
+      var state = h.taps[k];
+      var cls = 'hunt-char' + (state === 'ok' ? ' hunt-ok' : state === 'bad' ? ' hunt-bad' : '');
+      chars += '<span class="'+cls+'" onclick="huntTap('+k+')">' + ch + '</span>';
+    }
+  }
+  var done = h.found >= h.total;
+  return '<div class="bg-deco"></div><div class="app page-in">' + navHTML(t) +
+    secH(t, '🔍 ' + (t.letterHunt || 'Chasse aux lettres'), 'sectionBack()') +
+    '<p style="text-align:center;margin-bottom:6px;color:var(--text-light)">' +
+      (t.huntTapAll || 'Touche toutes les occurrences de') +
+      ' <span class="arabic" style="font-family:var(--font-arabic);font-size:1.8rem;color:'+d.c+';font-weight:700">' + d.l + '</span></p>' +
+    '<div class="hunt-progress">' + h.found + ' / ' + h.total + '</div>' +
+    '<div class="hunt-text" dir="rtl">' + chars + '</div>' +
+    (done ? '<div class="hunt-done">🎉 ' + (t.wellDone||'Bravo') + ' !</div>' +
+            '<button class="btn btn-primary" onclick="sectionBack()" style="margin:16px auto;display:flex">← ' + (t.back||'Retour') + '</button>'
+          : '<button class="btn btn-ghost btn-sm" onclick="startLetterHunt()" style="margin:14px auto;display:flex">🔄 ' + (t.replay||'Rejouer') + '</button>') +
+    '</div>';
+}
+
+function huntTap(idx) {
+  var h = AppState._hunt; if (!h) return;
+  if (h.taps[idx]) return; // already tapped
+  var ch = h.text[idx];
+  if (_huntMatches(ch, h.target)) {
+    h.taps[idx] = 'ok';
+    h.found++;
+    AudioSystem.playSound('correct');
+    if (h.found >= h.total) {
+      AudioSystem.playSound('complete');
+      bumpLetterStat(h.target, 'huntWins');
+      addScore(10);
+      showConfetti();
+    }
+  } else {
+    h.taps[idx] = 'bad';
+    h.wrong++;
+    AudioSystem.playSound('wrong');
+    setTimeout(function () { if (h.taps[idx] === 'bad') { delete h.taps[idx]; render(); } }, 500);
+  }
+  render();
 }
 
 // ==================== ONBOARDING ====================
@@ -732,10 +880,16 @@ function toggleTheme() {
 
 // ==================== STORIES ====================
 function renderStoriesList(t) {
-  const cards = STORIES.map(s => `
+  // Cap story difficulty by user's difficulty: toddler/beginner → lvl 1,
+  // normal → 1-2, advanced → all levels (unlocks richer stories).
+  const diff = AppState.difficulty || 'normal';
+  const maxLevel = diff === 'advanced' ? 99 : diff === 'normal' ? 2 : 1;
+  const visible = STORIES.filter(s => (s.level || 1) <= maxLevel);
+  const cards = visible.map(s => `
     <div class="story-card" onclick="openStory('${s.id}')">
       <div class="story-emoji">${s.emoji}</div>
       <div class="story-title">${(s.title && s.title[AppState.lang]) || s.title.en}</div>
+      ${(s.level || 1) >= 3 ? '<div class="story-badge">🔥 ' + (t.advanced || 'Advanced') + '</div>' : ''}
     </div>`).join('');
   return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}
     ${secH(t, '📖 ' + (t.stories || 'Stories'), 'sectionBack()')}
@@ -752,11 +906,9 @@ function renderStory(t) {
   const s = STORIES.find(x => x.id === AppState.selectedStory);
   if (!s) return renderStoriesList(t);
   const body = s.lines.map(l => `<p class="story-line" data-speak="${l}">${l}</p>`).join('');
-  const trans = (s.translation && s.translation[AppState.lang]) || s.translation.en;
   return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}
     ${secH(t, s.emoji + ' ' + ((s.title && s.title[AppState.lang]) || s.title.en), 'sectionBack()')}
     <div class="story-body" dir="rtl">${body}</div>
-    <p class="story-translation">${trans}</p>
     <button class="btn btn-secondary btn-sm" data-speak="${s.lines.join(' ')}" style="margin:10px auto;display:flex">🔊 ${t.listen}</button>
     <button class="btn btn-primary" onclick="startStoryQuiz()" style="margin:16px auto 0;display:flex">${t.comprehension || 'Questions'} →</button>
   </div></div>`;
@@ -1254,7 +1406,7 @@ function startQuizMatch() {
   const diff=DIFFICULTY[AppState.difficulty||'normal'];
   const all=diff.catKeys?diff.catKeys.flatMap(k=>WORD_CATEGORIES[k].words):getAllWords();
   const rounds=diff.matchRounds, perRound=diff.matchPerRound;
-  matchState = { leftSelected: null, matched: [], wrong: null, round: 0, pairs: [], results: [], totalRounds: rounds, perRound };
+  matchState = { firstSide: null, firstIdx: null, matched: [], wrong: null, round: 0, pairs: [], results: [], totalRounds: rounds, perRound };
   const picked=shuffle(all).slice(0,rounds*perRound);
   matchState.allPairs=picked;
   matchState.pairs=picked.slice(0,perRound);
@@ -1274,43 +1426,72 @@ function renderQuizMatch(t) {
     <p class="qq">${t.round} ${ms.round+1} ${t.of} ${ms.totalRounds||2}</p>
     <p style="color:var(--text-light);margin-bottom:14px">${t.tapToMatch}</p>
     <div class="match-container">
-      <div class="match-col">${leftItems.map(item=>`<div class="match-item match-left ${ms.matched.includes(item.idx)?'matched':''} ${ms.leftSelected===item.idx?'selected':''} ${ms.wrong===item.idx?'wrong':''}" onclick="quizMatchSelect('left',${item.idx})"><span class="arabic" style="font-family:var(--font-arabic);font-size:1.3rem">${item.ar}</span></div>`).join('')}</div>
-      <div class="match-col">${rightItems.map(item=>`<div class="match-item match-right ${ms.matched.includes(item.idx)?'matched':''}" onclick="quizMatchSelect('right',${item.idx})"><span>${item.tr}</span></div>`).join('')}</div>
+      <div class="match-col">${leftItems.map(item=>`<div class="match-item match-left" data-idx="${item.idx}" onclick="quizMatchSelect('left',${item.idx})"><span class="arabic" style="font-family:var(--font-arabic);font-size:1.3rem">${item.ar}</span></div>`).join('')}</div>
+      <div class="match-col">${rightItems.map(item=>`<div class="match-item match-right" data-idx="${item.idx}" onclick="quizMatchSelect('right',${item.idx})"><span>${item.tr}</span></div>`).join('')}</div>
     </div>
   </div></div>`;
 }
 
+// Patch CSS classes directly on the already-rendered match items, instead of
+// triggering a full render() on every tap — keeps the grid silky on slow
+// WebViews and avoids the flicker when the child is quickly pairing items.
+function _paintMatch() {
+  const ms = matchState;
+  document.querySelectorAll('.match-item').forEach(el => {
+    const side = el.classList.contains('match-left') ? 'left' : 'right';
+    const idx = parseInt(el.dataset.idx, 10);
+    el.classList.toggle('matched',  ms.matched.includes(idx));
+    el.classList.toggle('selected', ms.firstSide === side && ms.firstIdx === idx);
+    el.classList.toggle('wrong',    ms.wrong === idx);
+  });
+}
+
 function quizMatchSelect(side, idx) {
-  const ms=matchState;
-  if(ms.matched.includes(idx)&&side==='left')return;
-  if(side==='left'){
-    ms.leftSelected=idx; ms.wrong=null; render(); return;
+  const ms = matchState;
+  if (ms.matched.includes(idx)) return;
+
+  // First tap (either side) — just remember it.
+  if (ms.firstSide === null) {
+    ms.firstSide = side; ms.firstIdx = idx; ms.wrong = null;
+    _paintMatch(); return;
   }
-  if(side==='right'&&ms.leftSelected!==null){
-    if(ms.matched.includes(idx))return;
-    if(idx===ms.leftSelected){
-      ms.matched.push(idx); AudioSystem.playSound('match'); addScore(AppState.quizData.pts||10);
-      AppState.quizData.results.push(true);
-      ms.leftSelected=null; ms.wrong=null; render();
-      const pr=ms.perRound||4;
-      if(ms.matched.length===pr){
-        setTimeout(()=>{
-          const totalRounds=ms.totalRounds||2;
-          if(ms.round<totalRounds-1){
-            ms.round++; ms.matched=[]; ms.leftSelected=null; ms.wrong=null;
-            ms.pairs=ms.allPairs.slice(ms.round*pr,(ms.round+1)*pr);
-            ms.rightOrder=shuffle(Array.from({length:ms.pairs.length},(_,i)=>i)); render();
-          } else {
-            AppState.quizData.done=true; addQuiz(); if(AppState.quizData.results.every(r=>r))awardBadge('perfectQuiz'); showConfetti(); render();
-          }
-        },600);
-      }
-    } else {
-      ms.wrong=ms.leftSelected; AudioSystem.playSound('wrong');
-      AppState.quizData.results.push(false);
-      ms.leftSelected=null; render();
-      setTimeout(()=>{ms.wrong=null;render();},600);
+
+  // Tap again on the same side — change the current selection.
+  if (ms.firstSide === side) {
+    ms.firstIdx = idx; ms.wrong = null;
+    _paintMatch(); return;
+  }
+
+  // Second tap on the opposite side — this is the pair attempt.
+  const firstIdx = ms.firstIdx;
+  if (idx === firstIdx) {
+    ms.matched.push(idx); AudioSystem.playSound('match');
+    addScore(AppState.quizData.pts || 10);
+    AppState.quizData.results.push(true);
+    ms.firstSide = null; ms.firstIdx = null; ms.wrong = null;
+    _paintMatch();
+    const pr = ms.perRound || 4;
+    if (ms.matched.length === pr) {
+      setTimeout(() => {
+        const totalRounds = ms.totalRounds || 2;
+        if (ms.round < totalRounds - 1) {
+          ms.round++; ms.matched = []; ms.firstSide = null; ms.firstIdx = null; ms.wrong = null;
+          ms.pairs = ms.allPairs.slice(ms.round * pr, (ms.round + 1) * pr);
+          ms.rightOrder = shuffle(Array.from({ length: ms.pairs.length }, (_, i) => i));
+          render(); // new round → full redraw to refresh both columns
+        } else {
+          AppState.quizData.done = true; addQuiz();
+          if (AppState.quizData.results.every(r => r)) awardBadge('perfectQuiz');
+          showConfetti(); render();
+        }
+      }, 600);
     }
+  } else {
+    ms.wrong = firstIdx; AudioSystem.playSound('wrong');
+    AppState.quizData.results.push(false);
+    ms.firstSide = null; ms.firstIdx = null;
+    _paintMatch();
+    setTimeout(() => { ms.wrong = null; _paintMatch(); }, 600);
   }
 }
 
