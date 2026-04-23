@@ -5,6 +5,43 @@
 Utilisez ces textes dans Google Play Console > Release > Release notes
 
 
+📌 VERSION 1.3.0 — Chasse aux lettres, histoires avancées
+─────────────────────────────────────
+
+🇫🇷 Français :
+• Nouvelle activité « Chasse aux lettres » : repère toutes les occurrences d'une lettre dans une phrase
+• 3 mots-exemples supplémentaires pour chaque lettre (plus de vocabulaire)
+• Compteur de maîtrise par lettre (vues, écoutes, chasses réussies)
+• 2 nouvelles histoires pour le niveau avancé (forêt enchantée, voyage en montagne) avec questions de compréhension
+• Son sur sukun et shadda désormais correctement prononcés
+• Quiz d'association : tu peux commencer par le mot français ou arabe, moins de rafraîchissements
+• Bouton « Terminer le défi » sur le défi du jour
+• Changements de contenu : lion pour Alif, plume pour Ra, retrait de certains mots et animaux peu pertinents
+• Corrections de prononciation (ثُعْبَانٌ, سُلْحُفَاة) et d'icônes
+
+🇬🇧 English:
+• New "Letter hunt" activity: tap every occurrence of a letter in a sentence
+• 3 additional example words per letter (more vocabulary exposure)
+• Per-letter mastery counter (views, listens, hunts won)
+• 2 new advanced-level stories (enchanted forest, mountain trip) with comprehension questions
+• Sukun and Shadda now speak correctly
+• Match quiz: you can start from the French or Arabic side, fewer refreshes
+• "Complete challenge" button on the daily challenge
+• Content update: lion for Alif, feather for Ra, removed a few less relevant words/animals
+• Pronunciation fixes (ثُعْبَانٌ, سُلْحُفَاة) and icon fixes
+
+🇸🇦 العربية:
+• نشاط جديد "صيد الحروف": المس كل موضع يظهر فيه الحرف في جملة
+• 3 أمثلة كلمات إضافية لكل حرف (مفردات أكثر)
+• عدّاد إتقان لكل حرف (مرات المشاهدة والاستماع وفوز الصيد)
+• قصتان جديدتان للمستوى المتقدم (الغابة الساحرة، رحلة الجبل) مع أسئلة فهم
+• السكون والشدة يُنطقان الآن بشكل صحيح
+• اختبار المطابقة: يمكنك البدء من الكلمة الفرنسية أو العربية، تحديثات أقل
+• زر "إنهاء التحدي" في تحدي اليوم
+• تحديث المحتوى: أسد للألف، ريش للراء، إزالة بعض الكلمات/الحيوانات الأقل أهمية
+• تصحيحات النطق (ثُعْبَانٌ، سُلْحُفَاة) والأيقونات
+
+
 📌 VERSION 1.2.0 — Audio, harakat et UX
 ─────────────────────────────────────
 
