@@ -2266,11 +2266,6 @@ function _checkTrace() {
     AudioSystem.playSound('wrong');
     return;
   }
-  _traceCompleted = true; _traceGuideRunning = false;
-  if (_traceAnimTimer) { clearTimeout(_traceAnimTimer); _traceAnimTimer = null; }
-  // Queue an interstitial for every 4 successful tracings (shown on exit).
-  _lettersTracedCount++;
-  if (_lettersTracedCount % 4 === 0) _adPending = true;
   var i = AppState.selectedLetter || 0;
   var sd = TRACE_STROKES[i], S = _TRACE_W / 100, R = 45; // generous radius for kids
   var wps = [];
@@ -2284,13 +2279,32 @@ function _checkTrace() {
     }
   }
   var pct = wps.length > 0 ? Math.round((hit / wps.length) * 100) : 0;
-  // Very generous scoring for kids
-  var stars = pct >= 55 ? 3 : pct >= 30 ? 2 : 1;
+
+  // Minimum threshold — below this, nothing is awarded. Kid gets an
+  // encouragement message and can redo the tracing from scratch.
+  var MIN_PCT = 30;
+  if (pct < MIN_PCT) {
+    AudioSystem.playSound('wrong');
+    var resElLo = document.getElementById('traceResult');
+    if (resElLo) {
+      resElLo.style.display = 'flex';
+      resElLo.innerHTML = '<div class="trace-result-inner"><div class="trace-stars" style="font-size:2.6rem">💪</div>'+
+        '<div class="trace-msg">' + (t.traceRetryMsg || 'Essaie encore ! Suis bien le modèle.') + '</div>'+
+        '<button class="btn btn-primary btn-sm" onclick="_clearTrace()" style="margin-top:12px">🔄 ' + (t.replay || 'Réessayer') + '</button></div>';
+    }
+    return; // no score, no learned flag, user retries
+  }
+
+  _traceCompleted = true; _traceGuideRunning = false;
+  if (_traceAnimTimer) { clearTimeout(_traceAnimTimer); _traceAnimTimer = null; }
+  // Queue an interstitial for every 4 successful tracings (shown on exit).
+  _lettersTracedCount++;
+  if (_lettersTracedCount % 4 === 0) _adPending = true;
+  var stars = pct >= 70 ? 3 : pct >= 50 ? 2 : 1;
   var pts = stars * 5;
   addScore(pts); markLetterLearned(ALPHABET[i].l); addLesson();
   if (stars === 3) { AudioSystem.playSound('correct'); showConfetti(); }
-  else if (stars === 2) AudioSystem.playSound('correct');
-  else AudioSystem.playSound('wrong');
+  else AudioSystem.playSound('correct');
   var msgs = [t.keepGoing||'Continue !', t.good||'Bien !', t.perfect||'Parfait ! 🌟'];
   var starStr = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
   var resEl = document.getElementById('traceResult');
