@@ -5,6 +5,14 @@
 Utilisez ces textes dans Google Play Console > Release > Release notes
 
 
+📌 VERSION 1.3.2 — Correctif de sécurité
+─────────────────────────────────────
+
+🇫🇷 Mise à jour de la bibliothèque reCAPTCHA (correctif de sécurité).
+🇬🇧 Updated reCAPTCHA library (security fix).
+🇸🇦 تحديث مكتبة reCAPTCHA (إصلاح أمني).
+
+
 📌 VERSION 1.3.1 — Correctif tracé des lettres
 ─────────────────────────────────────
 

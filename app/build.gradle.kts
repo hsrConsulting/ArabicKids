@@ -22,8 +22,8 @@ android {
         applicationId = "com.hsrconsulting.arabickids"
         minSdk = 24
         targetSdk = 35
-        versionCode = 7
-        versionName = "1.3.1"
+        versionCode = 8
+        versionName = "1.3.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += listOf("fr", "en", "es", "de", "tr", "hi", "id", "it", "nl", "pt", "ar")
     }
@@ -98,6 +98,9 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.crashlytics)
+    // Force an up-to-date reCAPTCHA to override the vulnerable version that
+    // firebase-auth pulls in transitively (Play Console security warning).
+    implementation(libs.recaptcha)
 
     testImplementation(kotlin("test"))
     testImplementation("junit:junit:4.13.2")

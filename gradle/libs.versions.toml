@@ -27,6 +27,9 @@ play-services-ads = { group = "com.google.android.gms", name = "play-services-ad
 user-messaging-platform = { group = "com.google.android.ump", name = "user-messaging-platform", version.ref = "userMessagingPlatform" }
 play-billing = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "billing" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+# Pin reCAPTCHA explicitly — Firebase Auth pulls an older transitive version
+# that Play Console flags as vulnerable (CVE in 18.1.2). Keep at 18.4.0+.
+recaptcha = { group = "com.google.android.recaptcha", name = "recaptcha", version = "18.6.1" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database-ktx" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth-ktx" }
