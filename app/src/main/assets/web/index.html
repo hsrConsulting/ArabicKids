@@ -256,6 +256,104 @@
     .lextra-tr { font-size: 0.78rem; color: var(--text-light); margin-top: 2px; }
     body.theme-dark .lextra-card { background: var(--bg-card); border-color: var(--border); }
 
+    /* Premium comparison screen */
+    .sub-hero-v2 {
+      text-align: center;
+      padding: 8px 16px 20px;
+      background: linear-gradient(180deg, #fef3c7 0%, transparent 100%);
+      border-radius: 20px;
+      margin-bottom: 18px;
+    }
+    .sub-hero-emoji { font-size: 3.5rem; line-height: 1; animation: float 3s ease-in-out infinite; }
+    .sub-hero-title { font-size: 1.5rem; font-weight: 800; color: var(--text-dark); margin: 8px 0 4px; }
+    .sub-hero-sub { color: var(--text-light); font-size: 0.95rem; line-height: 1.4; }
+    .sub-compare {
+      background: #ffffff;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 22px;
+    }
+    .sub-compare-head {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      background: linear-gradient(135deg, #fef3c7, #fed7aa);
+      padding: 10px 8px;
+    }
+    .sub-col-head { text-align: center; font-weight: 700; font-size: 0.9rem; }
+    .sub-col-free { color: #78716c; }
+    .sub-col-prem { color: #b45309; }
+    .sub-compare-row {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      align-items: center;
+      padding: 12px 8px;
+      border-top: 1px solid #f1f5f9;
+      font-size: 0.9rem;
+    }
+    .sub-cell-label { padding-left: 4px; font-weight: 500; color: var(--text-dark); }
+    .sub-cell-ico { margin-right: 6px; font-size: 1.1rem; }
+    .sub-cell-free { text-align: center; color: #78716c; font-weight: 500; font-size: 0.9rem; }
+    .sub-cell-prem { text-align: center; font-weight: 700; font-size: 0.95rem; color: #b45309; background: linear-gradient(90deg, #fef3c7 0%, transparent 100%); margin: 0 -4px; padding: 6px 4px; border-radius: 10px; }
+    .sub-plans-v2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+    .sub-plan-card {
+      position: relative;
+      padding: 18px 14px 16px;
+      border-radius: 18px;
+      border: 2px solid var(--border);
+      background: #ffffff;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+      font-family: inherit;
+    }
+    .sub-plan-card:active { transform: scale(0.98); }
+    .sub-plan-monthly { border-color: #cbd5e0; }
+    .sub-plan-yearly {
+      border-color: #f59e0b;
+      background: linear-gradient(180deg, #fef3c7 0%, #ffffff 60%);
+      box-shadow: 0 6px 18px rgba(245, 158, 11, 0.25);
+    }
+    .sub-plan-badge, .sub-plan-badge-empty {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #f59e0b, #dc2626);
+      color: white;
+      white-space: nowrap;
+      box-shadow: 0 3px 8px rgba(220, 38, 38, 0.35);
+    }
+    .sub-plan-badge-empty { visibility: hidden; }
+    .sub-plan-period { font-size: 0.82rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .sub-plan-price { font-size: 1.1rem; font-weight: 800; color: var(--text-dark); margin: 4px 0; }
+    .sub-plan-save { font-size: 0.78rem; color: #059669; font-weight: 700; margin-bottom: 8px; }
+    .sub-plan-cta { font-size: 0.85rem; color: var(--primary); font-weight: 700; padding-top: 6px; border-top: 1px dashed #e2e8f0; }
+    .sub-plan-yearly .sub-plan-cta { color: #b45309; }
+    .sub-trust { text-align: center; color: var(--text-light); font-size: 0.78rem; margin: 6px 0 2px; }
+    .sub-active {
+      display: flex; align-items: center; gap: 14px;
+      background: linear-gradient(135deg, #fef3c7, #fed7aa);
+      padding: 18px 20px;
+      border-radius: 18px;
+      border: 2px solid #f59e0b;
+    }
+
+    body.theme-dark .sub-compare { background: var(--bg-card); }
+    body.theme-dark .sub-compare-head { background: linear-gradient(135deg, #78350f, #92400e); }
+    body.theme-dark .sub-col-free, body.theme-dark .sub-cell-free { color: #d1d5db; }
+    body.theme-dark .sub-col-prem { color: #fbbf24; }
+    body.theme-dark .sub-cell-prem { color: #fbbf24; background: linear-gradient(90deg, #78350f 0%, transparent 100%); }
+    body.theme-dark .sub-compare-row { border-top-color: #4a5568; }
+    body.theme-dark .sub-plan-card { background: var(--bg-card); border-color: var(--border); }
+    body.theme-dark .sub-plan-yearly { background: linear-gradient(180deg, #78350f 0%, var(--bg-card) 60%); }
+    body.theme-dark .sub-hero-v2 { background: linear-gradient(180deg, #78350f 0%, transparent 100%); }
+    body.theme-dark .sub-active { background: linear-gradient(135deg, #78350f, #92400e); }
+
     /* Toddler mode (3-5 yo): bigger touch targets and less visual density */
     body.mode-toddler .menu-grid {
       grid-template-columns: repeat(2, 1fr);
@@ -271,6 +369,37 @@
     body.mode-toddler .stats-row .stat-val { font-size: 2rem; }
     body.mode-toddler .lbig { font-size: 10rem !important; }
     body.mode-toddler .qprompt { font-size: 4rem !important; }
+
+    /* Quizzes hub */
+    .quizcat-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-dark);
+      margin: 18px 4px 10px;
+      letter-spacing: 0.3px;
+    }
+    .quizcat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    @media (min-width: 600px) {
+      .quizcat-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .menu-item-quizzes {
+      background: linear-gradient(135deg, #ddd6fe, #a78bfa);
+      border: 1.5px solid #7c3aed;
+      color: white;
+    }
+    .menu-item-quizzes .menu-lbl { color: white; }
+    .menu-item-locked { position: relative; opacity: 0.85; }
+    .menu-lock {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      font-size: 0.95rem;
+    }
+    body.theme-dark .menu-item-quizzes { background: linear-gradient(135deg, #5b21b6, #4c1d95) !important; border-color: #a78bfa; }
 
     /* Floating "Complete daily challenge" button */
     .daily-float {

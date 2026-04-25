@@ -103,7 +103,8 @@ function render() {
     storiesList: renderStoriesList,
     story: renderStory,
     storyQuiz: renderStoryQuiz,
-    letterHunt: renderLetterHunt
+    letterHunt: renderLetterHunt,
+    quizzesList: renderQuizzesList
   };
   const fn = renderers[AppState.screen] || renderWelcome;
   app.innerHTML = fn(t);
@@ -124,6 +125,9 @@ function render() {
 
 function _tryShowPendingAd() {
   if (!_adPending) return;
+  // Premium = zero ads. Clear the pending flag so we don't accumulate a queue
+  // that would fire if the user downgrades.
+  if (AppState.premium) { _adPending = false; return; }
   try {
     if (typeof Android === 'undefined') { _adPending = false; return; }
     // showInterstitial() returns true only if the ad was ready and is being
@@ -583,22 +587,13 @@ function renderDashboard(t) {
       <div class="menu-item menu-item-path" onclick="navigate('path')"><span class="menu-icon">🗺️</span><span class="menu-lbl">${t.learningPath||'Path'}</span></div>
       <div class="menu-item" onclick="navigate('alphabet')"><span class="menu-icon">🔤</span><span class="menu-lbl">${t.alphabet}</span></div>
       <div class="menu-item" onclick="navigate('words')"><span class="menu-icon">📝</span><span class="menu-lbl">${t.words}</span></div>
+      <div class="menu-item menu-item-quizzes" onclick="navigate('quizzesList')"><span class="menu-icon">🎯</span><span class="menu-lbl">${t.quizzesAll||'Quiz'}</span></div>
+      <div class="menu-item menu-item-stories" onclick="navigate('storiesList')"><span class="menu-icon">📖</span><span class="menu-lbl">${t.stories||'Stories'}</span></div>
       <div class="menu-item menu-item-forms" onclick="navigate('letterForms')"><span class="menu-icon">✍️</span><span class="menu-lbl">${t.letterForms}</span></div>
       <div class="menu-item menu-item-trace" onclick="navigate('letterTraceMenu')"><span class="menu-icon">✏️</span><span class="menu-lbl">${t.tracing||'Écriture'}</span></div>
       <div class="menu-item menu-item-reading" onclick="startReadingWords()"><span class="menu-icon">🎙️</span><span class="menu-lbl">${t.readingWords||'Lecture'}</span></div>
       ${AppState.difficulty==='advanced'?`<div class="menu-item menu-item-reading" onclick="startReadingText()"><span class="menu-icon">📖</span><span class="menu-lbl">${t.readingText||'Textes'}</span></div>`:''}
-      <div class="menu-item" onclick="startQuizLetters()"><span class="menu-icon">🎯</span><span class="menu-lbl">${t.quizLetters}</span></div>
-      <div class="menu-item" onclick="startQuizWords()"><span class="menu-icon">🧩</span><span class="menu-lbl">${t.quizWords}</span></div>
-      <div class="menu-item" onclick="startQuizForms()"><span class="menu-icon">🖊️</span><span class="menu-lbl">${t.quizForms}</span></div>
-      <div class="menu-item" onclick="startQuizPositions()"><span class="menu-icon">📍</span><span class="menu-lbl">${t.quizPositions||'Positions'}</span></div>
-      <div class="menu-item" onclick="startQuizAudio()"><span class="menu-icon">🎧</span><span class="menu-lbl">${t.quizAudio}</span></div>
-      <div class="menu-item" onclick="startQuizListen()"><span class="menu-icon">👂</span><span class="menu-lbl">${t.quizListen||'Listen'}</span></div>
-      <div class="menu-item menu-item-stories" onclick="navigate('storiesList')"><span class="menu-icon">📖</span><span class="menu-lbl">${t.stories||'Stories'}</span></div>
       <div class="menu-item" onclick="startLetterHuntFromHome()"><span class="menu-icon">🔍</span><span class="menu-lbl">${t.letterHunt||'Hunt'}</span></div>
-      <div class="menu-item" onclick="startQuizHarakat()"><span class="menu-icon">◌َ</span><span class="menu-lbl">${t.quizHarakat||'Quiz Harakat'}</span></div>
-      <div class="menu-item" onclick="startQuizCategories()"><span class="menu-icon">📂</span><span class="menu-lbl">${t.quizCategories}</span></div>
-      <div class="menu-item" onclick="startQuizPhrases()"><span class="menu-icon">💬</span><span class="menu-lbl">${t.quizPhrases}</span></div>
-      <div class="menu-item" onclick="startQuizMatch()"><span class="menu-icon">🔗</span><span class="menu-lbl">${t.quizMatch}</span></div>
       <div class="menu-item" onclick="startMemory()"><span class="menu-icon">🃏</span><span class="menu-lbl">${t.memory}</span></div>
       <div class="menu-item" onclick="navigate('badges')"><span class="menu-icon">🏆</span><span class="menu-lbl">${t.badges}</span></div>
     </div>
@@ -711,6 +706,50 @@ function letterNext(i) {
   }
   if(i<27){AppState.selectedLetter=i+1;AudioSystem.speakArabic(ALPHABET[i+1].l);render();window.scrollTo(0,0);}
   else navigate('alphabet');
+}
+
+// ==================== QUIZZES LIST ====================
+// Single entry point for all quizzes — keeps the dashboard uncluttered and
+// lets the child see what kind of quiz they pick (letters / words / sounds).
+// Premium-only quizzes are shown but route through the existing paywall.
+function renderQuizzesList(t) {
+  const sections = [
+    { title: '🔤 ' + (t.quizCatLetters || 'Lettres'), items: [
+      { ico: '🎯',  lbl: t.quizLetters,                  fn: 'startQuizLetters()' },
+      { ico: '🖊️', lbl: t.quizForms,                    fn: 'startQuizForms()' },
+      { ico: '📍',  lbl: t.quizPositions || 'Positions', fn: 'startQuizPositions()' },
+      { ico: '◌َ',  lbl: t.quizHarakat   || 'Harakat',   fn: 'startQuizHarakat()' }
+    ]},
+    { title: '📝 ' + (t.quizCatWords || 'Mots'), items: [
+      { ico: '🧩', lbl: t.quizWords,                       fn: 'startQuizWords()' },
+      { ico: '📂', lbl: t.quizCategories,                  fn: 'startQuizCategories()' },
+      { ico: '💬', lbl: t.quizPhrases,                     fn: 'startQuizPhrases()' }
+    ]},
+    { title: '🔊 ' + (t.quizCatSound || 'Sons'), items: [
+      { ico: '🎧', lbl: t.quizAudio,                       fn: 'startQuizAudio()' },
+      { ico: '👂', lbl: t.quizListen   || 'Écoute',        fn: 'startQuizListen()' }
+    ]},
+    { title: '🎮 ' + (t.quizCatGames || 'Jeux'), items: [
+      { ico: '🔗', lbl: t.quizMatch,                       fn: 'startQuizMatch()' }
+    ]},
+    { title: '👑 ' + (t.feat_expertQuiz || 'Premium'), items: [
+      { ico: '⏱️',  lbl: t.quizChrono   || 'Chrono',       fn: 'startQuizChrono()',   premium: true },
+      { ico: '🔤',  lbl: t.quizSpelling || 'Épellation',   fn: 'startQuizSpelling()', premium: true },
+      { ico: '🧠',  lbl: t.quizExpert   || 'Expert',       fn: 'startQuizExpert()',   premium: true }
+    ]}
+  ];
+  const html = sections.map(s => `
+    <div class="quizcat-title">${s.title}</div>
+    <div class="quizcat-grid">${s.items.map(it => `
+      <div class="menu-item ${it.premium && !AppState.premium ? 'menu-item-locked' : ''}" onclick="${it.fn}">
+        <span class="menu-icon">${it.ico}</span>
+        <span class="menu-lbl">${it.lbl}</span>
+        ${it.premium && !AppState.premium ? '<span class="menu-lock">🔒</span>' : ''}
+      </div>`).join('')}</div>`).join('');
+  return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}
+    ${secH(t, '🎯 ' + (t.quizzesAll || 'Quiz'), 'sectionBack()')}
+    ${html}
+  </div>`;
 }
 
 // ==================== LETTER HUNT ====================
@@ -1079,6 +1118,25 @@ function renderWordList(t) {
     <div class="word-grid" id="wordGrid">${cat.words.map((w,i)=>`<div class="wcard" data-idx="${i}"><div class="wemoji">${w.emoji}</div><div class="war">${w.ar}</div><div class="wphon">${transliterate(w.ar)}</div><div class="wtr">${w[AppState.lang]}</div><button class="listen-btn" data-idx="${i}">🔊 ${t.listen}</button></div>`).join('')}</div></div>`;
 }
 
+// Append tanwīn ḍamm (ـٌ) to a single Arabic word for TTS, so the word is read
+// as the standard nominative indefinite ("kalamun" instead of bare "kalam").
+// - skip multi-word strings (no iḍāfa heuristic) and digits-formatted entries
+// - skip if already ends with any tanwīn (ـً ـٌ ـٍ) or sukun
+// - skip if last char isn't an Arabic letter / hamza / tāʾ marbūṭa
+function _withTanwinDhamm(text) {
+  if (!text) return text;
+  // Strip Arabic-Indic digits + trailing space first (numbers like "وَاحِد ١").
+  var t = text.replace(/[\u0660-\u0669\u06F0-\u06F9\d]/g, '').replace(/\s+$/, '');
+  if (!t || t.indexOf(' ') >= 0) return text; // multi-word → leave as-is
+  var last = t.charCodeAt(t.length - 1);
+  // Already vocalized at the end (any tanwīn or sukun) → leave it
+  if (last === 0x064B || last === 0x064C || last === 0x064D || last === 0x0652) return t;
+  // Last must be a base Arabic letter/hamza/tāʾ marbūṭa to take tanwīn.
+  var isArabicLetter = (last >= 0x0621 && last <= 0x064A) || last === 0x0670;
+  if (!isArabicLetter) return t;
+  return t + '\u064C'; // tanwīn ḍamm
+}
+
 // Global event delegation — avoids inline onclick with Arabic text (broken on some WebViews)
 document.addEventListener('click', function(e) {
   // Any element with data-speak attribute → speak that text
@@ -1097,7 +1155,7 @@ document.addEventListener('click', function(e) {
     const idx = parseInt(el.dataset.idx);
     const cat = WORD_CATEGORIES[AppState.selectedCategory];
     if (cat && cat.words[idx]) {
-      AudioSystem.speakArabic(cat.words[idx].ar);
+      AudioSystem.speakArabic(_withTanwinDhamm(cat.words[idx].ar));
     }
     return;
   }
@@ -1688,30 +1746,58 @@ function setPremiumStatus(status) {
 }
 
 function renderSubscription(t) {
-  return `<div class="bg-deco"></div>${flLetters()}<div class="app page-in">${navHTML(t)}${secH(t,'🔐 '+t.premiumTitle,'sectionBack()')}
+  // Clear side-by-side comparison — each row tells a parent *why* to pay.
+  // Free column highlights the limits; Premium column highlights what they
+  // actually get. Rows are ordered by emotional impact (no-ads first).
+  const rows = [
+    { icon: '🚫', label: t.feat_noAds        || 'Zero ads',              free: '📱 '+(t.feat_withAds||'With ads'), prem: '✨' },
+    { icon: '📖', label: t.feat_allStories   || 'All stories',           free: '3',                                prem: '✨ '+(t.feat_premStories||'+ advanced') },
+    { icon: '⏱️', label: t.feat_expertQuiz   || 'Expert quizzes',        free: '❌',                                prem: '✅' },
+    { icon: '🧠', label: t.feat_adaptLearn   || 'Adaptive learning',     free: '❌',                                prem: '✅' },
+    { icon: '👨‍👩‍👧', label: t.feat_multikid || 'Up to 4 children',      free: '1',                                prem: '✅ 4' },
+    { icon: '📊', label: t.feat_parentDash   || 'Parent dashboard',      free: '❌',                                prem: '✅' },
+    { icon: '🏆', label: t.feat_certif       || 'PDF certificates',      free: '❌',                                prem: '✅' }
+  ];
+  const activeCard = `<div class="sub-active"><span style="font-size:2.2rem">👑</span><div><strong>${t.alreadySubscribed||'Premium active'}</strong><div style="font-size:0.85rem;opacity:0.85">${t.feat_thanks||'Thanks for your support!'}</div></div></div>`;
+  const plansBlock = `
+    <div class="sub-plans-v2">
+      <button class="sub-plan-card sub-plan-monthly" onclick="triggerSubscription('monthly')">
+        <div class="sub-plan-badge-empty"></div>
+        <div class="sub-plan-period">${t.monthly||'Monthly'}</div>
+        <div class="sub-plan-price">${t.subscribeMonthly||'€4.99/mo'}</div>
+        <div class="sub-plan-cta">${t.subscribeBtn||"Subscribe"}</div>
+      </button>
+      <button class="sub-plan-card sub-plan-yearly" onclick="triggerSubscription('yearly')">
+        <div class="sub-plan-badge">⭐ ${t.bestValue||'Best value'}</div>
+        <div class="sub-plan-period">${t.yearly||'Yearly'}</div>
+        <div class="sub-plan-price">${t.subscribeYearly||'€29.99/yr'}</div>
+        <div class="sub-plan-save">${t.feat_save||'Save 50%'}</div>
+        <div class="sub-plan-cta">${t.subscribeBtn||"Subscribe"}</div>
+      </button>
+    </div>
+    <div class="sub-trust">🔒 ${t.feat_cancel||'Cancel anytime on Google Play'}</div>
+    <button class="btn btn-ghost" style="width:100%;font-size:0.85rem;margin-top:6px" onclick="restorePurchasesAction()">${t.restorePurchases}</button>
+  `;
+  return `<div class="bg-deco"></div>${flLetters()}<div class="app page-in">${navHTML(t)}${secH(t,'👑 '+(t.premiumTitle||'Premium'),'sectionBack()')}
     <div class="sub-page">
-      <div class="sub-hero">🌟</div>
-      <h2 style="text-align:center;margin:0 0 8px">${t.premiumTitle||'Premium'}</h2>
-      <p style="text-align:center;color:var(--text-light);font-size:0.92rem;margin-bottom:20px">${t.premiumBenefits||''}</p>
-      <div class="sub-features">
-        <div class="sub-feature"><span class="sub-feat-icon">⏱️</span><div><strong>${t.quizChrono}</strong><div class="sub-feat-desc">${t.chronoInstruct}</div></div></div>
-        <div class="sub-feature"><span class="sub-feat-icon">🔤</span><div><strong>${t.quizSpelling}</strong><div class="sub-feat-desc">${t.spellInstruct}</div></div></div>
-        <div class="sub-feature"><span class="sub-feat-icon">🧠</span><div><strong>${t.quizExpert}</strong><div class="sub-feat-desc">${t.expertInstruct}</div></div></div>
+      <div class="sub-hero-v2">
+        <div class="sub-hero-emoji">👑</div>
+        <h2 class="sub-hero-title">${t.feat_unlock||'Unlock the full Arabic Kids'}</h2>
+        <p class="sub-hero-sub">${t.feat_tagline||'No ads · all content · the whole family'}</p>
       </div>
-      ${AppState.premium
-        ? `<div class="sub-active"><span style="font-size:2rem">✅</span><div>${t.alreadySubscribed||'Abonnement actif'}</div></div>`
-        : `<div class="sub-plans">
-            <button class="btn btn-primary sub-plan-btn" onclick="triggerSubscription('monthly')">
-              <div class="sub-plan-label">${t.subscribeMonthly||'1,99€/mois'}</div>
-              <div class="sub-plan-sub">${t.subscribeBtn||"S'abonner"}</div>
-            </button>
-            <button class="btn btn-secondary sub-plan-btn" onclick="triggerSubscription('yearly')">
-              <div class="sub-plan-label">${t.subscribeYearly||'14,99€/an'}</div>
-              <div class="sub-plan-sub" style="color:rgba(255,255,255,0.8)">💰 Économise 37%</div>
-            </button>
-          </div>
-          <button class="btn btn-ghost" style="width:100%;font-size:0.85rem;margin-top:8px" onclick="restorePurchasesAction()">${t.restorePurchases}</button>`
-      }
+      <div class="sub-compare">
+        <div class="sub-compare-head">
+          <div></div>
+          <div class="sub-col-head sub-col-free">${t.feat_free||'Gratuit'}</div>
+          <div class="sub-col-head sub-col-prem">👑 Premium</div>
+        </div>
+        ${rows.map(r => `<div class="sub-compare-row">
+          <div class="sub-cell-label"><span class="sub-cell-ico">${r.icon}</span>${r.label}</div>
+          <div class="sub-cell-free">${r.free}</div>
+          <div class="sub-cell-prem">${r.prem}</div>
+        </div>`).join('')}
+      </div>
+      ${AppState.premium ? activeCard : plansBlock}
     </div>
   </div>`;
 }

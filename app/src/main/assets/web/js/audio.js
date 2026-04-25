@@ -140,13 +140,18 @@ function handleAndroidBack() {
     if (typeof navigate === 'function') navigate('path');
     return false;
   }
-  // Parent screen mapping
+  // Parent screen mapping. Register/Login back to welcome — never to a
+  // dashboard the user isn't authenticated to see.
   var parents = {
     letterDetail: 'alphabet',
     wordList: 'words',
-    letterTraceLesson: 'letterTraceMenu'
+    letterTraceLesson: 'letterTraceMenu',
+    register: 'welcome',
+    login: 'welcome'
   };
-  var parent = parents[s] || 'dashboard';
+  // If the user isn't logged in, the only safe top-level is 'welcome'.
+  var fallback = AppState.user ? 'dashboard' : 'welcome';
+  var parent = parents[s] || fallback;
   if (typeof navigate === 'function') navigate(parent);
   else if (typeof goHome === 'function') goHome();
   return false;
