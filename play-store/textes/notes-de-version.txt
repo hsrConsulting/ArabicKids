@@ -5,6 +5,37 @@
 Utilisez ces textes dans Google Play Console > Release > Release notes
 
 
+📌 VERSION 1.4.0 — Premium revampé, hub Quiz, tracé pixel-perfect
+─────────────────────────────────────
+
+🇫🇷 Français :
+• Nouveau scoring du tracé basé sur le glyphe réel : marche automatiquement pour toutes les lettres
+• Tracés ajustés pour د، ذ، ر، ز (lettres non-connecteurs)
+• Page Premium refondue : comparaison Gratuit vs Premium claire, plan annuel mis en avant, zéro pub pour les abonnés
+• Tous les quiz regroupés dans une seule tuile « 🎯 Quiz » avec catégories (Lettres / Mots / Sons / Jeux / Premium)
+• Module Mots : prononciation TTS avec tanwīn ḍamm automatique (« qalamun » au lieu de « qalam »)
+• Correctif navigation : retour depuis Inscription/Connexion va à l'accueil (au lieu du dashboard non-authentifié)
+• Dashboard simplifié : 19 → 12 tuiles
+
+🇬🇧 English:
+• New tracing scorer based on the actual glyph mask — auto-adapts to every letter
+• Adjusted trace paths for د، ذ، ر، ز (non-connector letters)
+• Premium screen redesigned: clear Free vs Premium comparison, yearly plan highlighted, zero ads for subscribers
+• All quizzes grouped under a single "🎯 Quiz" tile with categories (Letters / Words / Sounds / Games / Premium)
+• Words module: TTS now applies tanwīn ḍamm automatically ("qalamun" instead of "qalam")
+• Navigation fix: back from Register/Login returns to Welcome (was incorrectly going to dashboard)
+• Simplified dashboard: 19 → 12 tiles
+
+🇸🇦 العربية:
+• خوارزمية تقييم جديدة للخط مبنية على الشكل الحقيقي للحرف — تتكيف تلقائيًا مع كل حرف
+• تعديل مسارات الكتابة لـ د، ذ، ر، ز
+• إعادة تصميم شاشة Premium: مقارنة واضحة بين المجاني والمدفوع، إبراز الخطة السنوية، لا إعلانات للمشتركين
+• تجميع كل الاختبارات في تبويب واحد "🎯 اختبار" مع تصنيفات (حروف / كلمات / أصوات / ألعاب / Premium)
+• قسم الكلمات: نطق tanwīn ḍamm تلقائيًا ("قَلَمٌ" بدل "قَلَم")
+• تصحيح التنقل: العودة من التسجيل/الدخول إلى صفحة الترحيب
+• لوحة تحكم مبسطة: 19 → 12 تبويبًا
+
+
 📌 VERSION 1.3.2 — Correctif de sécurité
 ─────────────────────────────────────
 

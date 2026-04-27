@@ -22,8 +22,8 @@ android {
         applicationId = "com.hsrconsulting.arabickids"
         minSdk = 24
         targetSdk = 35
-        versionCode = 8
-        versionName = "1.3.2"
+        versionCode = 9
+        versionName = "1.4.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += listOf("fr", "en", "es", "de", "tr", "hi", "id", "it", "nl", "pt", "ar")
     }

@@ -1982,17 +1982,29 @@ const TRACE_STROKES = [
   // 6. خ Kha — même forme + point au-dessus
   { strokes: [[ {x:30,y:24},{x:45,y:20},{x:60,y:20},{x:75,y:24} ],[ {x:75,y:24},{x:55,y:36},{x:35,y:48},{x:25,y:64},{x:28,y:78},{x:42,y:88},{x:62,y:86},{x:76,y:76} ]], dots: [{x:55,y:10}] },
 
-  // 7. د Dal — petit crochet : trait horizontal puis descend à gauche
-  { strokes: [[ {x:70,y:35},{x:58,y:35},{x:50,y:38},{x:50,y:50},{x:46,y:62},{x:36,y:70} ]], dots: [] },
+  // 7. د Dal
+  { strokes: [[
+    {x:52,y:35}, {x:55,y:45}, {x:60,y:60}, {x:55,y:60},
+    {x:45,y:60}, {x:40,y:58}
+  ]], dots: [] },
 
   // 8. ذ Dhal — comme Dal + point au-dessus
-  { strokes: [[ {x:70,y:40},{x:58,y:40},{x:50,y:43},{x:50,y:55},{x:46,y:66},{x:36,y:74} ]], dots: [{x:62,y:26}] },
+  { strokes: [[
+    {x:52,y:35}, {x:55,y:45}, {x:60,y:60}, {x:55,y:60},
+    {x:45,y:60}, {x:40,y:58}
+  ]], dots: [{x:50,y:30}] },
 
-  // 9. ر Ra — petit départ horizontal puis grande courbe descendante en croissant
-  { strokes: [[ {x:80,y:30},{x:72,y:32},{x:66,y:40},{x:58,y:52},{x:46,y:64},{x:32,y:76},{x:20,y:84} ]], dots: [] },
+  // 9. ر Ra
+  { strokes: [[
+    {x:55,y:45}, {x:60,y:65}, {x:55,y:70}, {x:50,y:75},
+    {x:45,y:75}, {x:40,y:72}
+  ]], dots: [] },
 
   // 10. ز Zay — comme Ra + point au-dessus
-  { strokes: [[ {x:80,y:34},{x:72,y:36},{x:66,y:44},{x:58,y:56},{x:46,y:68},{x:32,y:80},{x:20,y:88} ]], dots: [{x:70,y:18}] },
+  { strokes: [[
+    {x:55,y:45}, {x:60,y:65}, {x:55,y:70}, {x:50,y:75},
+    {x:45,y:75}, {x:40,y:72}
+  ]], dots: [{x:55,y:32}] },
 
   // 11. س Sin — 3 dents D→G puis vasque plonge à gauche et remonte
   { strokes: [[ {x:90,y:40},{x:85,y:55},{x:75,y:55},{x:70,y:40},{x:65,y:55},{x:55,y:55},{x:50,y:40} ],[ {x:50,y:40},{x:45,y:80},{x:25,y:80},{x:10,y:60},{x:15,y:45} ]], dots: [] },

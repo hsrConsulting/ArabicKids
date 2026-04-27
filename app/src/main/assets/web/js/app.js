@@ -2344,6 +2344,70 @@ function _runTraceGuide() {
   _traceAnimTimer = setTimeout(step, 100);
 }
 
+// Glyph-mask scoring: render the actual font letter on a hidden canvas, build
+// the alpha mask, then score the user's trace by (a) coverage = % of letter
+// pixels they touched and (b) hit rate = % of their tap points that landed
+// on the letter. The combined score is what we display. Auto-adapts to any
+// letter without per-letter waypoint maintenance.
+function _scoreTraceByGlyph(letter) {
+  var W = _TRACE_W;
+  if (!W || _tracePath.length === 0) return 0;
+  var c = document.createElement('canvas');
+  c.width = W; c.height = W;
+  var cx = c.getContext('2d');
+  cx.font = '180px "Noto Naskh Arabic", serif';
+  cx.textAlign = 'center';
+  cx.textBaseline = 'middle';
+  cx.direction = 'rtl';
+  cx.fillStyle = '#000';
+  cx.fillText(letter, W / 2, W / 2 + 10);
+  var data = cx.getImageData(0, 0, W, W).data;
+
+  // Letter pixels sampled at a 5-px grid for coverage check.
+  var lp = [];
+  for (var y = 0; y < W; y += 5) {
+    for (var x = 0; x < W; x += 5) {
+      if (data[(y * W + x) * 4 + 3] > 50) lp.push(x, y);
+    }
+  }
+  if (lp.length === 0) return 0;
+
+  var TOL = 24, TOL_SQ = TOL * TOL;
+
+  // Coverage: how much of the letter the user drew over.
+  var covered = 0;
+  for (var k = 0; k < lp.length; k += 2) {
+    var lx = lp[k], ly = lp[k + 1];
+    for (var p = 0; p < _tracePath.length; p++) {
+      var dx = _tracePath[p].x - lx, dy = _tracePath[p].y - ly;
+      if (dx * dx + dy * dy <= TOL_SQ) { covered++; break; }
+    }
+  }
+  var coverage = covered / (lp.length / 2);
+
+  // Hit rate: how much of the user's path was on/near the letter (penalises
+  // wild scribbles that miss).
+  var hits = 0;
+  for (var pi = 0; pi < _tracePath.length; pi++) {
+    var px = _tracePath[pi].x | 0, py = _tracePath[pi].y | 0;
+    var found = false;
+    for (var dy2 = -8; dy2 <= 8 && !found; dy2 += 4) {
+      for (var dx2 = -8; dx2 <= 8 && !found; dx2 += 4) {
+        var nx = px + dx2, ny = py + dy2;
+        if (nx < 0 || ny < 0 || nx >= W || ny >= W) continue;
+        if (data[(ny * W + nx) * 4 + 3] > 50) found = true;
+      }
+    }
+    if (found) hits++;
+  }
+  var hitRate = hits / _tracePath.length;
+
+  // Weighted: coverage matters most, hit rate keeps off-shape scribbles down.
+  var score = Math.round((coverage * 0.7 + hitRate * 0.3) * 100);
+  if (hitRate < 0.4) score = Math.min(score, Math.round(hitRate * 100));
+  return score;
+}
+
 function _checkTrace() {
   var t = AppState.t;
   if (_tracePath.length < 6) {
@@ -2353,18 +2417,7 @@ function _checkTrace() {
     return;
   }
   var i = AppState.selectedLetter || 0;
-  var sd = TRACE_STROKES[i], S = _TRACE_W / 100, R = 45; // generous radius for kids
-  var wps = [];
-  sd.strokes.forEach(function(pts) { pts.forEach(function(p) { wps.push({ x: p.x*S, y: p.y*S }); }); });
-  sd.dots.forEach(function(d) { wps.push({ x: d.x*S, y: d.y*S }); });
-  var hit = 0;
-  for (var w = 0; w < wps.length; w++) {
-    for (var p = 0; p < _tracePath.length; p++) {
-      var dx = _tracePath[p].x - wps[w].x, dy = _tracePath[p].y - wps[w].y;
-      if (dx*dx + dy*dy <= R*R) { hit++; break; }
-    }
-  }
-  var pct = wps.length > 0 ? Math.round((hit / wps.length) * 100) : 0;
+  var pct = _scoreTraceByGlyph(ALPHABET[i].l);
 
   // Minimum threshold — below this, nothing is awarded. Kid gets an
   // encouragement message and can redo the tracing from scratch.
