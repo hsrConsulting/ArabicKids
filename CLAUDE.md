@@ -71,7 +71,7 @@ Android app teaching Arabic to children (ages 3–10). Multi-language UI (10 lan
 - `normal` ⭐ — 28 letters, 4 options, all content.
 - `advanced` 🔥 — 28 letters, 4 options, reversed quizzes, unlocks reading texts.
 
-## Recently shipped (v1.2.0 → working on v1.3.x)
+## Recently shipped (v1.2.0 → v1.4.x)
 
 - Audio Samsung fix (USAGE_MEDIA, removed 3s SoundPool release trap)
 - Harakat on all single words + phrases + reading texts
@@ -91,14 +91,10 @@ Android app teaching Arabic to children (ages 3–10). Multi-language UI (10 lan
 
 ## Known pending work
 
-- Bundle MP3s (run `tools/generate_audio.py` after AWS setup)
-- Multi-children per parent account
-- Parent dashboard (progress per child)
+- Multi-children per parent account (advertised in paywall but not implemented)
+- Parent dashboard (advertised in paywall but not implemented)
 - Remote Config (A/B testing)
-- Premium/free comparison in-app
 - Play Store: family subscription, trailer video, refreshed screenshots
-- Dedup `_PHON_DICT` (a few duplicates: تفاحة, زهرة, يد, فلفل)
-- Verify `setPremiumStatus(true)` JS function exists (referenced by Android bridge)
 
 ## Working style reminders
 
