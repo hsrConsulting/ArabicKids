@@ -27,3 +27,6 @@ Thumbs.db
 *.bak
 app/src/main/assets/audio/
 app/src/main/assets/web/js/audio_manifest.js
+
+# Trailer raw clips (large; reproducible via tools/capture_trailer.sh)
+play-store/trailer/raw/

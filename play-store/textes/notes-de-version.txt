@@ -5,6 +5,25 @@
 Utilisez ces textes dans Google Play Console > Release > Release notes
 
 
+📌 VERSION 1.5.0 — Bannière publicitaire + offres premium temporairement masquées
+─────────────────────────────────────
+
+🇫🇷 Français :
+• Nouvelle bannière publicitaire en bas de l'écran, conforme aux règles « Designed for Families »
+• Les offres Premium sont temporairement masquées le temps de finaliser de nouvelles fonctionnalités (multi-enfants, dashboard parents). Les abonnés actuels gardent leur expérience sans pub
+• Nettoyage interne du dictionnaire phonétique (transcriptions plus rapides)
+
+🇬🇧 English:
+• New ad banner at the bottom of the screen, compliant with Designed for Families policies
+• Premium offers are temporarily hidden while we finish new features (multi-child accounts, parent dashboard). Current subscribers keep their ad-free experience
+• Internal cleanup of the phonetic dictionary (faster transcriptions)
+
+🇸🇦 العربية:
+• شريط إعلانات جديد في أسفل الشاشة، متوافق مع سياسات "Designed for Families"
+• إخفاء عروض Premium مؤقتًا حتى الانتهاء من ميزات جديدة (حسابات متعددة الأطفال، لوحة الوالدين). يحتفظ المشتركون الحاليون بتجربتهم بدون إعلانات
+• تنظيف داخلي لقاموس النطق (نسخ أسرع)
+
+
 📌 VERSION 1.4.0 — Premium revampé, hub Quiz, tracé pixel-perfect
 ─────────────────────────────────────
 

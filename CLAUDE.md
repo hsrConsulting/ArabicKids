@@ -81,10 +81,10 @@ Premium UI is hidden from the user pending product decision. Code remains:
 
 ## Ads
 
-- **Banner**: `AdView` in `activity_main.xml` (id `adView`), unit `admob_banner_id` in `strings.xml`. Currently uses Google's test banner ID (`ca-app-pub-3940256099942544/6300978111`) — replace before publishing. Loaded after UMP consent + `MobileAds.initialize` via `loadBannerAd()`. Lifecycle hooks (`pause`/`resume`/`destroy`) wired in `MainActivity`.
+- **Banner**: `AdView` in `activity_main.xml` (id `adView`), unit `admob_banner_id` in `strings.xml`. Loaded after UMP consent + `MobileAds.initialize` via `loadBannerAd()`. Lifecycle hooks (`pause`/`resume`/`destroy`) wired in `MainActivity`.
 - **Interstitial**: real unit `admob_interstitial_id`. Triggered every 4 letter consultations (see `_lettersViewedCount` in `app.js`).
 
-## Recently shipped (v1.2.0 → v1.4.x)
+## Recently shipped (v1.2.0 → v1.5.x)
 
 - Audio Samsung fix (USAGE_MEDIA, removed 3s SoundPool release trap)
 - Harakat on all single words + phrases + reading texts
