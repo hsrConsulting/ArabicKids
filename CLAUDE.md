@@ -71,6 +71,19 @@ Android app teaching Arabic to children (ages 3–10). Multi-language UI (10 lan
 - `normal` ⭐ — 28 letters, 4 options, all content.
 - `advanced` 🔥 — 28 letters, 4 options, reversed quizzes, unlocks reading texts.
 
+## Premium status (currently hidden)
+
+Premium UI is hidden from the user pending product decision. Code remains:
+- Paywall (`showPaywall()`) and subscription screen (`renderSubscription()`) stay in `app.js` but no UI surface routes there.
+- `👑 Premium` quiz section removed from the quizzes hub. `startQuizChrono/Spelling/Expert` keep their `if(!AppState.premium){showPaywall();return;}` gate but are unreachable from UI.
+- Home dashboard premium block was already commented out.
+- Re-enable: restore the `'👑 ' + (t.feat_expertQuiz...)` section in `renderQuizzesList` and any new premium entry points.
+
+## Ads
+
+- **Banner**: `AdView` in `activity_main.xml` (id `adView`), unit `admob_banner_id` in `strings.xml`. Currently uses Google's test banner ID (`ca-app-pub-3940256099942544/6300978111`) — replace before publishing. Loaded after UMP consent + `MobileAds.initialize` via `loadBannerAd()`. Lifecycle hooks (`pause`/`resume`/`destroy`) wired in `MainActivity`.
+- **Interstitial**: real unit `admob_interstitial_id`. Triggered every 4 letter consultations (see `_lettersViewedCount` in `app.js`).
+
 ## Recently shipped (v1.2.0 → v1.4.x)
 
 - Audio Samsung fix (USAGE_MEDIA, removed 3s SoundPool release trap)

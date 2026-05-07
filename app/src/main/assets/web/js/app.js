@@ -711,7 +711,8 @@ function letterNext(i) {
 // ==================== QUIZZES LIST ====================
 // Single entry point for all quizzes — keeps the dashboard uncluttered and
 // lets the child see what kind of quiz they pick (letters / words / sounds).
-// Premium-only quizzes are shown but route through the existing paywall.
+// Premium quizzes (chrono/spelling/expert) are temporarily hidden from the
+// hub — keep their start functions in place for when premium is re-enabled.
 function renderQuizzesList(t) {
   const sections = [
     { title: '🔤 ' + (t.quizCatLetters || 'Lettres'), items: [
@@ -731,11 +732,6 @@ function renderQuizzesList(t) {
     ]},
     { title: '🎮 ' + (t.quizCatGames || 'Jeux'), items: [
       { ico: '🔗', lbl: t.quizMatch,                       fn: 'startQuizMatch()' }
-    ]},
-    { title: '👑 ' + (t.feat_expertQuiz || 'Premium'), items: [
-      { ico: '⏱️',  lbl: t.quizChrono   || 'Chrono',       fn: 'startQuizChrono()',   premium: true },
-      { ico: '🔤',  lbl: t.quizSpelling || 'Épellation',   fn: 'startQuizSpelling()', premium: true },
-      { ico: '🧠',  lbl: t.quizExpert   || 'Expert',       fn: 'startQuizExpert()',   premium: true }
     ]}
   ];
   const html = sections.map(s => `

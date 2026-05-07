@@ -180,6 +180,16 @@ class MainActivity : AppCompatActivity() {
         MobileAds.initialize(this) {
             Log.i(TAG, "AdMob initialized (child-directed, non-personalized)")
             loadInterstitialAd()
+            loadBannerAd()
+        }
+    }
+
+    private fun loadBannerAd() {
+        try {
+            binding.adView.loadAd(AdRequest.Builder().build())
+            Log.i(TAG, "Banner ad: load() called")
+        } catch (e: Exception) {
+            Log.e(TAG, "Banner ad: load failed — ${e.message}")
         }
     }
 
@@ -906,6 +916,7 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         binding.webView.onPause()
+        try { binding.adView.pause() } catch (_: Exception) {}
         if (::tts.isInitialized && tts.isSpeaking) tts.stop()
         try { onlinePlayer?.stop(); onlinePlayer?.release(); onlinePlayer = null } catch (_: Exception) {}
         speechRecognizer?.stopListening()
@@ -914,6 +925,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         binding.webView.onResume()
+        try { binding.adView.resume() } catch (_: Exception) {}
     }
 
     override fun onDestroy() {
@@ -922,6 +934,7 @@ class MainActivity : AppCompatActivity() {
         try { onlinePlayer?.release(); onlinePlayer = null } catch (_: Exception) {}
         if (::billingClient.isInitialized) billingClient.endConnection()
         speechRecognizer?.destroy(); speechRecognizer = null
+        try { binding.adView.destroy() } catch (_: Exception) {}
         binding.webView.destroy()
         super.onDestroy()
     }

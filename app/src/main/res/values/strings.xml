@@ -8,4 +8,6 @@
     <!-- AdMob — TEST IDs by default. Override in google-services or replace before production release -->
     <string name="admob_app_id" translatable="false">ca-app-pub-8422872428591836~4724928854</string>
     <string name="admob_interstitial_id" translatable="false">ca-app-pub-8422872428591836/2074714781</string>
+    <!-- TODO: replace with real banner unit once created in AdMob console (currently Google's test banner ID) -->
+    <string name="admob_banner_id" translatable="false">ca-app-pub-3940256099942544/6300978111</string>
 </resources>
