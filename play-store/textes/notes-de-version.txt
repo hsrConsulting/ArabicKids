@@ -5,6 +5,25 @@
 Utilisez ces textes dans Google Play Console > Release > Release notes
 
 
+📌 VERSION 2.0.0 — Nouvelle expérience publicitaire et interface affinée
+─────────────────────────────────────
+
+🇫🇷 Français :
+• Nouvelle bannière publicitaire en bas de l'écran, conforme aux règles « Designed for Families »
+• Quiz Associer : toutes les tuiles ont la même taille pour une lecture plus claire, même avec des traductions longues
+• Améliorations internes de stabilité et de performance
+
+🇬🇧 English:
+• New ad banner at the bottom of the screen, compliant with Designed for Families policies
+• Match quiz: all tiles share the same size for clearer reading, even with long translations
+• Internal stability and performance improvements
+
+🇸🇦 العربية:
+• شريط إعلانات جديد في أسفل الشاشة، متوافق مع سياسات "Designed for Families"
+• اختبار المطابقة: جميع المربعات لها نفس الحجم لقراءة أوضح، حتى مع الترجمات الطويلة
+• تحسينات داخلية للاستقرار والأداء
+
+
 📌 VERSION 1.5.1 — Quiz Associer plus lisible
 ─────────────────────────────────────
 
