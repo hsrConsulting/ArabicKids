@@ -1554,19 +1554,27 @@ body.theme-dark .daily-card { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4); }
 }
 
 .match-item {
-  padding: 14px 16px;
+  padding: 8px 12px;
   background: white;
   border: 3px solid var(--border);
   border-radius: var(--radius-md);
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.2;
   cursor: pointer;
   transition: all 0.25s;
   text-align: center;
-  min-height: 52px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  word-break: break-word;
+  box-sizing: border-box;
+}
+
+.match-item .arabic {
+  font-size: 1.2rem;
 }
 
 .match-item:hover:not(.matched) {
@@ -1710,9 +1718,9 @@ body.theme-dark .daily-card { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4); }
   }
 
   .match-item {
-    padding: 10px 8px;
-    font-size: 0.88rem;
-    min-height: 44px;
+    padding: 6px 8px;
+    font-size: 0.85rem;
+    height: 56px;
   }
 
   .phrase-text {

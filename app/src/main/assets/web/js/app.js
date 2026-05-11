@@ -207,7 +207,7 @@ function getDailyChallenge() {
     return { id: 'letter_' + letter.l, type: 'letter', target: letter.l, emoji: '🔤', label: letter.l };
   }
   if (pick === 1) {
-    const keys = Object.keys(WORD_CATEGORIES);
+    const keys = Object.keys(WORD_CATEGORIES).filter(k => !WORD_CATEGORIES[k].hidden);
     const k = keys[h % keys.length];
     return { id: 'cat_' + k, type: 'category', target: k, emoji: WORD_CATEGORIES[k].emoji, label: k };
   }
@@ -767,7 +767,7 @@ function _huntBuildText(letter, data) {
   (data.extra || []).forEach(function (x) { if (x.ar) words.push(x.ar); });
   // Top up with category words containing the letter (bare form check).
   var bare = letter.replace(/[\u064B-\u0652\u0670]/g, '');
-  Object.keys(WORD_CATEGORIES).some(function (k) {
+  Object.keys(WORD_CATEGORIES).filter(function (k) { return !WORD_CATEGORIES[k].hidden; }).some(function (k) {
     WORD_CATEGORIES[k].words.forEach(function (w) {
       if (words.length >= 6 || !w.ar) return;
       var wb = w.ar.replace(/[\u064B-\u0652\u0670]/g, '');
@@ -1095,7 +1095,7 @@ function goToPathStep(id) {
 // ==================== WORDS ====================
 function renderWords(t) {
   return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}${secH(t,'📝 '+t.words,'sectionBack()')}
-    <div class="cat-grid">${Object.entries(WORD_CATEGORIES).map(([k,v])=>`<div class="cat-card" onclick="openCategory('${k}')"><div class="cat-emoji">${v.emoji}</div><div class="cat-name">${t[k]}</div></div>`).join('')}</div></div>`;
+    <div class="cat-grid">${Object.entries(WORD_CATEGORIES).filter(([,v])=>!v.hidden).map(([k,v])=>`<div class="cat-card" onclick="openCategory('${k}')"><div class="cat-emoji">${v.emoji}</div><div class="cat-name">${t[k]}</div></div>`).join('')}</div></div>`;
 }
 
 function openCategory(k) {
@@ -1396,7 +1396,7 @@ function renderQuizAudio(t) {
 // ==================== QUIZ CATEGORIES ====================
 function startQuizCategories() {
   const diff=DIFFICULTY[AppState.difficulty||'normal'];
-  const catKeys=diff.catKeys||Object.keys(WORD_CATEGORIES);
+  const catKeys=diff.catKeys||Object.keys(WORD_CATEGORIES).filter(k=>!WORD_CATEGORIES[k].hidden);
   const all=diff.catKeys?diff.catKeys.flatMap(k=>WORD_CATEGORIES[k].words):getAllWords();
   const picked=shuffle(all).slice(0,diff.questionCount);
   AppState.quizData={type:'categories',questions:picked.map(w=>{
@@ -1480,7 +1480,7 @@ function renderQuizMatch(t) {
     <p class="qq">${t.round} ${ms.round+1} ${t.of} ${ms.totalRounds||2}</p>
     <p style="color:var(--text-light);margin-bottom:14px">${t.tapToMatch}</p>
     <div class="match-container">
-      <div class="match-col">${leftItems.map(item=>`<div class="match-item match-left" data-idx="${item.idx}" onclick="quizMatchSelect('left',${item.idx})"><span class="arabic" style="font-family:var(--font-arabic);font-size:1.3rem">${item.ar}</span></div>`).join('')}</div>
+      <div class="match-col">${leftItems.map(item=>`<div class="match-item match-left" data-idx="${item.idx}" onclick="quizMatchSelect('left',${item.idx})"><span class="arabic">${item.ar}</span></div>`).join('')}</div>
       <div class="match-col">${rightItems.map(item=>`<div class="match-item match-right" data-idx="${item.idx}" onclick="quizMatchSelect('right',${item.idx})"><span>${item.tr}</span></div>`).join('')}</div>
     </div>
   </div></div>`;

@@ -2822,6 +2822,7 @@ const WORD_CATEGORIES = {
   sports: {
     name: "sports",
     emoji: "⚽",
+    hidden: true,
     words: [
       { ar: "كُرَة القَدَم", fr: "Football", en: "Football", es: "Fútbol", de: "Fußball", tr: "Futbol", hi: "फ़ुटबॉल", id: "Sepak bola", it: "Calcio", nl: "Voetbal", pt: "Futebol", emoji: "⚽" },
       { ar: "كُرَة السَّلَّة", fr: "Basketball", en: "Basketball", es: "Baloncesto", de: "Basketball", tr: "Basketbol", hi: "बास्केटबॉल", id: "Bola basket", it: "Pallacanestro", nl: "Basketbal", pt: "Basquete", emoji: "🏀" },
@@ -2878,7 +2879,7 @@ function getLevelName(level, t) {
 }
 
 function getAllWords() {
-  return Object.values(WORD_CATEGORIES).flatMap(cat => cat.words);
+  return Object.values(WORD_CATEGORIES).filter(cat => !cat.hidden).flatMap(cat => cat.words);
 }
 
 // Arabic → Latin phonetic transliteration (with vowel-inserted dictionary)
