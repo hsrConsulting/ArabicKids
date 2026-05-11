@@ -220,6 +220,7 @@ function markDailyDone() {
   AppState.dailyDone = _todayStr();
   addScore(15); // bonus reward for completing the daily challenge
   AudioSystem.playSound('badge');
+  try { if (typeof Android !== 'undefined' && Android.setDailyDone) Android.setDailyDone(); } catch (e) {}
 }
 
 function startDailyChallenge() {

@@ -123,6 +123,8 @@ class MainActivity : AppCompatActivity() {
         // the alarm fires, it just can't post a visible notification.
         DailyReminder.ensureChannel(this)
         DailyReminder.schedule(this)
+        StreakReminder.ensureChannel(this)
+        StreakReminder.schedule(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED) {
@@ -789,6 +791,11 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun showToast(message: String) {
             runOnUiThread { Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+        }
+
+        @JavascriptInterface
+        fun setDailyDone() {
+            StreakReminder.markDoneToday(context)
         }
 
         @JavascriptInterface

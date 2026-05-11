@@ -87,6 +87,9 @@
             android:name=".DailyReminderReceiver"
             android:exported="false" />
         <receiver
+            android:name=".StreakReminderReceiver"
+            android:exported="false" />
+        <receiver
             android:name=".BootReceiver"
             android:exported="true">
             <intent-filter>
