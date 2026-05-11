@@ -5,6 +5,19 @@
 Utilisez ces textes dans Google Play Console > Release > Release notes
 
 
+📌 VERSION 1.5.1 — Quiz Associer plus lisible
+─────────────────────────────────────
+
+🇫🇷 Français :
+• Quiz Associer : toutes les tuiles ont désormais la même taille, même quand la traduction est longue (lecture plus claire pour les enfants)
+
+🇬🇧 English:
+• Match quiz: all tiles now share the same size, even when the translation is long (cleaner reading for kids)
+
+🇸🇦 العربية:
+• اختبار المطابقة: جميع المربعات لها الآن نفس الحجم، حتى عندما تكون الترجمة طويلة (قراءة أوضح للأطفال)
+
+
 📌 VERSION 1.5.0 — Bannière publicitaire + offres premium temporairement masquées
 ─────────────────────────────────────
 
