@@ -603,9 +603,14 @@ function renderDashboard(t) {
       ...
     </div>
     -->
-    <div style="text-align:center;margin:24px 0 16px">
+    <div style="text-align:center;margin:24px 0 8px">
       <button class="btn btn-ghost btn-sm" onclick="navigate('difficulty')" style="font-size:0.88rem;gap:6px">
         ⚙️ ${t.changeDifficulty||'Change level'} — <strong>${getDiffBadge(AppState.difficulty,t)}</strong>
+      </button>
+    </div>
+    <div style="text-align:center;margin:0 0 16px">
+      <button class="btn btn-ghost btn-sm" onclick="shareAppAction()" style="font-size:0.88rem;gap:6px">
+        📤 ${t.shareApp||'Share the app'}
       </button>
     </div>
   </div>`;
@@ -911,6 +916,21 @@ function toggleTheme() {
   if (AppState.user) AppState.save();
   applyTheme();
   render();
+}
+
+function shareAppAction() {
+  const t = AppState.t;
+  const url = 'https://play.google.com/store/apps/details?id=com.hsrconsulting.arabickids';
+  const msg = (t.shareMessage || 'Check out Arabic Kids!') + '\n\n' + url;
+  Analytics.log('share_app', { source: 'dashboard' });
+  try {
+    if (typeof Android !== 'undefined' && Android.shareApp) {
+      Android.shareApp(msg);
+      return;
+    }
+  } catch (e) {}
+  // Browser/dev fallback: copy to clipboard
+  try { navigator.clipboard?.writeText(msg); } catch (e) {}
 }
 
 // ==================== STORIES ====================

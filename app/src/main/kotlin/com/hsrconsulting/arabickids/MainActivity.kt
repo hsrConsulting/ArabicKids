@@ -792,6 +792,22 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun shareApp(text: String) {
+            runOnUiThread {
+                try {
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, text)
+                        putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name))
+                    }
+                    startActivity(Intent.createChooser(intent, null))
+                } catch (e: Exception) {
+                    Log.e(TAG, "shareApp failed: ${e.message}")
+                }
+            }
+        }
+
+        @JavascriptInterface
         fun isTTSReady(): Boolean = ttsReady
 
         @JavascriptInterface
