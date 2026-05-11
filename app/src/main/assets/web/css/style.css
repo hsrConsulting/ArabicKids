@@ -1382,6 +1382,10 @@ input {
   animation: confFall linear forwards;
 }
 
+.conf-round {
+  border-radius: 50%;
+}
+
 @keyframes confFall {
   0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
   100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }

@@ -263,6 +263,9 @@ function bumpStreak() {
   AppState.streak.current = (AppState.streak.lastActive === yesterday) ? AppState.streak.current + 1 : 1;
   if (AppState.streak.current > (AppState.streak.longest || 0)) AppState.streak.longest = AppState.streak.current;
   AppState.streak.lastActive = today;
+  if (AppState.streak.current === 7 || AppState.streak.current === 30) {
+    setTimeout(() => showBigConfetti(), 250);
+  }
 }
 
 function addScore(p) { AppState.score+=p; AppState.level=Math.floor(AppState.score/100)+1; checkBadges(); bumpStreak(); AppState.save(); }
@@ -332,11 +335,16 @@ function markLetterLearned(l) {
 
 function checkBadges() { if(AppState.score>=100)awardBadge('score100'); if(AppState.score>=500)awardBadge('score500'); if(AppState.score>=1000)awardBadge('score1000'); }
 
+const _MEGA_BADGES = ['alpha28', 'score1000'];
 function awardBadge(id) {
   if(!AppState.earnedBadges.includes(id)){
     AppState.earnedBadges.push(id);
     const b=BADGE_DEFINITIONS.find(x=>x.id===id);
-    if(b){AudioSystem.playSound('badge');showBadgePopup(b);showConfetti();}
+    if(b){
+      AudioSystem.playSound('badge');
+      showBadgePopup(b);
+      if(_MEGA_BADGES.includes(id)) showBigConfetti(); else showConfetti();
+    }
     AppState.save();
     Analytics.badgeEarned(id);
   }
@@ -379,6 +387,28 @@ function showConfetti() {
   const cols=['#FF6B6B','#4ECDC4','#FFE66D','#A78BFA','#F472B6','#60A5FA','#34D399','#FB923C'];
   for(let i=0;i<45;i++){const p=document.createElement('div');p.className='conf';p.style.left=Math.random()*100+'%';p.style.backgroundColor=cols[Math.floor(Math.random()*cols.length)];p.style.width=(6+Math.random()*8)+'px';p.style.height=(6+Math.random()*8)+'px';p.style.animationDuration=(1.5+Math.random()*2)+'s';p.style.animationDelay=(Math.random()*2)+'s';c.appendChild(p);}
   document.body.appendChild(c);setTimeout(()=>{const e=document.getElementById('confetti');if(e)e.remove();},4000);
+}
+
+// "MEGA" celebration: 110 particles, mix of squares + rounds, longer fall,
+// played with a complete-sound cue. Reserved for milestone moments — full
+// alphabet learned, learning path completed, 7/30-day streak reached.
+function showBigConfetti() {
+  const c=document.createElement('div');c.className='confetti-c';c.id='confetti';
+  const cols=['#FF6B6B','#4ECDC4','#FFE66D','#A78BFA','#F472B6','#60A5FA','#34D399','#FB923C','#FBBF24','#EC4899'];
+  for(let i=0;i<110;i++){
+    const p=document.createElement('div');
+    p.className='conf'+(Math.random()<0.45?' conf-round':'');
+    p.style.left=Math.random()*100+'%';
+    p.style.backgroundColor=cols[Math.floor(Math.random()*cols.length)];
+    const sz=6+Math.random()*14;
+    p.style.width=sz+'px';p.style.height=sz+'px';
+    p.style.animationDuration=(2.5+Math.random()*3)+'s';
+    p.style.animationDelay=(Math.random()*1.5)+'s';
+    c.appendChild(p);
+  }
+  document.body.appendChild(c);
+  setTimeout(()=>{const e=document.getElementById('confetti');if(e)e.remove();},7000);
+  try{AudioSystem.playSound('complete');}catch(e){}
 }
 
 function selectAvatar(el,emoji) { document.querySelectorAll('.av-opt').forEach(e=>e.classList.remove('sel')); el.classList.add('sel'); selectedAvatarEmoji=emoji; }
@@ -1074,6 +1104,10 @@ function renderPath(t) {
   const current = currentPathIndex();
   const total = LEARNING_PATH.length;
   const pct = Math.round((current / total) * 100);
+  if (current === total && !AppState._pathCompletedShown) {
+    AppState._pathCompletedShown = true; AppState.save();
+    setTimeout(() => showBigConfetti(), 400);
+  }
   const items = LEARNING_PATH.map((step, i) => {
     const done = i < current;
     const isCurrent = i === current;
