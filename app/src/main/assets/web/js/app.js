@@ -525,6 +525,7 @@ function navHTML(t) {
     <div class="nav-right">
       <button class="nav-btn" onclick="AudioSystem.toggle();this.textContent=AudioSystem.enabled?'🔊':'🔇'" title="${AudioSystem.enabled?t.soundOn:t.soundOff}">🔊</button>
       <button class="nav-btn" onclick="toggleTheme()" title="${t.theme||'Theme'}">${AppState.theme==='dark'?'☀️':'🌙'}</button>
+      <button class="nav-btn" onclick="toggleContrast()" title="${t.highContrast||'High contrast'}">${AppState.contrast==='high'?'◑':'◐'}</button>
       <button class="nav-btn" onclick="goHome()" title="${t.home}">🏠</button>
       <button class="nav-btn" onclick="logout()" title="Logout">🚪</button>
     </div>
@@ -939,11 +940,20 @@ function applyTheme() {
   const dark = AppState.theme === 'dark';
   document.body.classList.toggle('theme-dark', dark);
   document.body.classList.toggle('mode-toddler', AppState.difficulty === 'toddler');
+  document.body.classList.toggle('contrast-high', AppState.contrast === 'high');
 }
 
 function toggleTheme() {
   AppState.theme = AppState.theme === 'dark' ? 'light' : 'dark';
   try { localStorage.setItem('ak_theme', AppState.theme); } catch(e) {}
+  if (AppState.user) AppState.save();
+  applyTheme();
+  render();
+}
+
+function toggleContrast() {
+  AppState.contrast = AppState.contrast === 'high' ? 'normal' : 'high';
+  try { localStorage.setItem('ak_contrast', AppState.contrast); } catch(e) {}
   if (AppState.user) AppState.save();
   applyTheme();
   render();
@@ -2848,6 +2858,7 @@ document.addEventListener('DOMContentLoaded', function() {
   AppState.lang = AppState.detectLanguage();
   // Restore theme preference
   try { AppState.theme = localStorage.getItem('ak_theme') || 'light'; } catch(e) { AppState.theme = 'light'; }
+  try { AppState.contrast = localStorage.getItem('ak_contrast') || 'normal'; } catch(e) { AppState.contrast = 'normal'; }
   applyTheme();
   // First-launch onboarding — skip when a returning user auto-logs in.
   let onbDone = '1';
