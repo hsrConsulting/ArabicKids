@@ -40,6 +40,7 @@ import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
 import com.hsrconsulting.arabickids.databinding.ActivityMainBinding
+import com.google.firebase.FirebaseApp
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.auth.ktx.auth
@@ -96,6 +97,11 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Defensive: FirebaseInitProvider sometimes fails to auto-init when
+        // WebView is the first View inflated (race during the same onCreate).
+        // initializeApp() is idempotent — returns the existing instance if
+        // it was already attached, otherwise reads google-services resources.
+        try { FirebaseApp.initializeApp(this) } catch (e: Exception) { Log.e(TAG, "Firebase init failed: ${e.message}") }
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
