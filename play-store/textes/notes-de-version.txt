@@ -5,6 +5,37 @@
 Utilisez ces textes dans Google Play Console > Release > Release notes
 
 
+📌 VERSION 2.1.0 — Nouvelle introduction, accessibilité et fréquence de pubs allégée
+─────────────────────────────────────
+
+🇫🇷 Français :
+• Nouvelle introduction cinématographique au premier lancement : essaie une lettre arabe dès l'ouverture de l'app
+• Bouton « Partager l'application » sur l'écran d'accueil pour recommander l'app à un proche
+• Rappel à 19h00 si le défi du jour n'est pas terminé, pour ne plus perdre sa série 🔥
+• Animations renforcées sur les grandes étapes (28 lettres apprises, parcours guidé terminé, série de 7 et 30 jours)
+• Nouveau mode « Contraste élevé » dans la barre de navigation, pour les enfants ayant des besoins visuels
+• Publicités moins fréquentes et jamais durant la première minute de jeu
+• Correctif de stabilité au démarrage sur certains appareils
+
+🇬🇧 English:
+• New cinematic intro on first launch: try an Arabic letter as soon as the app opens
+• "Share the app" button on the home screen for word-of-mouth recommendations
+• 7 PM local-time reminder if today's challenge isn't done, so streaks stay alive 🔥
+• Bigger celebration animations at major milestones (28 letters learned, learning path completed, 7- and 30-day streaks)
+• New "High contrast" mode in the nav bar for kids with visual needs
+• Less frequent ads, and never during the first minute of play
+• Stability fix at startup on some devices
+
+🇸🇦 العربية:
+• مقدمة سينمائية جديدة عند التشغيل الأول: جرّب حرفًا عربيًا فور فتح التطبيق
+• زر "مشاركة التطبيق" في الشاشة الرئيسية للتوصية به للأقارب
+• تذكير في الساعة 19:00 إذا لم يكتمل تحدي اليوم، حفاظًا على سلسلتك 🔥
+• رسوم متحركة معززة عند الإنجازات الكبرى (تعلم 28 حرفًا، إكمال المسار الموجه، سلسلة 7 و30 يومًا)
+• وضع "تباين عالٍ" جديد في شريط التنقل للأطفال ذوي الاحتياجات البصرية
+• إعلانات أقل تكرارًا، ولا تظهر أبدًا خلال أول دقيقة من اللعب
+• إصلاح استقرار عند بدء التشغيل على بعض الأجهزة
+
+
 📌 VERSION 2.0.0 — Nouvelle expérience publicitaire et interface affinée
 ─────────────────────────────────────
 

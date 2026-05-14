@@ -123,19 +123,29 @@ function render() {
   }
 }
 
+// Ad pacing — parent-friendly:
+//   • 90s warm-up after app launch (never interrupt the very first minute)
+//   • 120s cool-down between two ads (no back-to-back even if triggers stack)
+// _adPending stays true across gates, so the deferred trigger fires on the
+// next eligible navigation rather than being lost.
+var _adSessionStartAt = Date.now();
+var _adLastShownAt = 0;
+var AD_WARMUP_MS = 90 * 1000;
+var AD_MIN_INTERVAL_MS = 120 * 1000;
 function _tryShowPendingAd() {
   if (!_adPending) return;
-  // Premium = zero ads. Clear the pending flag so we don't accumulate a queue
-  // that would fire if the user downgrades.
   if (AppState.premium) { _adPending = false; return; }
+  var now = Date.now();
+  if (now - _adSessionStartAt < AD_WARMUP_MS) return; // warm-up, keep pending
+  if (now - _adLastShownAt < AD_MIN_INTERVAL_MS) return; // cool-down, keep pending
   try {
     if (typeof Android === 'undefined') { _adPending = false; return; }
-    // showInterstitial() returns true only if the ad was ready and is being
-    // displayed. If it returns false, Android already kicked off a reload;
-    // keep _adPending=true so the next navigation retries automatically.
     var shown = Android.showInterstitial();
     console.log('[AD] tryShow → shown=' + shown + ' pending=' + _adPending);
-    if (shown === true || shown === 'true') _adPending = false;
+    if (shown === true || shown === 'true') {
+      _adPending = false;
+      _adLastShownAt = now;
+    }
   } catch (e) {
     _adPending = false;
   }
@@ -279,13 +289,13 @@ function addLesson() {
 var _adPending = false;
 // Session counters for ad cadence. Interstitials are queued on completion of
 // a unit of learning and shown on the next navigation away, so the child is
-// never interrupted mid-exercise. Cadences tuned for kids: never more than
-// ~4-5 ads/hour during intensive use (Designed for Families compliant).
-var _lettersViewedCount = 0;   // letter detail opens       — every 4
-var _lettersTracedCount = 0;   // tracing validated         — every 4
-var _memoryWinsCount = 0;      // memory match game wins    — every 3
-var _readingWordsCount = 0;    // word reading sessions     — every 3
-var _readingTextsCount = 0;    // text reading sessions     — every 2
+// never interrupted mid-exercise. Thresholds combined with the 120s cool-down
+// in _tryShowPendingAd cap real-world rate at ~3-4 ads per 30-min session.
+var _lettersViewedCount = 0;   // letter detail opens       — every 6
+var _lettersTracedCount = 0;   // tracing validated         — every 6
+var _memoryWinsCount = 0;      // memory match game wins    — every 5
+var _readingWordsCount = 0;    // word reading sessions     — every 4
+var _readingTextsCount = 0;    // text reading sessions     — every 3
 
 function _trackQuizComplete() {
   var qd = AppState.quizData;
@@ -306,7 +316,7 @@ function addQuiz() {
   _trackQuizComplete();
   if(AppState.quizzes===10&&!AppState.ratingDone)setTimeout(showRatingPopup,1800);
   // Mark ad as pending — will show when user leaves results screen
-  if(AppState.quizzes%2===0) _adPending = true;
+  if(AppState.quizzes%3===0) _adPending = true;
 }
 
 // Per-letter counters. Small, cheap, persisted via AppState.save().
@@ -658,9 +668,9 @@ function openLetter(i) {
   AppState.selectedLetter = i;
   AudioSystem.speakArabic(ALPHABET[i].l);
   navigate('letterDetail');
-  // Queue an interstitial for every 4 letter consultations (shown on exit).
+  // Queue an interstitial for every 6 letter consultations (shown on exit).
   _lettersViewedCount++;
-  if (_lettersViewedCount % 4 === 0) _adPending = true;
+  if (_lettersViewedCount % 6 === 0) _adPending = true;
 }
 
 // Diacritical marks (harakat)
@@ -899,38 +909,128 @@ function huntTap(idx) {
 }
 
 // ==================== ONBOARDING ====================
+// Slide layout:
+//   0  cinematic splash — particles assemble into ا → burst → logo
+//   1  interactive hook — tap ب, hear it, harakat appear + confetti
+//   2  🚀 ready-to-start CTA
 function renderOnboarding(t) {
   const slide = AppState._onbSlide || 0;
-  const slides = [
-    { emoji: '✨', title: t.appName, desc: t.tagline },
-    { emoji: '📚', title: `${t.alphabet} · ${t.words} · ${t.quizLetters}`, desc: t.onbSlide2 || 'Apprends à ton rythme avec des jeux' },
-    { emoji: '🚀', title: t.onbSlide3 || 'Prêt à commencer ?', desc: t.letsStart || "C'est parti !" }
-  ];
-  const s = slides[Math.min(slide, slides.length - 1)];
-  const isLast = slide >= slides.length - 1;
-  const dots = slides.map((_, i) => `<span class="onboard-dot ${i === slide ? 'active' : ''}"></span>`).join('');
+  if (slide === 0) return renderCinematicSplash(t);
+  if (slide === 1) return renderHookSlide(t);
+  const desc = t.letsStart || "C'est parti !";
   return `<div class="onboard-wrap">
     <button class="onboard-skip" onclick="finishOnboarding()">${t.skip || 'Passer'} ›</button>
     <div class="onboard-content">
-      <div class="onboard-emoji">${s.emoji}</div>
-      <h1 class="onboard-title">${s.title}</h1>
-      <p class="onboard-desc">${s.desc}</p>
+      <div class="onboard-emoji">🚀</div>
+      <h1 class="onboard-title">${t.onbSlide3 || 'Prêt à commencer ?'}</h1>
+      <p class="onboard-desc">${desc}</p>
     </div>
-    <div class="onboard-dots">${dots}</div>
-    <button class="btn btn-primary onboard-cta" onclick="${isLast ? 'finishOnboarding()' : 'nextOnboardingSlide()'}">
-      ${isLast ? (t.start || 'Commencer') : (t.next || 'Next')} →
+    <div class="onboard-dots"><span class="onboard-dot"></span><span class="onboard-dot"></span><span class="onboard-dot active"></span></div>
+    <button class="btn btn-primary onboard-cta" onclick="finishOnboarding()">
+      ${t.start || 'Commencer'} →
     </button>
   </div>`;
 }
 
+// Cinematic splash — phase timeline:
+//   0.0-1.2s  particles assemble toward center
+//   1.2-2.0s  letter ا appears with gradient + glow
+//   2.0-2.8s  letter bursts into colored stars radiating outward
+//   2.4-3.6s  logo + arabic tagline fade in
+//   3.0s+     bottom tagline pulse
+//   4.0s      auto-advance to hook slide (interruptible via tap)
+let _splashAdvanceTimer = null;
+function _clearSplashAdvance() {
+  if (_splashAdvanceTimer) { clearTimeout(_splashAdvanceTimer); _splashAdvanceTimer = null; }
+}
+function _scheduleSplashAdvance() {
+  _clearSplashAdvance();
+  _splashAdvanceTimer = setTimeout(() => {
+    _splashAdvanceTimer = null;
+    if (AppState.screen === 'onboarding' && (AppState._onbSlide || 0) === 0) {
+      nextOnboardingSlide();
+    }
+  }, 4000);
+}
+function finishSplashEarly() {
+  _clearSplashAdvance();
+  nextOnboardingSlide();
+}
+function renderCinematicSplash(t) {
+  _scheduleSplashAdvance();
+  let particles = '';
+  for (let i = 0; i < 42; i++) {
+    const x = ((Math.random() - 0.5) * 80).toFixed(1);
+    const y = ((Math.random() - 0.5) * 80).toFixed(1);
+    const d = (Math.random() * 0.6).toFixed(2);
+    particles += `<span class="sp-particle" style="--x:${x}vw;--y:${y}vh;--d:${d}s"></span>`;
+  }
+  let stars = '';
+  for (let i = 0; i < 30; i++) {
+    const angle = (i / 30) * 360 + Math.random() * 8;
+    const dist = (28 + Math.random() * 22).toFixed(1);
+    const hue = Math.floor(Math.random() * 360);
+    stars += `<span class="sp-star" style="--angle:${angle.toFixed(1)}deg;--dist:${dist}vmin;--hue:${hue}"></span>`;
+  }
+  return `<div class="splash-cine" onclick="finishSplashEarly()">
+    <div class="splash-particles">${particles}</div>
+    <div class="splash-letter">ا</div>
+    <div class="splash-burst">${stars}</div>
+    <div class="splash-logo">
+      <h1 class="splash-title">Arabic Kids</h1>
+      <p class="splash-arabic-tagline">تَعَلَّمْ العَرَبِيَّة</p>
+    </div>
+    <p class="splash-bottom-tagline">${t.splashJourney || 'Le voyage commence…'} ✨</p>
+  </div>`;
+}
+
+// "Show, don't tell": the hook screen replaces a marketing slide with a
+// 5-second interaction. Child taps ب, hears it pronounced, sees the harakat
+// materialize, gets a burst of confetti. Demonstrates the whole value of
+// the app in a single tap before they've even registered.
+function renderHookSlide(t) {
+  const tapped = !!AppState._hookTapped;
+  const dots = `<span class="onboard-dot"></span><span class="onboard-dot active"></span><span class="onboard-dot"></span>`;
+  return `<div class="onboard-wrap onboard-hook">
+    <button class="onboard-skip" onclick="finishOnboarding()">${t.skip || 'Passer'} ›</button>
+    <div class="onboard-content">
+      <p class="hook-prompt ${tapped ? 'fade-out' : ''}">
+        ${t.hookPrompt || "Touche la lettre pour l'entendre"} <span class="hook-prompt-emoji">👇</span>
+      </p>
+      <div class="hook-stage" onclick="onHookTap()">
+        <div class="hook-letter ${tapped ? 'tapped' : ''}">${tapped ? 'بَ' : 'ب'}</div>
+        <div class="hook-finger ${tapped ? 'fade-out' : ''}">👆</div>
+      </div>
+      <p class="hook-success ${tapped ? 'show' : ''}">
+        ${t.hookSuccess || "Magnifique ! Voilà comment fonctionne Arabic Kids."}
+      </p>
+    </div>
+    <div class="onboard-dots">${dots}</div>
+    <button class="btn btn-primary onboard-cta hook-cta ${tapped ? 'show' : ''}" onclick="nextOnboardingSlide()">
+      ${t.next || 'Continuer'} →
+    </button>
+  </div>`;
+}
+
+function onHookTap() {
+  if (AppState._hookTapped) return;
+  AppState._hookTapped = true;
+  try { AudioSystem.speakArabic('بَ'); } catch (e) {}
+  showConfetti();
+  render();
+}
+
 function nextOnboardingSlide() {
+  _clearSplashAdvance();
   AppState._onbSlide = (AppState._onbSlide || 0) + 1;
   render();
 }
 
 function finishOnboarding() {
+  _clearSplashAdvance();
   try { localStorage.setItem('ak_onboardingDone', '1'); } catch(e) {}
   AppState._onbSlide = 0;
+  AppState._hookTapped = false;
   AppState.screen = 'welcome';
   render();
 }
@@ -1669,7 +1769,7 @@ function memFlip(i) {
       setTimeout(function(){
         memoryCards[a].matched=true;memoryCards[b].matched=true;memoryFlipped=[];addScore(15);
         _memUpdateCard(a); _memUpdateCard(b);
-        if(memoryCards.every(function(x){return x.matched;})){memoryDone=true;addQuiz();_memoryWinsCount++;if(_memoryWinsCount%3===0)_adPending=true;showConfetti();AudioSystem.playSound('complete');render();}
+        if(memoryCards.every(function(x){return x.matched;})){memoryDone=true;addQuiz();_memoryWinsCount++;if(_memoryWinsCount%5===0)_adPending=true;showConfetti();AudioSystem.playSound('complete');render();}
       },500);
     } else {
       AudioSystem.playSound('wrong');
@@ -2497,9 +2597,9 @@ function _checkTrace() {
 
   _traceCompleted = true; _traceGuideRunning = false;
   if (_traceAnimTimer) { clearTimeout(_traceAnimTimer); _traceAnimTimer = null; }
-  // Queue an interstitial for every 4 successful tracings (shown on exit).
+  // Queue an interstitial for every 6 successful tracings (shown on exit).
   _lettersTracedCount++;
-  if (_lettersTracedCount % 4 === 0) _adPending = true;
+  if (_lettersTracedCount % 6 === 0) _adPending = true;
   var stars = pct >= 70 ? 3 : pct >= 50 ? 2 : 1;
   var pts = stars * 5;
   addScore(pts); markLetterLearned(ALPHABET[i].l); addLesson();
@@ -2665,13 +2765,13 @@ function _readingNext() {
   } else {
     _readingState.done = true;
     addQuiz();
-    // Queue an interstitial by reading type: every 3 word sessions, every 2 text sessions.
+    // Queue an interstitial by reading type: every 4 word sessions, every 3 text sessions.
     if (_readingState.type === 'text') {
       _readingTextsCount++;
-      if (_readingTextsCount % 2 === 0) _adPending = true;
+      if (_readingTextsCount % 3 === 0) _adPending = true;
     } else {
       _readingWordsCount++;
-      if (_readingWordsCount % 3 === 0) _adPending = true;
+      if (_readingWordsCount % 4 === 0) _adPending = true;
     }
     const goodCount = _readingState.results.filter(r => r.score >= 0.8).length;
     if (goodCount === _readingState.results.length) { awardBadge('perfectQuiz'); }
