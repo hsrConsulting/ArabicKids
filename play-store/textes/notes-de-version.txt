@@ -5,6 +5,19 @@
 Utilisez ces textes dans Google Play Console > Release > Release notes
 
 
+📌 VERSION 2.1.1 — Petits ajustements d'interface
+─────────────────────────────────────
+
+🇫🇷 Français :
+• Retrait du bouton « Contraste élevé » dans la barre de navigation (interface simplifiée)
+
+🇬🇧 English:
+• Removed the "High contrast" button from the navigation bar (simpler interface)
+
+🇸🇦 العربية:
+• إزالة زر "تباين عالٍ" من شريط التنقل (واجهة مبسطة)
+
+
 📌 VERSION 2.1.0 — Nouvelle introduction, accessibilité et fréquence de pubs allégée
 ─────────────────────────────────────
 
