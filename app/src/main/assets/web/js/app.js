@@ -493,6 +493,23 @@ function tryAutoLogin() {
   return false;
 }
 
+function showLogoutPopup() {
+  const t = AppState.t;
+  AudioSystem.playSound('click');
+  const ov = document.createElement('div'); ov.className = 'badge-overlay'; ov.id = 'lo'; ov.onclick = closeLogoutPopup;
+  const pp = document.createElement('div'); pp.className = 'badge-popup'; pp.id = 'lp';
+  pp.innerHTML = `<div class="badge-popup-emoji">🚪</div>
+    <h2 style="margin-bottom:8px">${t.logoutTitle || 'Log out?'}</h2>
+    <p style="font-size:0.95rem;color:#718096;margin-bottom:18px;line-height:1.4">${t.logoutMessage || 'You can log back in with your name and code.'}</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+      <button class="btn btn-ghost" onclick="closeLogoutPopup()" style="flex:1;min-width:110px">${t.logoutCancel || 'Cancel'}</button>
+      <button class="btn btn-primary" onclick="confirmLogout()" style="flex:1;min-width:110px">${t.logoutConfirm || 'Yes, log out'}</button>
+    </div>`;
+  document.body.appendChild(ov); document.body.appendChild(pp);
+}
+function closeLogoutPopup() { ['lo','lp'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); }); }
+function confirmLogout() { closeLogoutPopup(); logout(); }
+
 function logout() {
   try{localStorage.removeItem('ak_lastUser');}catch(e){}
   AppState.user=null;AppState.screen='welcome';render();
@@ -536,7 +553,7 @@ function navHTML(t) {
       <button class="nav-btn" onclick="AudioSystem.toggle();this.textContent=AudioSystem.enabled?'🔊':'🔇'" title="${AudioSystem.enabled?t.soundOn:t.soundOff}">🔊</button>
       <button class="nav-btn" onclick="toggleTheme()" title="${t.theme||'Theme'}">${AppState.theme==='dark'?'☀️':'🌙'}</button>
       <button class="nav-btn" onclick="goHome()" title="${t.home}">🏠</button>
-      <button class="nav-btn" onclick="logout()" title="Logout">🚪</button>
+      <button class="nav-btn" onclick="showLogoutPopup()" title="${t.logoutTitle||'Log out'}">🚪</button>
     </div>
   </div>`;
 }
