@@ -7,6 +7,8 @@ const AudioSystem = {
   enabled: true,
   isAndroid: typeof Android !== 'undefined',
   _current: null, // currently playing HTMLAudioElement (for stopSpeech)
+  _silentCount: 0, // consecutive speakArabic calls where no playback succeeded
+  _hintTriggered: false, // one-shot guard for the missing-TTS popup
 
   getContext() {
     if (!this.context) {
@@ -29,13 +31,26 @@ const AudioSystem = {
   _playRecorded(text, onError) {
     var url = this._audioUrl(text);
     if (!url) { onError(); return; }
+    var self = this;
     try {
       if (this._current) { try { this._current.pause(); } catch(e) {} this._current = null; }
       var a = new Audio(url);
       this._current = a;
+      a.onplay = function() { self._silentCount = 0; }; // playback started → success
       a.onerror = function() { onError(); };
       a.play().catch(function() { onError(); });
     } catch(e) { onError(); }
+  },
+
+  // Called when no audio path produced playback for a speakArabic() request.
+  // After a few consecutive silent attempts, surface the TTS-missing popup
+  // so the parent can install the Arabic voice or check the volume.
+  _registerSilentAttempt() {
+    this._silentCount++;
+    if (this._silentCount >= 3 && !this._hintTriggered && typeof _showTtsMissingHint === 'function') {
+      this._hintTriggered = true;
+      try { _showTtsMissingHint(); } catch(e) {}
+    }
   },
 
   playSound(type) {
@@ -87,7 +102,12 @@ const AudioSystem = {
       try {
         var ok = Android.speakArabic(text);
         if (ok === true || ok === 'true') return;
+        // Local TTS unavailable — try the online fallback. We can't observe
+        // success from JS, so count this as silent. If online does play, the
+        // user just sees a warning popup once after a few words and can ignore;
+        // if online fails too, the popup is genuinely useful.
         Android.speakOnline(text);
+        this._registerSilentAttempt();
         return;
       } catch(e) {
         console.log('Android bridge error:', e);

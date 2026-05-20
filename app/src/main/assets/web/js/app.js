@@ -90,6 +90,7 @@ function render() {
     words: renderWords, wordList: renderWordList, quizL: renderQuizLetters,
     quizW: renderQuizWords, quizResults: renderQuizResults, memory: renderMemory, badges: renderBadges,
     quizForms: renderQuizForms, quizAudio: renderQuizAudio, quizCategories: renderQuizCategories,
+    quizFirstLetter: renderQuizFirstLetter,
     quizPhrases: renderQuizPhrases, quizMatch: renderQuizMatch,
     difficulty: renderDifficulty, letterForms: renderLetterForms,
     letterTraceMenu: renderLetterTraceMenu, letterTraceLesson: renderLetterTraceLesson,
@@ -779,9 +780,10 @@ function letterNext(i) {
 function renderQuizzesList(t) {
   const sections = [
     { title: '🔤 ' + (t.quizCatLetters || 'Lettres'), items: [
-      { ico: '🎯',  lbl: t.quizLetters,                  fn: 'startQuizLetters()' },
-      { ico: '📍',  lbl: t.quizPositions || 'Positions', fn: 'startQuizPositions()' },
-      { ico: '◌َ',  lbl: t.quizHarakat   || 'Harakat',   fn: 'startQuizHarakat()' }
+      { ico: '🎯',  lbl: t.quizLetters,                       fn: 'startQuizLetters()' },
+      { ico: '🔡',  lbl: t.quizFirstLetter || 'First letter', fn: 'startQuizFirstLetter()' },
+      { ico: '📍',  lbl: t.quizPositions   || 'Positions',    fn: 'startQuizPositions()' },
+      { ico: '◌َ',  lbl: t.quizHarakat     || 'Harakat',      fn: 'startQuizHarakat()' }
     ]},
     { title: '📝 ' + (t.quizCatWords || 'Mots'), items: [
       { ico: '🧩', lbl: t.quizWords,                       fn: 'startQuizWords()' },
@@ -1149,6 +1151,69 @@ function renderStoryQuiz(t) {
 // ==================== QUIZ LISTEN & CHOOSE ====================
 // Variant of quizAudio where options are emoji-only (easier for pre-readers).
 // The child hears an Arabic word and picks the matching picture.
+// First-letter quiz: show emoji + audio + Arabic word, child taps the
+// letter the word starts with (among 4 options). Strips harakat from the
+// first character and normalizes alif variants to match ALPHABET keys.
+function _firstBaseLetter(ar) {
+  if (!ar) return '';
+  const stripped = ar.replace(/[ً-ْٰ]/g, '');
+  if (!stripped) return '';
+  let c = stripped.charAt(0);
+  if ('أإآا'.includes(c)) c = 'أ';
+  return c;
+}
+
+function startQuizFirstLetter() {
+  const diff = DIFFICULTY[AppState.difficulty || 'normal'];
+  const pool = (diff.catKeys ? diff.catKeys.flatMap(k => WORD_CATEGORIES[k].words) : getAllWords())
+    .filter(w => w && w.emoji && w.ar);
+  const candidates = [];
+  pool.forEach(w => {
+    const first = _firstBaseLetter(w.ar);
+    if (first && ALPHABET.some(a => a.l === first)) {
+      candidates.push({ ar: w.ar, emoji: w.emoji, first: first });
+    }
+  });
+  if (!candidates.length) { startQuizLetters(); return; }
+  const picked = shuffle(candidates).slice(0, diff.questionCount);
+  AppState.quizData = {
+    type: 'firstLetter', pts: diff.pts,
+    questions: picked.map(w => {
+      const distractors = shuffle(ALPHABET.filter(a => a.l !== w.first)).slice(0, diff.options - 1);
+      return {
+        arabic: w.ar, emoji: w.emoji,
+        options: shuffle([
+          { letter: w.first, correct: true },
+          ...distractors.map(d => ({ letter: d.l, correct: false }))
+        ])
+      };
+    }),
+    current: 0, selected: null, results: [], done: false
+  };
+  Analytics.quizStart('firstLetter', AppState.difficulty);
+  navigate('quizFirstLetter');
+  setTimeout(() => AudioSystem.speakArabic(AppState.quizData.questions[0].arabic), 500);
+}
+
+function renderQuizFirstLetter(t) {
+  const qd = AppState.quizData; if (!qd) return renderDashboard(t);
+  if (qd.done) return renderQuizResults(t);
+  const q = qd.questions[qd.current];
+  return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}<div class="quiz-c">
+    ${secH(t, '🔡 ' + (t.quizFirstLetter || 'First letter'), 'sectionBack()')}
+    <div class="quiz-dots">${qd.questions.map((_, i) => `<div class="qdot ${i === qd.current ? 'active' : i < qd.current ? (qd.results[i] ? 'done' : 'wrong') : ''}"></div>`).join('')}</div>
+    <p class="qq">${t.questionOf} ${qd.current + 1} ${t.of} ${qd.questions.length}</p>
+    <p style="color:var(--text-light);margin-bottom:6px">${t.tapFirstLetter || 'Which letter does this word start with?'}</p>
+    <div style="text-align:center;margin:10px 0 6px">
+      <div style="font-size:5rem;line-height:1">${q.emoji}</div>
+      <div class="arabic" data-speak="${q.arabic}" style="font-size:2.2rem;font-weight:700;margin-top:8px;cursor:pointer">${q.arabic}</div>
+    </div>
+    <button class="btn btn-secondary btn-sm" data-speak="${q.arabic}" style="margin:0 auto 16px;display:flex">🔊 ${t.listen}</button>
+    <div class="qoptions">${q.options.map((o, i) => `<button class="qopt ${qd.selected === i ? (o.correct ? 'correct' : 'incorrect') : (qd.selected !== null ? 'dis' : '')}" style="font-family:var(--font-arabic);font-size:2.2rem;font-weight:600;padding:18px" onclick="quizAnswer(${i})">${o.letter}</button>`).join('')}</div>
+    ${qd.selected !== null ? `<div class="qfeedback ${q.options[qd.selected].correct ? 'correct' : 'incorrect'}">${q.options[qd.selected].correct ? t.correct : t.incorrect}</div>` : ''}
+  </div></div>`;
+}
+
 function startQuizListen() {
   const diff = DIFFICULTY[AppState.difficulty || 'normal'];
   const all = (diff.catKeys ? diff.catKeys.flatMap(k => WORD_CATEGORIES[k].words) : getAllWords())
@@ -1427,7 +1492,7 @@ function renderQuizResults(t) {
   const msg=pct===100?t.perfect:pct>=75?t.great:pct>=50?t.good:t.keepGoing;
   const icons={letters:'🎯',words:'🧩',forms:'✍️',audio:'🎧',categories:'📂',phrases:'💬',match:'🔗',harakat:'◌َ',positions:'📍',story:'📖',listen:'👂'};
   const icon=icons[qd.type]||'🎯';
-  const replays={letters:'startQuizLetters()',words:'startQuizWords()',forms:'startQuizForms()',audio:'startQuizAudio()',categories:'startQuizCategories()',phrases:'startQuizPhrases()',match:'startQuizMatch()',harakat:'startQuizHarakat()',positions:'startQuizPositions()',story:'startStoryQuiz()',listen:'startQuizListen()'};
+  const replays={letters:'startQuizLetters()',words:'startQuizWords()',forms:'startQuizForms()',audio:'startQuizAudio()',categories:'startQuizCategories()',phrases:'startQuizPhrases()',match:'startQuizMatch()',harakat:'startQuizHarakat()',positions:'startQuizPositions()',story:'startStoryQuiz()',listen:'startQuizListen()',firstLetter:'startQuizFirstLetter()'};
   const replay=replays[qd.type]||'goHome()';
   const pts=qd.pts||10;
   return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}<div class="quiz-c">
@@ -2954,10 +3019,11 @@ function _openTtsSettings() {
   try { if (typeof Android !== 'undefined') Android.openTtsSettings(); } catch(e) {}
 }
 
-// Called from Android when TTS init detects missing Arabic
+// Called from Android when TTS init detects missing Arabic. Fires on any
+// screen, with a small delay so cinematic/splash slides have time to play.
 window.onTtsStatus = function(available) {
-  if (!available && AppState.screen === 'dashboard') {
-    setTimeout(_showTtsMissingHint, 1500);
+  if (!available) {
+    setTimeout(_showTtsMissingHint, 2500);
   }
 };
 
