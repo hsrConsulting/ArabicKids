@@ -780,7 +780,6 @@ function renderQuizzesList(t) {
   const sections = [
     { title: '🔤 ' + (t.quizCatLetters || 'Lettres'), items: [
       { ico: '🎯',  lbl: t.quizLetters,                  fn: 'startQuizLetters()' },
-      { ico: '🖊️', lbl: t.quizForms,                    fn: 'startQuizForms()' },
       { ico: '📍',  lbl: t.quizPositions || 'Positions', fn: 'startQuizPositions()' },
       { ico: '◌َ',  lbl: t.quizHarakat   || 'Harakat',   fn: 'startQuizHarakat()' }
     ]},
@@ -2686,9 +2685,12 @@ function _startListening() {
   _readingState.listening = true;
   _readingState.partial = '';
   render();
+  // Reading a full text needs much longer silence tolerance than a single
+  // word — pass the flag so Android extends the SpeechRecognizer timeouts.
+  const extended = _readingState.type === 'text';
   try {
     if (typeof Android !== 'undefined' && Android.startListening) {
-      Android.startListening();
+      Android.startListening(extended);
     } else {
       // Web Speech API fallback for browser testing
       if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {

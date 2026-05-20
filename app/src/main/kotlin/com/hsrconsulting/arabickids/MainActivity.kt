@@ -440,7 +440,7 @@ class MainActivity : AppCompatActivity() {
         runOnUiThread { binding.webView.evaluateJavascript(js, null) }
     }
 
-    private fun startSpeechRecognition() {
+    private fun startSpeechRecognition(extended: Boolean = false) {
         if (!SpeechRecognizer.isRecognitionAvailable(this)) {
             jsCallback("if(typeof onSpeechResult==='function')onSpeechResult('','0','not_available')")
             return
@@ -491,6 +491,13 @@ class MainActivity : AppCompatActivity() {
                 putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, "ar")
                 putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
                 putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                // Reading-text mode: give the child much more breathing room
+                // between words. Single-word reading keeps the snappy defaults.
+                if (extended) {
+                    putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 4000L)
+                    putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 6000L)
+                    putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 3000L)
+                }
             }
             startListening(intent)
         }
@@ -836,7 +843,7 @@ class MainActivity : AppCompatActivity() {
         fun showInterstitial(): Boolean = showInterstitialAd()
 
         @JavascriptInterface
-        fun startListening() {
+        fun startListening(extended: Boolean) {
             runOnUiThread {
                 if (!hasAudioPermission()) {
                     requestAudioPermission()
@@ -845,7 +852,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 // Stop TTS if speaking before starting recognition
                 if (::tts.isInitialized && tts.isSpeaking) tts.stop()
-                startSpeechRecognition()
+                startSpeechRecognition(extended)
             }
         }
 
