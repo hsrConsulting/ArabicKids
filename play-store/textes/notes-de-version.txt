@@ -5,6 +5,37 @@
 Utilisez ces textes dans Google Play Console > Release > Release notes
 
 
+📌 VERSION 2.2.0 — Nouveau quiz, lecture améliorée et son intelligent
+─────────────────────────────────────
+
+🇫🇷 Français :
+• Nouveau quiz 🔡 « Première lettre » : retrouve la lettre par laquelle commence un mot
+• Confirmation avant déconnexion (plus de déconnexion accidentelle)
+• Lecture de texte : beaucoup plus de temps pour parler avant que le micro ne s'arrête
+• Tracés des lettres ف et ه retravaillés pour mieux suivre la forme réelle
+• Détection automatique si la voix arabe n'est pas installée sur l'appareil + lien direct vers les paramètres
+• Quiz « Formes » retiré (faisait doublon avec le quiz « Positions »)
+• Correctif de stabilité au démarrage
+
+🇬🇧 English:
+• New quiz 🔡 "First letter": find the letter a word starts with
+• Confirmation before logging out (no more accidental logouts)
+• Reading text: much more breathing room before the mic times out
+• Tracing paths for ف and ه reworked to follow the real glyph shape
+• Auto-detect missing Arabic voice + direct link to system settings
+• "Forms" quiz removed (overlapped with "Positions" quiz)
+• Startup stability fix
+
+🇸🇦 العربية:
+• اختبار جديد 🔡 "الحرف الأول": اكتشف الحرف الذي تبدأ به الكلمة
+• تأكيد قبل تسجيل الخروج (لا مزيد من الخروج العرضي)
+• قراءة النص: وقت أطول بكثير قبل توقف الميكروفون
+• إعادة تصميم مسارات الكتابة لحرفي ف و ه
+• اكتشاف تلقائي إذا كان الصوت العربي غير مثبت + رابط مباشر للإعدادات
+• إزالة اختبار "الأشكال" (يتداخل مع اختبار "المواقع")
+• إصلاح استقرار عند بدء التشغيل
+
+
 📌 VERSION 2.1.1 — Petits ajustements d'interface
 ─────────────────────────────────────
 
