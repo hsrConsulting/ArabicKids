@@ -82,32 +82,63 @@ Premium UI is hidden from the user pending product decision. Code remains:
 ## Ads
 
 - **Banner**: `AdView` in `activity_main.xml` (id `adView`), unit `admob_banner_id` in `strings.xml`. Loaded after UMP consent + `MobileAds.initialize` via `loadBannerAd()`. Lifecycle hooks (`pause`/`resume`/`destroy`) wired in `MainActivity`.
-- **Interstitial**: real unit `admob_interstitial_id`. Triggered every 4 letter consultations (see `_lettersViewedCount` in `app.js`).
+- **Interstitial**: real unit `admob_interstitial_id`. Tuned for kids — 90s warm-up after launch + 120s cool-down between two ads (in `_tryShowPendingAd`, `app.js`). Frequency thresholds: every 3 quizzes, every 6 letter views, every 5 memory wins, every 6 tracings, every 4 word readings, every 3 text readings. Triggers queue `_adPending` flag, shown on next navigation away.
 
-## Recently shipped (v1.2.0 → v1.5.x)
+## Audio failure detection
 
+`AudioSystem` (audio.js) tracks consecutive silent `speakArabic` calls — silent = MP3 not in `_AUDIO_DICT` AND `Android.speakArabic` returned false. After 3 silent calls in a session, `_showTtsMissingHint()` popup fires once with a deeplink into system TTS settings (`Android.openTtsSettings`). `Audio.onplay` resets the counter so any working playback path keeps the popup dormant. Also auto-fires once at app launch via `onTtsStatus(false)` callback when the TTS engine reports no Arabic voice.
+
+## Recently shipped (v1.2.0 → v2.1.x)
+
+### v2.1.x (latest)
+- Cinematic splash + interactive hook onboarding (tap a letter, hear it, harakat materialize + confetti)
+- New quiz 🔡 **First letter** in Letters category (tap which letter the word starts with)
+- Logout confirmation popup (🚪 nav button no longer logs out immediately)
+- Reading-text speech recognition: 6s complete-silence + 4s minimum + 3s possibly-complete (vs short defaults for single-word reading)
+- Forms quiz hidden from hub (overlapped with Positions); function kept in code for replays/saved state
+- Tracing paths reworked for ف Fa and ه Hé to follow the rendered glyph more closely
+- Ad pacing tuned (see Ads section)
+- Audio failure detector + popup (see Audio failure detection section)
+- Defensive `FirebaseApp.initializeApp(this)` in MainActivity.onCreate (fixes a race with WebView inflation that left Firebase un-initialized on some devices)
+- High contrast accessibility mode added then removed (test in v2.1.0, dropped in v2.1.1 — feedback)
+- Sports category (14 words, 10 langs) added but flagged `hidden:true` pending audio recording
+
+### v2.0.x
+- AdMob banner ad at bottom of WebView host (`AdView` in `activity_main.xml`, unit `admob_banner_id`)
+- Premium UI hidden everywhere — paywall & subscription screen stay in code, just unreachable
+- Match quiz tile homogenization (fixed height 64px / 56px mobile, no more uneven cards from long translations)
+- Streak push: second alarm at 19:00 only fires when daily challenge isn't done (mirrored from JS via `Android.setDailyDone()` → SharedPreferences)
+- Share intent on dashboard 📤 → `Intent.ACTION_SEND` chooser with Play Store URL
+- Confetti polish — `showBigConfetti()` for alpha28 / score1000 / 7-day & 30-day streaks / learning-path completion (110 particles + complete sound)
+- IARC age rating Global Rating ID issued (`b0a50799-aef3-8303-8af0-3f2f7ea61ff2`) — save for use on App Store / Galaxy Store / Amazon
+
+### v1.x
 - Audio Samsung fix (USAGE_MEDIA, removed 3s SoundPool release trap)
 - Harakat on all single words + phrases + reading texts
-- 2 new categories: emotions + verbs
+- 2 categories: emotions + verbs
 - Parcours guidé (LEARNING_PATH, 48 steps, 7 modules)
-- Quiz Positions (📍)
-- Quiz Listen & Choose (👂 emoji options)
-- Stories (3 narratives with comprehension quiz)
-- Dark mode (🌙/☀️ toggle in nav)
-- Onboarding 3 slides
-- Firebase cloud sync (Firestore + anonymous auth)
+- Quiz Positions (📍), Listen & Choose (👂), Harakat (◌َ)
+- Stories with comprehension quiz, Dark mode, Toddler mode 🧸
+- Firebase cloud sync (Firestore + anonymous auth), Crashlytics
 - Streak 🔥 + Daily challenge 🎯 + animated badges
-- Crashlytics
-- Toddler mode 🧸
-- Local notif (17:00, AlarmManager)
-- MP3 audio pipeline (Polly-ready, fallback to TTS)
+- Local notif at 17:00 (AlarmManager)
+- MP3 audio pipeline (Polly Zeina, 448 files bundled, fallback to TTS)
 
 ## Known pending work
 
-- Multi-children per parent account (advertised in paywall but not implemented)
-- Parent dashboard (advertised in paywall but not implemented)
+- Multi-children per parent account (advertised in paywall — must rebuild before re-enabling premium)
+- Parent dashboard (advertised in paywall)
 - Remote Config (A/B testing)
 - Play Store: family subscription, trailer video, refreshed screenshots
+- Sports category audio: regenerate MP3s via `tools/generate_audio.py` then flip `hidden:true` → false in `WORD_CATEGORIES.sports`
+- Replace AdMob test devices warning in Play Console / AdMob console (UMP consent form was not fully published as of last check)
+
+## Project hosting
+
+- **Repo**: https://github.com/hsrConsulting/ArabicKids (public)
+- **GitHub Pages landing**: https://hsrconsulting.github.io/ArabicKids/ (declared in Play Console as Developer Website)
+- **app-ads.txt**: AdMob crawler requires it at the *root* of the developer subdomain (`https://hsrconsulting.github.io/app-ads.txt`), which means a separate `hsrconsulting.github.io` repo. A copy is also versioned at the root of this repo for reference.
+- **IARC Global Rating ID**: `b0a50799-aef3-8303-8af0-3f2f7ea61ff2` (issued 2026-05-11)
 
 ## Working style reminders
 
