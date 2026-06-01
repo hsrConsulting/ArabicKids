@@ -22,9 +22,9 @@ const AudioSystem = {
   // form — matches how tools/generate_audio.py produces the manifest.
   _audioUrl(text) {
     if (typeof _AUDIO_DICT === 'undefined' || !text) return null;
-    if (_AUDIO_DICT[text]) return 'audio/' + _AUDIO_DICT[text] + '.mp3';
+    if (_AUDIO_DICT[text]) return '../audio/' + _AUDIO_DICT[text] + '.mp3';
     var bare = text.replace(/[\u064B-\u0652\u0670]/g, '');
-    if (bare !== text && _AUDIO_DICT[bare]) return 'audio/' + _AUDIO_DICT[bare] + '.mp3';
+    if (bare !== text && _AUDIO_DICT[bare]) return '../audio/' + _AUDIO_DICT[bare] + '.mp3';
     return null;
   },
 

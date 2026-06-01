@@ -105,7 +105,13 @@ function render() {
     story: renderStory,
     storyQuiz: renderStoryQuiz,
     letterHunt: renderLetterHunt,
-    quizzesList: renderQuizzesList
+    quizzesList: renderQuizzesList,
+    quizOddOneOut: renderQuizOddOneOut,
+    quizCounting: renderQuizCounting,
+    anagram: renderAnagram,
+    fallingLetters: renderFallingLetters,
+    parentDashboard: renderParentDashboard,
+    parentChildDetail: renderParentChildDetail
   };
   const fn = renderers[AppState.screen] || renderWelcome;
   app.innerHTML = fn(t);
@@ -122,6 +128,8 @@ function render() {
     btn.onclick = completeDailyChallenge;
     document.body.appendChild(btn);
   }
+  // Streak-saved popup fires once when bumpStreak consumed a freeze.
+  _maybeShowStreakSavedPopup();
 }
 
 // Ad pacing — parent-friendly:
@@ -133,8 +141,12 @@ var _adSessionStartAt = Date.now();
 var _adLastShownAt = 0;
 var AD_WARMUP_MS = 90 * 1000;
 var AD_MIN_INTERVAL_MS = 120 * 1000;
+// Interstitial display is paused. Flip to false to re-enable — triggers /
+// pacing / counters are untouched so behavior resumes identically.
+var INTERSTITIAL_HIDDEN = true;
 function _tryShowPendingAd() {
   if (!_adPending) return;
+  if (INTERSTITIAL_HIDDEN) { _adPending = false; return; }
   if (AppState.premium) { _adPending = false; return; }
   var now = Date.now();
   if (now - _adSessionStartAt < AD_WARMUP_MS) return; // warm-up, keep pending
@@ -153,6 +165,13 @@ function _tryShowPendingAd() {
 }
 
 function navigate(s) {
+  // Tear down the falling-letters game loop on any navigation away from it
+  // (the 🏠 / nav buttons don't go through _fallingExit, so its 80ms interval
+  // would otherwise keep ticking — battery drain + stray playSound).
+  if (s !== 'fallingLetters' && fallingState) {
+    if (fallingState.timerId) clearInterval(fallingState.timerId);
+    fallingState = null;
+  }
   // Show pending ad when leaving results screen, or when leaving a letter
   // detail / tracing lesson (so the 4th-letter ad fires as the child moves on).
   var leavingLearning = AppState.screen === 'letterDetail' || AppState.screen === 'letterTraceLesson';
@@ -266,17 +285,57 @@ function dailyAutoCheck() {
 
 // Update the daily-activity streak. Idempotent within a day. Called from any
 // progress hook (addScore, addLesson, addQuiz, markLetterLearned) via save().
+//
+// Streak freeze:
+//   - The child banks +1 freeze every 7 consecutive days (cap 2).
+//   - Missing exactly one day (lastActive == day-before-yesterday) consumes
+//     one freeze instead of resetting the streak. Two missed days or more
+//     still resets — freezes only forgive single-day slips.
+//   - When a freeze is consumed, _streakSavedPending is raised so the next
+//     render shows a celebratory popup once.
+const MAX_FREEZES = 2;
 function bumpStreak() {
   const today = new Date().toISOString().slice(0, 10);
-  if (!AppState.streak) AppState.streak = { current: 0, longest: 0, lastActive: null };
+  if (!AppState.streak) AppState.streak = { current: 0, longest: 0, lastActive: null, freezes: 0 };
+  if (typeof AppState.streak.freezes !== 'number') AppState.streak.freezes = 0;
   if (AppState.streak.lastActive === today) return;
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  AppState.streak.current = (AppState.streak.lastActive === yesterday) ? AppState.streak.current + 1 : 1;
+  const yesterday  = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const dayBefore  = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
+  if (AppState.streak.lastActive === yesterday) {
+    AppState.streak.current += 1;
+  } else if (AppState.streak.lastActive === dayBefore && AppState.streak.freezes > 0) {
+    AppState.streak.freezes -= 1;
+    AppState.streak.current += 1;
+    AppState._streakSavedPending = true;
+  } else {
+    AppState.streak.current = 1;
+  }
   if (AppState.streak.current > (AppState.streak.longest || 0)) AppState.streak.longest = AppState.streak.current;
   AppState.streak.lastActive = today;
+  // Reward: +1 freeze every 7 consecutive days, capped.
+  if (AppState.streak.current > 0 && AppState.streak.current % 7 === 0 && AppState.streak.freezes < MAX_FREEZES) {
+    AppState.streak.freezes += 1;
+  }
   if (AppState.streak.current === 7 || AppState.streak.current === 30) {
     setTimeout(() => showBigConfetti(), 250);
   }
+}
+
+// Surfaces a one-shot ❄️ popup when bumpStreak consumed a freeze. Called from
+// render() right after the screen is painted so it lands on top.
+function _maybeShowStreakSavedPopup() {
+  if (!AppState._streakSavedPending) return;
+  AppState._streakSavedPending = false;
+  const t = AppState.t;
+  AudioSystem.playSound('badge');
+  const ov = document.createElement('div'); ov.className = 'badge-overlay'; ov.id = 'sso';
+  ov.onclick = function(){ ['sso','ssp'].forEach(id=>{const e=document.getElementById(id);if(e)e.remove();}); };
+  const pp = document.createElement('div'); pp.className = 'badge-popup'; pp.id = 'ssp';
+  pp.innerHTML = `<div class="badge-popup-emoji">❄️</div>
+    <h2 style="margin-bottom:8px">${t.streakSavedTitle || 'Streak saved!'}</h2>
+    <p style="font-size:0.95rem;color:#718096;margin-bottom:14px;line-height:1.4">${t.streakSavedMsg || 'You used a freeze ❄️ — your streak keeps going!'}</p>
+    <button class="btn btn-primary" onclick="document.getElementById('sso').click()" style="min-width:140px">${t.go || 'OK'} 🎉</button>`;
+  document.body.appendChild(ov); document.body.appendChild(pp);
 }
 
 function addScore(p) { AppState.score+=p; AppState.level=Math.floor(AppState.score/100)+1; checkBadges(); bumpStreak(); AppState.save(); }
@@ -365,7 +424,7 @@ function showBadgePopup(badge) {
   const t=AppState.t;
   const ov=document.createElement('div');ov.className='badge-overlay';ov.id='bo';ov.onclick=closeBadgePopup;
   const pp=document.createElement('div');pp.className='badge-popup';pp.id='bp';
-  pp.innerHTML=`<div class="badge-popup-emoji">${badge.emoji}</div><h2 style="margin-bottom:8px">${t.newBadge}</h2><p style="font-size:1.15rem;font-weight:600;color:#4A5568">${badge.name[AppState.lang]}</p><button class="btn btn-primary" style="margin-top:18px" onclick="closeBadgePopup()">${t.wellDone} ✨</button>`;
+  pp.innerHTML=`<div class="badge-popup-emoji">${badge.emoji}</div><h2 style="margin-bottom:8px">${t.newBadge}</h2><p style="font-size:1.15rem;font-weight:600;color:#4A5568">${badge.name[AppState.lang]||badge.name.en}</p><button class="btn btn-primary" style="margin-top:18px" onclick="closeBadgePopup()">${t.wellDone} ✨</button>`;
   document.body.appendChild(ov);document.body.appendChild(pp);
 }
 
@@ -435,6 +494,15 @@ function doRegister() {
   const n=document.getElementById('rn').value.trim(),c=document.getElementById('rc').value;
   if(!n){showAuthError('reg-err',t.nameTooShort);return;}
   if(c.length!==4){showAuthError('reg-err',t.codeRequired);return;}
+  // Cap local profiles — only enforced for *new* names; re-registering an
+  // existing name (overwriting their saved state) doesn't grow the list.
+  try {
+    const existing = listLocalProfiles();
+    if (existing.length >= MAX_PROFILES && !existing.some(p=>p.name===n)) {
+      showAuthError('reg-err', t.maxChildrenReached || '4 children max');
+      return;
+    }
+  } catch(e) {}
   AppState.user={name:n,avatar:selectedAvatarEmoji,code:c};AppState.score=0;AppState.level=1;AppState.lessons=0;AppState.quizzes=0;AppState.learnedLetters=[];AppState.earnedBadges=[];AppState.visitedCategories=[];AppState.difficulty='normal';AppState.premium=false;
   AppState._firstTime=true;
   try{localStorage.setItem('ak_lastUser',n);}catch(e){}
@@ -494,22 +562,191 @@ function tryAutoLogin() {
   return false;
 }
 
-function showLogoutPopup() {
+// ==================== MULTI-PROFILE (max 4 per device) ====================
+const MAX_PROFILES = 4;
+const _RESERVED_KEYS = new Set(['ak_lastUser','ak_theme','ak_onboardingDone']);
+
+// Enumerate ak_{name} entries (excluding reserved keys), parse each profile
+// and return a thin descriptor for the picker. Sorted by best-effort recency
+// — the lastUser comes first when present.
+function listLocalProfiles() {
+  const out = [];
+  try {
+    const last = localStorage.getItem('ak_lastUser');
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith('ak_') || _RESERVED_KEYS.has(k)) continue;
+      try {
+        const data = JSON.parse(localStorage.getItem(k));
+        if (data && data.user && data.user.name) {
+          out.push({
+            name: data.user.name,
+            avatar: data.user.avatar || '👤',
+            level: data.level || 1,
+            score: data.score || 0,
+            isLast: data.user.name === last
+          });
+        }
+      } catch(e) {}
+    }
+  } catch(e) {}
+  out.sort((a,b)=> (b.isLast?1:0) - (a.isLast?1:0));
+  return out;
+}
+
+// Show 4-digit code popup for an existing local profile, then load + go to
+// dashboard on match. Re-uses the badge-popup overlay styling.
+function promptProfileCode(name) {
   const t = AppState.t;
   AudioSystem.playSound('click');
-  const ov = document.createElement('div'); ov.className = 'badge-overlay'; ov.id = 'lo'; ov.onclick = closeLogoutPopup;
-  const pp = document.createElement('div'); pp.className = 'badge-popup'; pp.id = 'lp';
-  pp.innerHTML = `<div class="badge-popup-emoji">🚪</div>
-    <h2 style="margin-bottom:8px">${t.logoutTitle || 'Log out?'}</h2>
-    <p style="font-size:0.95rem;color:#718096;margin-bottom:18px;line-height:1.4">${t.logoutMessage || 'You can log back in with your name and code.'}</p>
+  const ov = document.createElement('div'); ov.className = 'badge-overlay'; ov.id = 'cpo'; ov.onclick = closeCodePrompt;
+  const pp = document.createElement('div'); pp.className = 'badge-popup'; pp.id = 'cpp';
+  const safeName = (name||'').replace(/'/g,"\\'");
+  const label = (t.enterCodeFor || 'Code for {name}').replace('{name}', name);
+  pp.innerHTML = `<div class="badge-popup-emoji">🔑</div>
+    <h2 style="margin-bottom:8px">${label}</h2>
+    <div class="inp-group" style="margin-top:8px"><input class="inp" type="password" id="cpc" placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="off" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,4)" onkeydown="if(event.key==='Enter')submitCodePrompt('${safeName}')"></div>
+    <div class="auth-error" id="cp-err" style="display:none;margin-bottom:10px"></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
-      <button class="btn btn-ghost" onclick="closeLogoutPopup()" style="flex:1;min-width:110px">${t.logoutCancel || 'Cancel'}</button>
-      <button class="btn btn-primary" onclick="confirmLogout()" style="flex:1;min-width:110px">${t.logoutConfirm || 'Yes, log out'}</button>
+      <button class="btn btn-ghost" onclick="closeCodePrompt()" style="flex:1;min-width:110px">${t.back || 'Back'}</button>
+      <button class="btn btn-primary" onclick="submitCodePrompt('${safeName}')" style="flex:1;min-width:110px">${t.go || 'Go'} 🚀</button>
     </div>`;
   document.body.appendChild(ov); document.body.appendChild(pp);
+  setTimeout(()=>{ const i=document.getElementById('cpc'); if(i) i.focus(); }, 80);
+}
+function closeCodePrompt() { ['cpo','cpp'].forEach(id=>{ const e=document.getElementById(id); if(e) e.remove(); }); }
+function submitCodePrompt(name) {
+  const t = AppState.t;
+  const input = document.getElementById('cpc');
+  const c = input ? input.value : '';
+  if (c.length !== 4) {
+    const er = document.getElementById('cp-err'); if (er) { er.textContent = t.codeRequired || 'Code requis'; er.style.display = 'block'; }
+    return;
+  }
+  if (AppState.load(name) && AppState.user && AppState.user.code === c) {
+    try { localStorage.setItem('ak_lastUser', name); } catch(e) {}
+    closeCodePrompt();
+    Analytics.login();
+    navigate('dashboard');
+    return;
+  }
+  const er = document.getElementById('cp-err'); if (er) { er.textContent = t.wrongCode || 'Code incorrect'; er.style.display = 'block'; }
+}
+
+// Long-press / × button on a profile card. Pure local removal — the Firestore
+// copy stays untouched so the child can be recovered from another device.
+function askRemoveProfile(name) {
+  const t = AppState.t;
+  const msg = (t.removeProfileConfirm || 'Remove {name} from this device?').replace('{name}', name);
+  _parentGate(msg, function(){ confirmRemoveProfile(name); });
+}
+function confirmRemoveProfile(name) {
+  try { localStorage.removeItem('ak_' + name); } catch(e) {}
+  try {
+    const last = localStorage.getItem('ak_lastUser');
+    if (last === name) localStorage.removeItem('ak_lastUser');
+  } catch(e) {}
+  render();
+}
+
+function showLogoutPopup() {
+  if (!AppState.user) { logout(); return; }
+  _parentGate(AppState.t.logoutTitle || 'Log out?', logout);
 }
 function closeLogoutPopup() { ['lo','lp'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); }); }
 function confirmLogout() { closeLogoutPopup(); logout(); }
+
+// ==================== PARENT GATE (code-protected actions) ====================
+// Dedicated 4-digit parent code, stored device-wide in localStorage (key
+// _PARENT_CODE_KEY). Distinct from the per-child login codes — those are
+// known to the child, this one isn't. First trigger asks the parent to
+// CREATE the code (new + confirm). Subsequent triggers ask to VERIFY it.
+// If the parent ever forgets, only fix is to uninstall (CLAUDE.md notes it).
+const _PARENT_CODE_KEY = 'ak_parentCode';
+function _getParentCode() { try { return localStorage.getItem(_PARENT_CODE_KEY); } catch(e) { return null; } }
+function _setParentCode(code) { try { localStorage.setItem(_PARENT_CODE_KEY, String(code)); } catch(e) {} }
+
+function _parentGate(headline, actionFn) {
+  const existing = _getParentCode();
+  if (!existing) _showCreateParentCode(headline, actionFn);
+  else           _showVerifyParentCode(headline, existing, actionFn);
+}
+
+function _showCreateParentCode(headline, actionFn) {
+  const t = AppState.t;
+  AudioSystem.playSound('click');
+  const ov = document.createElement('div'); ov.className = 'badge-overlay'; ov.id = 'pgo'; ov.onclick = _closeParentGate;
+  const pp = document.createElement('div'); pp.className = 'badge-popup'; pp.id = 'pgp';
+  pp.innerHTML = `<div class="badge-popup-emoji">🔐</div>
+    <h2 style="margin-bottom:6px">${t.parentCodeCreateTitle || 'Create parent code'}</h2>
+    <p style="font-size:0.93rem;color:#718096;margin-bottom:14px;line-height:1.4">${t.parentCodeCreateDesc || '4 digits. Keep it secret from your child.'}</p>
+    <div class="inp-group" style="margin:0 0 8px"><label style="font-size:0.85rem">${t.parentCodeNew || 'New code'}</label><input class="inp" type="password" id="pgc1" placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="off" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,4)"></div>
+    <div class="inp-group" style="margin:0 0 8px"><label style="font-size:0.85rem">${t.parentCodeConfirm || 'Confirm code'}</label><input class="inp" type="password" id="pgc2" placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="off" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,4)" onkeydown="if(event.key==='Enter')_submitCreateParentCode()"></div>
+    <div class="auth-error" id="pg-err" style="display:none;margin-bottom:10px"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+      <button class="btn btn-ghost" onclick="_closeParentGate()" style="flex:1;min-width:110px">${t.logoutCancel || 'Cancel'}</button>
+      <button class="btn btn-primary" onclick="_submitCreateParentCode()" style="flex:1;min-width:110px">${t.parentCodeCreate || 'Create'} 🔐</button>
+    </div>`;
+  document.body.appendChild(ov); document.body.appendChild(pp);
+  window._parentGateData = { mode: 'create', actionFn };
+  setTimeout(()=>{ const i = document.getElementById('pgc1'); if (i) i.focus(); }, 80);
+}
+
+function _showVerifyParentCode(headline, expectedCode, actionFn) {
+  const t = AppState.t;
+  AudioSystem.playSound('click');
+  const ov = document.createElement('div'); ov.className = 'badge-overlay'; ov.id = 'pgo'; ov.onclick = _closeParentGate;
+  const pp = document.createElement('div'); pp.className = 'badge-popup'; pp.id = 'pgp';
+  pp.innerHTML = `<div class="badge-popup-emoji">👪</div>
+    <h2 style="margin-bottom:6px">${t.parentZone || 'Parent zone'}</h2>
+    <p style="font-size:0.95rem;color:#718096;margin-bottom:14px;line-height:1.4">${headline || (t.parentZoneAsk || 'Ask a parent to type the code')}</p>
+    <div class="inp-group" style="margin:0 0 8px"><input class="inp" type="password" id="pgc" placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="off" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,4)" onkeydown="if(event.key==='Enter')_submitParentGate()"></div>
+    <div class="auth-error" id="pg-err" style="display:none;margin-bottom:10px"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+      <button class="btn btn-ghost" onclick="_closeParentGate()" style="flex:1;min-width:110px">${t.logoutCancel || 'Cancel'}</button>
+      <button class="btn btn-primary" onclick="_submitParentGate()" style="flex:1;min-width:110px">🔓 ${t.go || 'Go'}</button>
+    </div>`;
+  document.body.appendChild(ov); document.body.appendChild(pp);
+  window._parentGateData = { mode: 'verify', expectedCode: String(expectedCode||''), actionFn };
+  setTimeout(()=>{ const i = document.getElementById('pgc'); if (i) i.focus(); }, 80);
+}
+
+function _closeParentGate() { ['pgo','pgp'].forEach(id=>{const e=document.getElementById(id);if(e)e.remove();}); window._parentGateData=null; }
+
+function _submitParentGate() {
+  const t = AppState.t;
+  const d = window._parentGateData; if (!d || d.mode !== 'verify') return;
+  const input = document.getElementById('pgc'); const c = input ? input.value : '';
+  if (c.length !== 4) {
+    const er = document.getElementById('pg-err'); if (er) { er.textContent = t.codeRequired || 'Code requis'; er.style.display='block'; }
+    return;
+  }
+  if (c === d.expectedCode) {
+    const fn = d.actionFn; _closeParentGate();
+    if (typeof fn === 'function') fn();
+    return;
+  }
+  const er = document.getElementById('pg-err'); if (er) { er.textContent = t.wrongCode || 'Code incorrect'; er.style.display='block'; }
+}
+
+function _submitCreateParentCode() {
+  const t = AppState.t;
+  const d = window._parentGateData; if (!d || d.mode !== 'create') return;
+  const c1 = (document.getElementById('pgc1')||{}).value || '';
+  const c2 = (document.getElementById('pgc2')||{}).value || '';
+  const er = document.getElementById('pg-err');
+  if (c1.length !== 4) { if (er) { er.textContent = t.codeRequired || 'Code requis'; er.style.display='block'; } return; }
+  if (c1 !== c2)       { if (er) { er.textContent = t.parentCodeMismatch || 'Codes do not match'; er.style.display='block'; } return; }
+  _setParentCode(c1);
+  const fn = d.actionFn; _closeParentGate();
+  if (typeof fn === 'function') fn();
+}
+
+// Sensitive-action wrappers
+function _openDifficulty() {
+  if (!AppState.user) { navigate('difficulty'); return; }
+  _parentGate(AppState.t.gateDifficulty || 'Change difficulty?', function(){ navigate('difficulty'); });
+}
 
 function logout() {
   try{localStorage.removeItem('ak_lastUser');}catch(e){}
@@ -534,7 +771,7 @@ function flLetters() {
 function getDiffBadge(diff, t) {
   const map = {toddler:{e:'🧸',col:'#F472B6'}, beginner:{e:'🌱',col:'#34D399'}, normal:{e:'⭐',col:'#60A5FA'}, advanced:{e:'🔥',col:'#FB923C'}};
   const d = map[diff||'normal'];
-  return `<span class="diff-badge" style="background:${d.col}20;color:${d.col};border:1.5px solid ${d.col}40" onclick="navigate('difficulty')" title="${t.changeDifficulty||'Level'}">${d.e} ${t[diff||'normal']||diff||'Normal'}</span>`;
+  return `<span class="diff-badge" style="background:${d.col}20;color:${d.col};border:1.5px solid ${d.col}40" onclick="_openDifficulty()" title="${t.changeDifficulty||'Level'}">${d.e} ${t[diff||'normal']||diff||'Normal'}</span>`;
 }
 
 function navHTML(t) {
@@ -551,12 +788,40 @@ function navHTML(t) {
       <div class="nav-score"><span class="nav-score-icon">⭐</span><span class="nav-score-val">${AppState.score}</span></div>
     </div>
     <div class="nav-right">
-      <button class="nav-btn" onclick="AudioSystem.toggle();this.textContent=AudioSystem.enabled?'🔊':'🔇'" title="${AudioSystem.enabled?t.soundOn:t.soundOff}">🔊</button>
-      <button class="nav-btn" onclick="toggleTheme()" title="${t.theme||'Theme'}">${AppState.theme==='dark'?'☀️':'🌙'}</button>
       <button class="nav-btn" onclick="goHome()" title="${t.home}">🏠</button>
-      <button class="nav-btn" onclick="showLogoutPopup()" title="${t.logoutTitle||'Log out'}">🚪</button>
+      <button class="nav-btn" onclick="_toggleNavMenu(event)" title="${t.menu||'Menu'}" id="navMenuBtn">⋮</button>
+      <div class="nav-menu" id="navMenu" style="display:none">
+        <button class="nav-menu-item" onclick="AudioSystem.toggle();_closeNavMenu();render()"><span class="nav-menu-ico">${AudioSystem.enabled?'🔊':'🔇'}</span><span>${AudioSystem.enabled?(t.soundOn||'Sound on'):(t.soundOff||'Sound off')}</span></button>
+        <button class="nav-menu-item" onclick="toggleTheme();_closeNavMenu()"><span class="nav-menu-ico">${AppState.theme==='dark'?'☀️':'🌙'}</span><span>${t.theme||'Theme'}</span></button>
+        <button class="nav-menu-item" onclick="_closeNavMenu();openParentDashboard()"><span class="nav-menu-ico">👪</span><span>${t.parentDashTitle||t.parentZone||'Parents'}</span></button>
+        <button class="nav-menu-item nav-menu-danger" onclick="_closeNavMenu();showLogoutPopup()"><span class="nav-menu-ico">🚪</span><span>${t.logoutTitle||'Log out'}</span></button>
+      </div>
     </div>
   </div>`;
+}
+
+// Toggle overflow menu and wire a one-shot outside-click closer.
+function _toggleNavMenu(e) {
+  if (e) e.stopPropagation();
+  const m = document.getElementById('navMenu'); if (!m) return;
+  const open = m.style.display !== 'none';
+  if (open) { _closeNavMenu(); return; }
+  m.style.display = 'block';
+  setTimeout(() => { document.addEventListener('click', _navMenuOutsideClick, { once: true }); }, 0);
+}
+function _closeNavMenu() {
+  const m = document.getElementById('navMenu'); if (m) m.style.display = 'none';
+  document.removeEventListener('click', _navMenuOutsideClick);
+}
+function _navMenuOutsideClick(e) {
+  const m = document.getElementById('navMenu'); const btn = document.getElementById('navMenuBtn');
+  if (!m) return;
+  if (m.contains(e.target) || (btn && btn.contains(e.target))) {
+    // Click inside menu or on toggle btn — re-attach the listener for the next click.
+    document.addEventListener('click', _navMenuOutsideClick, { once: true });
+    return;
+  }
+  _closeNavMenu();
 }
 
 function secH(t,title,back) { return `<div class="sec-header"><button class="back-btn" onclick="${back}"><span style="font-size:1.1rem">←</span> ${t.back}</button><h2>${title}</h2></div>`; }
@@ -564,11 +829,39 @@ function secH(t,title,back) { return `<div class="sec-header"><button class="bac
 // ==================== SCREEN RENDERERS ====================
 function renderWelcome(t) {
   const langs=[{c:'fr',flag:'🇫🇷'},{c:'en',flag:'🇬🇧'},{c:'es',flag:'🇪🇸'},{c:'de',flag:'🇩🇪'},{c:'tr',flag:'🇹🇷'},{c:'hi',flag:'🇮🇳'},{c:'id',flag:'🇮🇩'},{c:'it',flag:'🇮🇹'},{c:'nl',flag:'🇳🇱'},{c:'pt',flag:'🇵🇹'}];
+  const langBar = `<div class="lang-sel">${langs.map(l=>`<button class="lang-btn ${AppState.lang===l.c?'active':''}" onclick="setLanguage('${l.c}')">${l.flag}</button>`).join('')}</div>`;
+  const profiles = listLocalProfiles();
+  // Picker mode: at least one local profile exists. Show the profile cards +
+  // 'Add child' tile (capped at MAX_PROFILES) + a small footer link to log in
+  // with an existing account on another device (cloud recovery).
+  if (profiles.length > 0) {
+    const canAdd = profiles.length < MAX_PROFILES;
+    const cards = profiles.map(p => {
+      const safe = (p.name||'').replace(/'/g,"\\'");
+      return `<div class="profile-card" onclick="promptProfileCode('${safe}')">
+        <button class="profile-del" onclick="event.stopPropagation();askRemoveProfile('${safe}')" aria-label="Remove">×</button>
+        <div class="profile-avatar">${p.avatar}</div>
+        <div class="profile-name">${p.name}</div>
+        <div class="profile-meta">${t.level} ${p.level} · ⭐ ${p.score}</div>
+      </div>`;
+    }).join('');
+    const addTile = canAdd
+      ? `<div class="profile-card profile-add" onclick="navigate('register')"><div class="profile-avatar">＋</div><div class="profile-name">${t.addChild || 'Add a child'}</div></div>`
+      : `<div class="profile-cap-note">${t.maxChildrenReached || '4 children max'}</div>`;
+    return `<div class="bg-deco"></div>${flLetters()}<div class="app"><div class="welcome page-in">
+      <h1 class="w-title" style="margin-bottom:4px">Arabic Kids</h1>
+      <p class="w-tagline" style="margin-bottom:18px">${t.chooseProfile || 'Who is learning today?'}</p>
+      ${langBar}
+      <div class="profile-grid">${cards}${addTile}</div>
+      <button class="btn btn-ghost" style="margin-top:14px;font-size:0.95rem" onclick="navigate('login')">${t.useExistingAccount || 'Log in with an existing account'}</button>
+    </div></div>`;
+  }
+  // First-launch mode: no profile yet — keep the original welcome screen.
   return `<div class="bg-deco"></div>${flLetters()}<div class="app"><div class="welcome page-in">
     <div class="w-chars"><span>🌟</span><span>📚</span><span>✨</span><span>🎮</span><span>🏆</span></div>
     <h1 class="w-title">Arabic Kids</h1><p class="w-arabic">تعلّم العربية</p>
     <p class="w-tagline">${t.tagline}</p>
-    <div class="lang-sel">${langs.map(l=>`<button class="lang-btn ${AppState.lang===l.c?'active':''}" onclick="setLanguage('${l.c}')">${l.flag}</button>`).join('')}</div>
+    ${langBar}
     <div style="display:flex;gap:12px;margin-top:8px;width:100%;max-width:400px"><button class="btn btn-primary" onclick="navigate('register')" style="flex:1;font-size:1.1rem;padding:16px 0">${t.createAccount} ✨</button><button class="btn btn-secondary" onclick="navigate('login')" style="flex:1;font-size:1.1rem;padding:16px 0">${t.login} 👋</button></div>
   </div></div>`;
 }
@@ -596,7 +889,9 @@ function renderLogin(t) {
 
 function renderStreakBadge(t) {
   const s = AppState.streak; if (!s || !s.current) return '';
-  return `<div class="streak-badge" title="${t.longestStreak||'Best'}: ${s.longest||s.current}">🔥 ${s.current} ${t.streakDays||'days'}</div>`;
+  const freezes = s.freezes || 0;
+  const freezeBit = freezes > 0 ? ` · ❄️ ${freezes}` : '';
+  return `<div class="streak-badge" title="${t.longestStreak||'Best'}: ${s.longest||s.current}${freezes?' — '+freezes+' freeze':''}">🔥 ${s.current} ${t.streakDays||'days'}${freezeBit}</div>`;
 }
 
 function renderDailyCard(t) {
@@ -783,19 +1078,23 @@ function renderQuizzesList(t) {
       { ico: '🎯',  lbl: t.quizLetters,                       fn: 'startQuizLetters()' },
       { ico: '🔡',  lbl: t.quizFirstLetter || 'First letter', fn: 'startQuizFirstLetter()' },
       { ico: '📍',  lbl: t.quizPositions   || 'Positions',    fn: 'startQuizPositions()' },
-      { ico: '◌َ',  lbl: t.quizHarakat     || 'Harakat',      fn: 'startQuizHarakat()' }
+      { ico: '◌َ',  lbl: t.quizHarakat     || 'Harakat',      fn: 'startQuizHarakat()' },
+      { ico: '🅰️', lbl: t.quizAnagram     || 'Anagram',      fn: 'startAnagram()' }
     ]},
     { title: '📝 ' + (t.quizCatWords || 'Mots'), items: [
-      { ico: '🧩', lbl: t.quizWords,                       fn: 'startQuizWords()' },
-      { ico: '📂', lbl: t.quizCategories,                  fn: 'startQuizCategories()' },
-      { ico: '💬', lbl: t.quizPhrases,                     fn: 'startQuizPhrases()' }
+      { ico: '🧩', lbl: t.quizWords,                          fn: 'startQuizWords()' },
+      { ico: '📂', lbl: t.quizCategories,                     fn: 'startQuizCategories()' },
+      { ico: '💬', lbl: t.quizPhrases,                        fn: 'startQuizPhrases()' },
+      { ico: '🆎', lbl: t.quizOddOneOut    || 'Odd one out',  fn: 'startQuizOddOneOut()' },
+      { ico: '🧮', lbl: t.quizCounting     || 'Counting',     fn: 'startQuizCounting()' }
     ]},
     { title: '🔊 ' + (t.quizCatSound || 'Sons'), items: [
-      { ico: '🎧', lbl: t.quizAudio,                       fn: 'startQuizAudio()' },
-      { ico: '👂', lbl: t.quizListen   || 'Écoute',        fn: 'startQuizListen()' }
+      { ico: '🎧', lbl: t.quizAudio,                          fn: 'startQuizAudio()' },
+      { ico: '👂', lbl: t.quizListen      || 'Écoute',        fn: 'startQuizListen()' }
     ]},
     { title: '🎮 ' + (t.quizCatGames || 'Jeux'), items: [
-      { ico: '🔗', lbl: t.quizMatch,                       fn: 'startQuizMatch()' }
+      { ico: '🔗', lbl: t.quizMatch,                          fn: 'startQuizMatch()' },
+      { ico: '🎯', lbl: t.fallingLetters   || 'Falling',      fn: 'startFallingLetters()' }
     ]}
   ];
   const html = sections.map(s => `
@@ -1093,6 +1392,7 @@ function renderStoriesList(t) {
     <div class="story-card" onclick="openStory('${s.id}')">
       <div class="story-emoji">${s.emoji}</div>
       <div class="story-title">${(s.title && s.title[AppState.lang]) || s.title.en}</div>
+      ${s.interactive ? '<div class="story-badge story-badge-interactive">🔀 ' + (t.interactiveLabel || 'Interactive') + '</div>' : ''}
       ${(s.level || 1) >= 3 ? '<div class="story-badge">🔥 ' + (t.advanced || 'Advanced') + '</div>' : ''}
     </div>`).join('');
   return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}
@@ -1103,12 +1403,14 @@ function renderStoriesList(t) {
 
 function openStory(id) {
   AppState.selectedStory = id;
+  AppState._storyNode = 'start'; // reset interactive position when (re)entering
   navigate('story');
 }
 
 function renderStory(t) {
   const s = STORIES.find(x => x.id === AppState.selectedStory);
   if (!s) return renderStoriesList(t);
+  if (s.interactive) return renderInteractiveStory(t, s);
   const body = s.lines.map(l => `<p class="story-line" data-speak="${l}">${l}</p>`).join('');
   return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}
     ${secH(t, s.emoji + ' ' + ((s.title && s.title[AppState.lang]) || s.title.en), 'sectionBack()')}
@@ -1116,6 +1418,57 @@ function renderStory(t) {
     <button class="btn btn-secondary btn-sm" data-speak="${s.lines.join(' ')}" style="margin:10px auto;display:flex">🔊 ${t.listen}</button>
     <button class="btn btn-primary" onclick="startStoryQuiz()" style="margin:16px auto 0;display:flex">${t.comprehension || 'Questions'} →</button>
   </div></div>`;
+}
+
+// Branching story renderer. Reads AppState._storyNode (default 'start') and
+// shows the current node's Arabic line + translation, then either choice
+// buttons (advance with _storyChoose) or an ending screen (restart only).
+function renderInteractiveStory(t, s) {
+  const nodeId = AppState._storyNode || 'start';
+  const node = (s.nodes && s.nodes[nodeId]) || s.nodes.start;
+  const tr = (node.tr && node.tr[AppState.lang]) || (node.tr && node.tr.en) || '';
+  let choiceHtml = '';
+  if (node.choice) {
+    const q = (node.choice.q && node.choice.q[AppState.lang]) || (node.choice.q && node.choice.q.en) || '';
+    const opts = node.choice.options.map(o => {
+      const lbl = (o.label && o.label[AppState.lang]) || (o.label && o.label.en) || '';
+      const safeNext = (o.next||'').replace(/'/g,"\\'");
+      return `<button class="qopt" style="flex-direction:column;padding:14px 10px;display:flex;align-items:center;gap:4px" onclick="_storyChoose('${safeNext}')">
+        <span style="font-size:2rem;line-height:1">${o.emoji||'•'}</span>
+        <span style="font-size:0.95rem">${lbl}</span>
+      </button>`;
+    }).join('');
+    choiceHtml = `
+      <p style="color:var(--text-light);text-align:center;margin:18px 0 10px;font-weight:600">${q}</p>
+      <div class="qoptions" style="grid-template-columns:repeat(2,1fr);display:grid;gap:10px">${opts}</div>`;
+  } else if (node.ending) {
+    choiceHtml = `
+      <div style="text-align:center;margin-top:24px">
+        <div style="font-size:2.6rem">🎉</div>
+        <h3 style="margin:6px 0 14px">${t.theEnd || 'The end!'}</h3>
+        <button class="btn btn-primary" onclick="_restartInteractiveStory()">🔁 ${t.restartStory || 'Restart'}</button>
+      </div>`;
+  }
+  // Auto-speak the current node's line shortly after paint (let DOM settle).
+  setTimeout(() => { try { AudioSystem.speakArabic(node.ar); } catch(e) {} }, 400);
+  return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}<div class="quiz-c">
+    ${secH(t, s.emoji + ' ' + ((s.title && s.title[AppState.lang]) || s.title.en), 'sectionBack()')}
+    <p class="story-line" dir="rtl" style="font-size:1.5rem;text-align:center;font-family:var(--font-arabic);margin:14px 0">${node.ar}</p>
+    <p style="color:var(--text-light);text-align:center;font-style:italic;font-size:0.95rem">${tr}</p>
+    <div style="text-align:center;margin:8px 0"><button class="btn btn-secondary btn-sm" onclick="AudioSystem.speakArabic('${(node.ar||'').replace(/'/g,"\\'")}')">🔊 ${t.listen}</button></div>
+    ${choiceHtml}
+  </div></div>`;
+}
+
+function _storyChoose(nextId) {
+  AppState._storyNode = nextId;
+  AudioSystem.playSound('click');
+  render();
+}
+function _restartInteractiveStory() {
+  AppState._storyNode = 'start';
+  AudioSystem.playSound('click');
+  render();
 }
 
 function startStoryQuiz() {
@@ -1480,7 +1833,7 @@ function quizAnswer(i) {
       if(qd.type==='audio')setTimeout(()=>AudioSystem.speakArabic(qd.questions[qd.current].arabic),400);
       if(qd.type==='harakat')setTimeout(()=>AudioSystem.speakArabic(qd.questions[qd.current].combined),400);
     }
-    else{qd.done=true;addQuiz();if(qd.results.every(r=>r))awardBadge('perfectQuiz');showConfetti();render();}
+    else{qd.done=true;addQuiz();if(qd.results.every(r=>r))awardBadge('perfectQuiz');if(qd.type==='oddOneOut')awardBadge('first_intruder');if(qd.type==='counting')awardBadge('first_counting');showConfetti();render();}
   },1200);
 }
 
@@ -1490,9 +1843,9 @@ function renderQuizResults(t) {
   const correct=qd.results.filter(r=>r).length;
   const pct=Math.round((correct/total)*100);
   const msg=pct===100?t.perfect:pct>=75?t.great:pct>=50?t.good:t.keepGoing;
-  const icons={letters:'🎯',words:'🧩',forms:'✍️',audio:'🎧',categories:'📂',phrases:'💬',match:'🔗',harakat:'◌َ',positions:'📍',story:'📖',listen:'👂'};
+  const icons={letters:'🎯',words:'🧩',forms:'✍️',audio:'🎧',categories:'📂',phrases:'💬',match:'🔗',harakat:'◌َ',positions:'📍',story:'📖',listen:'👂',oddOneOut:'🆎',counting:'🧮',anagram:'🅰️',fallingLetters:'🎯',firstLetter:'🔡'};
   const icon=icons[qd.type]||'🎯';
-  const replays={letters:'startQuizLetters()',words:'startQuizWords()',forms:'startQuizForms()',audio:'startQuizAudio()',categories:'startQuizCategories()',phrases:'startQuizPhrases()',match:'startQuizMatch()',harakat:'startQuizHarakat()',positions:'startQuizPositions()',story:'startStoryQuiz()',listen:'startQuizListen()',firstLetter:'startQuizFirstLetter()'};
+  const replays={letters:'startQuizLetters()',words:'startQuizWords()',forms:'startQuizForms()',audio:'startQuizAudio()',categories:'startQuizCategories()',phrases:'startQuizPhrases()',match:'startQuizMatch()',harakat:'startQuizHarakat()',positions:'startQuizPositions()',story:'startStoryQuiz()',listen:'startQuizListen()',firstLetter:'startQuizFirstLetter()',oddOneOut:'startQuizOddOneOut()',counting:'startQuizCounting()',anagram:'startAnagram()',fallingLetters:'startFallingLetters()'};
   const replay=replays[qd.type]||'goHome()';
   const pts=qd.pts||10;
   return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}<div class="quiz-c">
@@ -1857,7 +2210,7 @@ function renderBadges(t) {
   return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}${secH(t,'🏆 '+t.badges,'sectionBack()')}
     <div class="badge-grid">${BADGE_DEFINITIONS.map(b=>{
       const earned=AppState.earnedBadges.includes(b.id);
-      return `<div class="badge ${earned?'earned':'locked'}"><div class="badge-emoji">${b.emoji}</div><div class="badge-name">${b.name[AppState.lang]}</div>${earned?'<div style="color:var(--green);font-weight:700;font-size:0.78rem;margin-top:3px">✓</div>':''}</div>`;
+      return `<div class="badge ${earned?'earned':'locked'}"><div class="badge-emoji">${b.emoji}</div><div class="badge-name">${b.name[AppState.lang]||b.name.en}</div>${earned?'<div style="color:var(--green);font-weight:700;font-size:0.78rem;margin-top:3px">✓</div>':''}</div>`;
     }).join('')}</div></div>`;
 }
 
@@ -3027,6 +3380,492 @@ window.onTtsStatus = function(available) {
   }
 };
 
+// ==================== QUIZ ODD-ONE-OUT (🆎 Trouve l'intrus) ====================
+function startQuizOddOneOut() {
+  const diff = DIFFICULTY[AppState.difficulty || 'normal'];
+  const catKeys = (diff.catKeys || Object.keys(WORD_CATEGORIES).filter(k => !WORD_CATEGORIES[k].hidden))
+    .filter(k => WORD_CATEGORIES[k].words.length >= 3);
+  if (catKeys.length < 2) return;
+  const questions = [];
+  for (let i = 0; i < diff.questionCount; i++) {
+    const mainCat = catKeys[Math.floor(Math.random() * catKeys.length)];
+    const otherPool = catKeys.filter(c => c !== mainCat);
+    const otherCat = otherPool[Math.floor(Math.random() * otherPool.length)];
+    const mainWords = shuffle(WORD_CATEGORIES[mainCat].words.slice()).slice(0, 3);
+    const intruder = shuffle(WORD_CATEGORIES[otherCat].words.slice())[0];
+    const options = shuffle([
+      ...mainWords.map(w => ({ label: w.ar, emoji: w.emoji, tr: w[AppState.lang] || w.en, correct: false })),
+      { label: intruder.ar, emoji: intruder.emoji, tr: intruder[AppState.lang] || intruder.en, correct: true }
+    ]);
+    questions.push({ mainCat, options });
+  }
+  AppState.quizData = { type: 'oddOneOut', questions, pts: diff.pts, current: 0, selected: null, results: [], done: false };
+  navigate('quizOddOneOut');
+}
+
+function renderQuizOddOneOut(t) {
+  const qd = AppState.quizData; if (!qd) return renderDashboard(t);
+  if (qd.done) return renderQuizResults(t);
+  const q = qd.questions[qd.current];
+  return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}<div class="quiz-c">
+    ${secH(t, '🆎 ' + (t.quizOddOneOut || 'Odd one out'), 'sectionBack()')}
+    <div class="quiz-dots">${qd.questions.map((_,i)=>`<div class="qdot ${i===qd.current?'active':i<qd.current?(qd.results[i]?'done':'wrong'):''}"></div>`).join('')}</div>
+    <p class="qq">${t.questionOf} ${qd.current+1} ${t.of} ${qd.questions.length}</p>
+    <p style="color:var(--text-light);margin-bottom:14px">${t.findTheIntruder || 'Find the odd one out'}</p>
+    <div class="qoptions" style="grid-template-columns:repeat(2,1fr);display:grid;gap:10px">
+      ${q.options.map((o,i)=>`<button class="qopt ${qd.selected===i?(o.correct?'correct':'incorrect'):(qd.selected!==null?'dis':'')}" style="flex-direction:column;padding:14px 8px;display:flex;align-items:center;gap:4px" onclick="quizAnswer(${i})">
+        <span style="font-size:2.2rem;line-height:1">${o.emoji||'•'}</span>
+        <span style="font-family:var(--font-arabic);font-size:1.2rem">${o.label}</span>
+      </button>`).join('')}
+    </div>
+    ${qd.selected!==null?`<div class="qfeedback ${q.options[qd.selected].correct?'correct':'incorrect'}">${q.options[qd.selected].correct?t.correct:t.incorrect}</div>`:''}
+  </div></div>`;
+}
+
+// ==================== QUIZ COUNTING (🧮 Compter) ====================
+function startQuizCounting() {
+  const diff = DIFFICULTY[AppState.difficulty || 'normal'];
+  const nums = WORD_CATEGORIES.numbers.words.slice(0, 10); // 1..10
+  const visualEmojis = ['⭐','🍎','🍌','🐝','🌸','🐠','🍓','🎈','🌟','🦋'];
+  const maxN = (AppState.difficulty === 'toddler') ? 5 : 10;
+  const questions = [];
+  for (let i = 0; i < diff.questionCount; i++) {
+    const n = 1 + Math.floor(Math.random() * maxN);
+    const correctWord = nums[n - 1];
+    const visual = visualEmojis[Math.floor(Math.random() * visualEmojis.length)];
+    const wrongs = shuffle(nums.filter((_, idx) => idx !== (n - 1))).slice(0, diff.options - 1);
+    const options = shuffle([
+      { label: correctWord.ar, correct: true },
+      ...wrongs.map(w => ({ label: w.ar, correct: false }))
+    ]);
+    questions.push({ n, visual, arabic: correctWord.ar, options });
+  }
+  AppState.quizData = { type: 'counting', questions, pts: diff.pts, current: 0, selected: null, results: [], done: false };
+  navigate('quizCounting');
+}
+
+function renderQuizCounting(t) {
+  const qd = AppState.quizData; if (!qd) return renderDashboard(t);
+  if (qd.done) return renderQuizResults(t);
+  const q = qd.questions[qd.current];
+  const visualsHtml = Array.from({length: q.n}, () => `<span style="font-size:1.8rem;margin:2px;display:inline-block">${q.visual}</span>`).join('');
+  return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}<div class="quiz-c">
+    ${secH(t, '🧮 ' + (t.quizCounting || 'Counting'), 'sectionBack()')}
+    <div class="quiz-dots">${qd.questions.map((_,i)=>`<div class="qdot ${i===qd.current?'active':i<qd.current?(qd.results[i]?'done':'wrong'):''}"></div>`).join('')}</div>
+    <p class="qq">${t.questionOf} ${qd.current+1} ${t.of} ${qd.questions.length}</p>
+    <p style="color:var(--text-light);margin-bottom:8px">${t.howMany || 'How many?'}</p>
+    <div style="background:rgba(0,0,0,0.04);border-radius:14px;padding:18px;margin-bottom:14px;text-align:center;line-height:1.7">${visualsHtml}</div>
+    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${qd.selected===i?(o.correct?'correct':'incorrect'):(qd.selected!==null?'dis':'')}" style="font-family:var(--font-arabic);font-size:1.3rem" onclick="quizAnswer(${i})">${o.label}</button>`).join('')}</div>
+    ${qd.selected!==null?`<div class="qfeedback ${q.options[qd.selected].correct?'correct':'incorrect'}">${q.options[qd.selected].correct?t.correct:t.incorrect}</div>`:''}
+  </div></div>`;
+}
+
+// ==================== ANAGRAM (🅰️ Anagramme) ====================
+function startAnagram() {
+  const diff = DIFFICULTY[AppState.difficulty || 'normal'];
+  const stripH = s => (s||'').replace(/[ً-ْٰ]/g, '');
+  const sourceWords = diff.catKeys ? diff.catKeys.flatMap(k => WORD_CATEGORIES[k].words) : getAllWords();
+  const candidates = sourceWords.filter(w => {
+    const bare = stripH(w.ar).replace(/\s/g, '');
+    return bare.length >= 3 && bare.length <= 6;
+  });
+  if (!candidates.length) return;
+  const picked = shuffle(candidates.slice()).slice(0, diff.questionCount);
+  const questions = picked.map(w => {
+    const bare = stripH(w.ar).replace(/\s/g, '');
+    const letters = bare.split('');
+    let shuffled = shuffle(letters.slice());
+    if (shuffled.join('') === bare && letters.length > 1) shuffled.reverse();
+    return { word: bare, letters, shuffled, emoji: w.emoji, tr: w[AppState.lang] || w.en, ar: w.ar };
+  });
+  AppState.quizData = { type: 'anagram', questions, pts: diff.pts, current: 0, picked: [], results: [], done: false };
+  navigate('anagram');
+}
+
+function anagramTap(i) {
+  const qd = AppState.quizData; if (!qd || qd.done) return;
+  if (qd.results.length > qd.current) return; // current already evaluated
+  if (qd.picked.indexOf(i) >= 0) return;
+  qd.picked.push(i);
+  AudioSystem.playSound('click');
+  const q = qd.questions[qd.current];
+  if (qd.picked.length === q.letters.length) {
+    const built = qd.picked.map(idx => q.shuffled[idx]).join('');
+    const ok = built === q.word;
+    qd.results.push(ok);
+    if (ok) { AudioSystem.playSound('correct'); addScore(qd.pts||10); setTimeout(()=>AudioSystem.speakArabic(q.ar), 200); }
+    else AudioSystem.playSound('wrong');
+    render();
+    setTimeout(() => {
+      if (qd.current < qd.questions.length - 1) { qd.current++; qd.picked = []; render(); }
+      else { qd.done = true; addQuiz(); if (qd.results.every(r=>r)) awardBadge('perfectQuiz'); awardBadge('first_anagram'); showConfetti(); render(); }
+    }, 1500);
+  } else { render(); }
+}
+
+function anagramUndo() {
+  const qd = AppState.quizData;
+  if (qd && qd.picked.length > 0 && qd.results.length === qd.current) { qd.picked.pop(); render(); }
+}
+
+function renderAnagram(t) {
+  const qd = AppState.quizData; if (!qd) return renderDashboard(t);
+  if (qd.done) return renderQuizResults(t);
+  const q = qd.questions[qd.current];
+  const builtChars = qd.picked.map(idx => q.shuffled[idx]).join('');
+  const isFull = qd.picked.length === q.letters.length;
+  const ok = isFull && builtChars === q.word;
+  const builtColor = isFull ? (ok ? 'color:#34D399' : 'color:#FB7185') : '';
+  return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}<div class="quiz-c">
+    ${secH(t, '🅰️ ' + (t.quizAnagram || 'Anagram'), 'sectionBack()')}
+    <div class="quiz-dots">${qd.questions.map((_,i)=>`<div class="qdot ${i===qd.current?'active':i<qd.current?(qd.results[i]?'done':'wrong'):''}"></div>`).join('')}</div>
+    <p class="qq">${t.questionOf} ${qd.current+1} ${t.of} ${qd.questions.length}</p>
+    <div style="text-align:center;margin:10px 0 16px">
+      <div style="font-size:3.2rem;line-height:1">${q.emoji||'❓'}</div>
+      <div style="color:var(--text-light);font-size:0.95rem;margin-top:4px">${q.tr}</div>
+    </div>
+    <div dir="rtl" style="background:rgba(0,0,0,0.05);border-radius:14px;padding:18px;margin-bottom:14px;min-height:64px;font-family:var(--font-arabic);font-size:2rem;letter-spacing:8px;text-align:center;${builtColor}">${builtChars||'<span style="opacity:0.3">'+q.shuffled.map(()=>'·').join(' ')+'</span>'}</div>
+    <div dir="rtl" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:14px">
+      ${q.shuffled.map((c,i)=>`<button class="qopt ${qd.picked.indexOf(i)>=0?'dis':''}" style="font-family:var(--font-arabic);font-size:1.8rem;padding:8px 14px;min-width:54px" onclick="anagramTap(${i})" ${qd.picked.indexOf(i)>=0?'disabled':''}>${c}</button>`).join('')}
+    </div>
+    <div style="text-align:center"><button class="btn btn-ghost btn-sm" onclick="anagramUndo()" ${qd.picked.length===0||isFull?'disabled style="opacity:0.4"':''}>← ${t.anagramUndo || 'Undo'}</button></div>
+  </div></div>`;
+}
+
+// ==================== FALLING LETTERS (🎯 mini-jeu) ====================
+// Game loop: spawns a new letter every spawnInterval ms, falls top→bottom in
+// fallDuration ms. The audio prompt names one specific "target" letter on
+// screen. Tap the right one before it hits the bottom: score++. Wrong tap or
+// letting the target hit bottom: life--. Game ends at 0 lives.
+var fallingState = null;
+function startFallingLetters() {
+  if (fallingState && fallingState.timerId) clearInterval(fallingState.timerId);
+  const diff = DIFFICULTY[AppState.difficulty || 'normal'];
+  const pool = ALPHABET.slice(0, diff.letterCount).map(L => L.l);
+  fallingState = {
+    pool, active: [], lastSpawn: 0,
+    spawnInterval: 1700, fallDuration: 5200,
+    target: null, hits: 0, misses: 0, lives: 3,
+    streak: 0, // consecutive hits (resets on any miss) — feeds falling_streak badge
+    timerId: null, done: false
+  };
+  AppState.quizData = { type: 'fallingLetters', pts: diff.pts, results: [], done: false };
+  navigate('fallingLetters');
+  // Kick off the loop after DOM is in place.
+  setTimeout(function(){
+    if (!fallingState) return;
+    fallingState.timerId = setInterval(_fallingTick, 80);
+    _fallingTick();
+  }, 80);
+}
+
+function _fallingTick() {
+  const fs = fallingState; if (!fs || fs.done) return;
+  const now = Date.now();
+  // Spawn
+  if (now - fs.lastSpawn > fs.spawnInterval && fs.active.length < 4) {
+    const letter = fs.pool[Math.floor(Math.random() * fs.pool.length)];
+    const x = 8 + Math.random() * 78;
+    fs.active.push({ id: now + Math.random(), letter, x, spawnAt: now });
+    fs.lastSpawn = now;
+  }
+  // Despawn (bottom)
+  const survivors = [];
+  fs.active.forEach(a => {
+    const pct = (now - a.spawnAt) / fs.fallDuration;
+    if (pct >= 1) {
+      if (fs.target && a.id === fs.target.id) {
+        fs.lives--; fs.misses++; fs.streak = 0; AudioSystem.playSound('wrong'); fs.target = null;
+      }
+    } else { survivors.push(a); }
+  });
+  fs.active = survivors;
+  if (!fs.target && fs.active.length > 0) _fallingPickTarget();
+  if (fs.lives <= 0) { _fallingEnd(); return; }
+  _fallingRenderActive();
+}
+
+function _fallingPickTarget() {
+  const fs = fallingState; if (!fs) return;
+  // Prefer letters in the upper 60% of their fall (room to react).
+  const now = Date.now();
+  const fresh = fs.active.filter(a => (now - a.spawnAt) / fs.fallDuration < 0.55);
+  fs.target = fresh.length ? fresh[Math.floor(Math.random()*fresh.length)]
+                           : fs.active[Math.floor(Math.random()*fs.active.length)];
+  if (fs.target) setTimeout(() => { if (fallingState && fallingState.target && fallingState.target.id === fs.target.id) AudioSystem.speakArabic(fs.target.letter); }, 150);
+}
+
+function fallingTap(id) {
+  const fs = fallingState; if (!fs || fs.done) return;
+  const a = fs.active.find(x => x.id === id); if (!a) return;
+  if (fs.target && fs.target.id === id) {
+    fs.hits++; fs.streak++; addScore(AppState.quizData.pts || 10);
+    if (fs.streak === 10) awardBadge('falling_streak');
+    AudioSystem.playSound('correct');
+    fs.active = fs.active.filter(x => x.id !== id);
+    fs.target = null;
+    _fallingPickTarget();
+  } else {
+    fs.misses++; fs.lives--; fs.streak = 0;
+    AudioSystem.playSound('wrong');
+    if (fs.lives <= 0) { _fallingEnd(); return; }
+  }
+  _fallingRenderActive();
+}
+
+function _fallingRenderActive() {
+  const fs = fallingState; if (!fs) return;
+  const cont = document.getElementById('fallingArea'); if (!cont) return;
+  const now = Date.now();
+  const lives = document.getElementById('fallingLives'); if (lives) lives.textContent = '❤️'.repeat(Math.max(0, fs.lives));
+  const score = document.getElementById('fallingScore'); if (score) score.textContent = fs.hits;
+  cont.innerHTML = fs.active.map(a => {
+    const pct = Math.min(0.96, (now - a.spawnAt) / fs.fallDuration);
+    const top = pct * 100;
+    const isTarget = fs.target && fs.target.id === a.id;
+    return `<button class="falling-letter ${isTarget?'falling-target':''}" style="left:${a.x}%;top:${top}%" onclick="fallingTap(${a.id})">${a.letter}</button>`;
+  }).join('');
+}
+
+function _fallingEnd() {
+  const fs = fallingState; if (!fs) return;
+  fs.done = true;
+  if (fs.timerId) { clearInterval(fs.timerId); fs.timerId = null; }
+  AppState.quizData.done = true;
+  // Fake a results array so renderQuizResults can compute pct: hits=correct.
+  const total = Math.max(1, fs.hits + fs.misses);
+  AppState.quizData.results = Array.from({length: total}, (_,i) => i < fs.hits);
+  addQuiz();
+  if (fs.hits >= 10) showConfetti();
+  render();
+}
+
+function renderFallingLetters(t) {
+  const fs = fallingState;
+  if (fs && fs.done) return renderQuizResults(t);
+  return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}<div class="quiz-c">
+    ${secH(t, '🎯 ' + (t.fallingLetters || 'Falling letters'), '_fallingExit()')}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:1.05rem">
+      <div id="fallingLives">❤️❤️❤️</div>
+      <div style="color:var(--text-light)">${t.score} : <span id="fallingScore" style="color:var(--primary);font-weight:700">0</span></div>
+    </div>
+    <p style="color:var(--text-light);text-align:center;margin-bottom:8px;font-size:0.95rem">${t.fallingPrompt || 'Tap the letter you hear'}</p>
+    <div id="fallingArea" class="falling-area"></div>
+  </div></div>`;
+}
+
+function _fallingExit() {
+  if (fallingState && fallingState.timerId) { clearInterval(fallingState.timerId); fallingState.timerId = null; }
+  fallingState = null;
+  sectionBack();
+}
+
+// ==================== PARENT DASHBOARD ====================
+// Read-only summary view across all local children. Code-gated entry via the
+// 👪 nav button → _parentGate (code of the active child) → renders stat cards
+// per profile. Tap a card to drill into per-letter mastery, visited categories
+// and unlocked badges. The active session is left untouched.
+function openParentDashboard() {
+  if (!AppState.user) { AppState._parentProfile = null; navigate('parentDashboard'); return; }
+  _parentGate(AppState.t.parentDashTitle || 'Parent dashboard', function() {
+    AppState._parentProfile = null;
+    navigate('parentDashboard');
+  });
+}
+
+function _readProfile(name) {
+  try { const raw = localStorage.getItem('ak_' + name); if (raw) return JSON.parse(raw); } catch(e) {}
+  return null;
+}
+
+function _formatLastActive(ts, t) {
+  if (!ts) return '—';
+  const days = Math.floor((Date.now() - ts) / 86400000);
+  if (days <= 0) return t.parentToday || 'today';
+  if (days === 1) return t.parentYesterday || 'yesterday';
+  return (t.parentDaysAgo || '{n} days ago').replace('{n}', days);
+}
+
+function _openChildDetail(name) { AppState._parentProfile = name; navigate('parentChildDetail'); }
+function _backToParentDash() { AppState._parentProfile = null; navigate('parentDashboard'); }
+
+function renderParentDashboard(t) {
+  const profiles = listLocalProfiles();
+  if (!profiles.length) {
+    return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}
+      ${secH(t, '👪 ' + (t.parentDashTitle || 'Parent dashboard'), 'goHome()')}
+      <p style="text-align:center;color:var(--text-light);margin-top:40px">${t.parentNoProfiles || 'No profiles on this device'}</p>
+    </div>`;
+  }
+  const cards = profiles.map(p => {
+    const data = _readProfile(p.name) || {};
+    const lettersLearned = (data.learnedLetters || []).length;
+    const badges = (data.earnedBadges || []).length;
+    const cats = (data.visitedCategories || []).length;
+    const streak = data.streak ? (data.streak.current || 0) : 0;
+    const last = data.streak ? data.streak.lastActive : null;
+    const safe = (p.name||'').replace(/'/g,"\\'");
+    return `<div class="parent-card" onclick="_openChildDetail('${safe}')">
+      <div class="parent-card-head">
+        <div class="parent-avatar">${p.avatar}</div>
+        <div>
+          <div class="parent-name">${p.name}</div>
+          <div class="parent-meta">${t.level} ${p.level||1} · ⭐ ${p.score||0}</div>
+        </div>
+      </div>
+      <div class="parent-stats-grid">
+        <div class="ps"><div class="ps-val">${data.lessons||0}</div><div class="ps-lbl">${t.lessonsCompleted}</div></div>
+        <div class="ps"><div class="ps-val">${data.quizzes||0}</div><div class="ps-lbl">${t.quizzesPassed}</div></div>
+        <div class="ps"><div class="ps-val">${lettersLearned}/28</div><div class="ps-lbl">${t.alphabet}</div></div>
+        <div class="ps"><div class="ps-val">🔥 ${streak}</div><div class="ps-lbl">${t.streakDays||'days'}</div></div>
+        <div class="ps"><div class="ps-val">${badges}</div><div class="ps-lbl">${t.badges}</div></div>
+        <div class="ps"><div class="ps-val">${cats}</div><div class="ps-lbl">${t.parentCategories||'Cats'}</div></div>
+      </div>
+      <div class="parent-last">${t.parentLastActive||'Last active'} : ${_formatLastActive(last, t)}</div>
+    </div>`;
+  }).join('');
+  return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}
+    ${secH(t, '👪 ' + (t.parentDashTitle || 'Parent dashboard'), 'goHome()')}
+    <p style="text-align:center;color:var(--text-light);margin-bottom:14px;font-size:0.92rem">${t.parentTapForDetails || 'Tap a card for details'}</p>
+    <div class="parent-grid">${cards}</div>
+  </div>`;
+}
+
+function renderParentChildDetail(t) {
+  const name = AppState._parentProfile;
+  if (!name) return renderParentDashboard(t);
+  const data = _readProfile(name);
+  if (!data) return renderParentDashboard(t);
+  const avatar = (data.user && data.user.avatar) || '👶';
+  const stats = data.learnedLetters || [];
+  const ls = data.letterStats || {};
+  // Star rule: total interactions per letter (views + listens + huntWins).
+  // 1+ → ⭐, 5+ → ⭐⭐, 10+ → ⭐⭐⭐ — cheap mastery proxy without timestamps.
+  const letterRows = stats.length ? stats.map(L => {
+    const s = ls[L] || {};
+    const total = (s.views||0) + (s.listens||0) + (s.huntWins||0);
+    const stars = total >= 10 ? '⭐⭐⭐' : total >= 5 ? '⭐⭐' : total >= 1 ? '⭐' : '☆';
+    return `<div class="parent-letter-row"><span class="plr-l">${L}</span><span class="plr-s">${stars}</span><span class="plr-c">${total}</span></div>`;
+  }).join('') : `<p style="color:var(--text-light);text-align:center;padding:14px">${t.parentNoLetters || 'No letters yet'}</p>`;
+  const cats = (data.visitedCategories || []).map(c => `<span class="parent-cat-chip">${(WORD_CATEGORIES[c]||{}).emoji||'•'} ${t[c]||c}</span>`).join(' ') || '<span style="color:var(--text-light)">—</span>';
+  const badges = (data.earnedBadges || []).map(id => {
+    const b = BADGE_DEFINITIONS.find(x => x.id === id);
+    return b ? `<span class="parent-badge-chip" title="${(b.name[AppState.lang]||b.name.en||id).replace(/"/g,'&quot;')}">${b.emoji}</span>` : '';
+  }).join(' ') || '<span style="color:var(--text-light)">—</span>';
+  const streak = data.streak || {};
+  return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}
+    ${secH(t, avatar+' '+name, '_backToParentDash()')}
+    <div class="parent-section">
+      <h3 class="parent-section-title">🔥 ${t.streakDays || 'Streak'}</h3>
+      <div class="parent-section-body">${(t.streakDays||'Days')} ${streak.current||0} · ${t.longestStreak||'Best'} ${streak.longest||0} · ❄️ ${streak.freezes||0} · ${t.parentLastActive||'Last'} : ${_formatLastActive(streak.lastActive, t)}</div>
+    </div>
+    <div class="parent-section">
+      <h3 class="parent-section-title">${t.alphabet} (${stats.length}/28)</h3>
+      <div class="parent-letters-list">${letterRows}</div>
+    </div>
+    <div class="parent-section">
+      <h3 class="parent-section-title">${t.parentCategories || 'Categories'} (${(data.visitedCategories||[]).length})</h3>
+      <div class="parent-cats-row">${cats}</div>
+    </div>
+    <div class="parent-section">
+      <h3 class="parent-section-title">${t.badges} (${(data.earnedBadges||[]).length})</h3>
+      <div class="parent-badges-row">${badges}</div>
+    </div>
+  </div>`;
+}
+
+// ==================== REMOTE CONFIG (server-driven flags) ====================
+// Defaults mirror the hard-coded values in this file. Whenever Firebase Console
+// publishes a new Remote Config snapshot, Android calls _onRemoteConfigReady()
+// and the new values flow into the runtime — no app update needed.
+// Keys currently consumed:
+//   - ad_warmup_seconds (long)   → AD_WARMUP_MS
+//   - ad_cooldown_seconds (long) → AD_MIN_INTERVAL_MS
+//   - interstitial_hidden (bool) → INTERSTITIAL_HIDDEN
+//   - quiz_options_normal (long) → read on-demand inside start*Quiz()
+//   - daily_emphasis (string)    → read on-demand inside getDailyChallenge()
+window._rcReady = false;
+function _rc(key, def) {
+  if (typeof Android === 'undefined' || !window._rcReady) return def;
+  try {
+    if (typeof def === 'boolean') return Android.rcGetBoolean(key);
+    if (typeof def === 'number')  return Android.rcGetLong(key);
+    return Android.rcGetString(key) || def;
+  } catch(e) { return def; }
+}
+window._onRemoteConfigReady = function() {
+  window._rcReady = true;
+  try {
+    AD_WARMUP_MS       = _rc('ad_warmup_seconds', 90) * 1000;
+    AD_MIN_INTERVAL_MS = _rc('ad_cooldown_seconds', 120) * 1000;
+    INTERSTITIAL_HIDDEN = _rc('interstitial_hidden', true);
+    console.log('[RC] applied. warmup=' + AD_WARMUP_MS + ' cooldown=' + AD_MIN_INTERVAL_MS + ' hidden=' + INTERSTITIAL_HIDDEN);
+  } catch(e) {}
+};
+
+// ==================== CLOUD RECOVERY (auto-discover saved profiles) ====================
+// Ask Android for every cloud profile this device's uid has ever saved.
+// Anything cloud-side that's missing locally is offered as a one-tap recover.
+// Skipped automatically when the user has already responded or when nothing
+// is missing — never shown twice per session.
+function _maybeOfferCloudRecover() {
+  if (window._cloudRecoverChecked) return;
+  window._cloudRecoverChecked = true;
+  try {
+    if (typeof Android !== 'undefined' && Android.cloudListSeenProfiles) {
+      // Defer a bit so the initial render is on screen first.
+      setTimeout(() => { try { Android.cloudListSeenProfiles(); } catch(e) {} }, 1200);
+    }
+  } catch(e) {}
+}
+
+function _onCloudListSeen(json) {
+  if (!json) return;
+  let arr; try { arr = JSON.parse(json); } catch(e) { return; }
+  if (!arr || !arr.length) return;
+  const localNames = listLocalProfiles().map(p => p.name);
+  const missing = [];
+  for (const item of arr) {
+    try {
+      const data = JSON.parse(item.state);
+      if (data && data.user && data.user.name && localNames.indexOf(data.user.name) < 0) {
+        missing.push({ name: data.user.name, avatar: data.user.avatar || '👤', json: item.state });
+      }
+    } catch(e) {}
+  }
+  if (!missing.length) return;
+  _showCloudRecoverDialog(missing);
+}
+
+function _showCloudRecoverDialog(missing) {
+  const t = AppState.t;
+  AudioSystem.playSound('badge');
+  const ov = document.createElement('div'); ov.className = 'badge-overlay'; ov.id = 'cro'; ov.onclick = _closeCloudRecover;
+  const pp = document.createElement('div'); pp.className = 'badge-popup'; pp.id = 'crp';
+  const list = missing.map((m,i) => `<div class="cloud-rec-item"><span style="font-size:1.6rem">${m.avatar}</span><span style="font-weight:600">${m.name}</span></div>`).join('');
+  const headline = (t.cloudRecoverHeadline || 'Found {n} profile(s) in the cloud').replace('{n}', missing.length);
+  pp.innerHTML = `<div class="badge-popup-emoji">☁️</div>
+    <h2 style="margin-bottom:6px">${t.cloudRecoverTitle || 'Recover profiles?'}</h2>
+    <p style="font-size:0.95rem;color:#718096;margin-bottom:10px;line-height:1.4">${headline}</p>
+    <div class="cloud-rec-list">${list}</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px">
+      <button class="btn btn-ghost" onclick="_closeCloudRecover()" style="flex:1;min-width:110px">${t.logoutCancel || 'Cancel'}</button>
+      <button class="btn btn-primary" onclick="_acceptCloudRecover()" style="flex:1;min-width:110px">⬇️ ${t.cloudRecoverAccept || 'Recover all'}</button>
+    </div>`;
+  document.body.appendChild(ov); document.body.appendChild(pp);
+  window._cloudMissing = missing;
+}
+function _closeCloudRecover() { ['cro','crp'].forEach(id=>{const e=document.getElementById(id);if(e)e.remove();}); window._cloudMissing=null; }
+function _acceptCloudRecover() {
+  const list = window._cloudMissing || [];
+  for (const m of list) {
+    try { localStorage.setItem('ak_' + m.name, m.json); } catch(e) {}
+  }
+  _closeCloudRecover();
+  // If we're on the welcome picker, refresh it so the new profiles appear.
+  if (AppState.screen === 'welcome') render();
+}
+
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', function() {
   // Auto-detect device language
@@ -3044,4 +3883,8 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
   if (!tryAutoLogin()) render();
+  // Once first paint is in place, query the cloud for any profiles this device
+  // has previously saved but which are no longer on disk (re-install / new
+  // device case). Auth is anonymous so it takes a moment to be ready.
+  setTimeout(_maybeOfferCloudRecover, 2500);
 });
