@@ -3632,3 +3632,23 @@ body.theme-dark .reading-text-block { background: var(--bg-card); color: var(--t
 body.theme-dark .bg-deco { opacity: 0.3; }
 body.theme-dark .onboard-dot { background: #4a5568; }
 body.theme-dark .onboard-dot.active { background: var(--primary); }
+
+/* ===== Per-letter recognition check (pedagogical gate) ===== */
+.lcheck { display: flex; flex-direction: column; align-items: center; text-align: center; padding-bottom: 24px; }
+.lc-learned { color: var(--green); font-weight: 700; }
+.lc-progress { display: flex; gap: 8px; justify-content: center; margin: 6px 0 14px; }
+.lc-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(0,0,0,0.15); transition: background .2s, transform .2s; }
+.lc-dot.on { background: var(--green); transform: scale(1.15); }
+.lc-q { font-size: 1.2rem; font-weight: 700; color: var(--text-dark); margin: 8px 0 14px; }
+.lc-replay { font-size: 1.6rem; width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 22px; padding: 0; }
+.lc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; width: 100%; max-width: 360px; margin: 0 auto; }
+.lc-opt { font-family: 'Tajawal','Noto Sans Arabic',sans-serif; font-size: 3rem; font-weight: 800; line-height: 1; background: var(--bg-card); border: 3px solid rgba(0,0,0,0.08); border-radius: 22px; padding: 22px 0; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.06); transition: transform .12s, box-shadow .12s, border-color .12s; }
+.lc-opt:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(0,0,0,0.12); }
+.lc-opt:active { transform: scale(0.95); }
+.lc-result { min-height: 56px; margin-top: 18px; display: flex; flex-direction: column; align-items: center; }
+.lc-msg { font-size: 1.3rem; font-weight: 700; }
+.lc-msg.good { color: var(--green); }
+.lc-msg.bad { color: var(--text-light); }
+body.mode-toddler .lc-opt { font-size: 3.6rem; padding: 28px 0; }
+body.theme-dark .lc-opt { border-color: rgba(255,255,255,0.08); }
+body.theme-dark .lc-dot { background: rgba(255,255,255,0.15); }

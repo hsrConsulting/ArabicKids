@@ -86,7 +86,7 @@ function render() {
   const t = AppState.t;
   const renderers = {
     welcome: renderWelcome, register: renderRegister, login: renderLogin,
-    dashboard: renderDashboard, alphabet: renderAlphabet, letterDetail: renderLetterDetail,
+    dashboard: renderDashboard, alphabet: renderAlphabet, letterDetail: renderLetterDetail, letterCheck: renderLetterCheck,
     words: renderWords, wordList: renderWordList, quizL: renderQuizLetters,
     quizW: renderQuizWords, quizResults: renderQuizResults, memory: renderMemory, badges: renderBadges,
     quizForms: renderQuizForms, quizAudio: renderQuizAudio, quizCategories: renderQuizCategories,
@@ -203,6 +203,7 @@ function sectionBack() {
   }
   var parents = {
     letterDetail: 'alphabet',
+    letterCheck: 'letterDetail',
     wordList: 'words',
     letterTraceLesson: 'letterTraceMenu'
   };
@@ -1006,6 +1007,13 @@ function renderLetterDetail(t) {
     if (AppState.user) AppState.save();
   }
   var stats = getLetterStats(d.l);
+  var _learned = AppState.learnedLetters.includes(d.l);
+  // Soft pedagogical gate: outside toddler mode the child must validate the
+  // letter (recognition check) before "Next" advances. Until then the button
+  // launches the check instead of skipping ahead.
+  var _gated = letterGateActive() && !_learned;
+  var _nextLbl = _gated ? ('✅ ' + (t.letterValidateCta || 'I know it!'))
+                        : (i < 27 ? t.next + ' →' : '✅ ' + t.wellDone);
   var formNames = ['isolated','initial','medial','final'];
   var formsHTML = d.forms ? formNames.map(function(fn) {
     var fm = d.forms[fn];
@@ -1033,7 +1041,7 @@ function renderLetterDetail(t) {
     secH(t,t.letterOf+' '+(i+1)+'/28',"sectionBack()") +
     '<div class="lbig" style="color:'+d.c+'" data-speak="'+d.l+'">'+d.l+'</div>' +
     '<div class="lname"><span class="arabic" style="font-size:1.2rem">'+d.na+'</span> — '+d.n+'</div>' +
-    '<div class="lmastery">👀 '+stats.views+' · 🔊 '+stats.listens+(stats.huntWins?' · 🔍 '+stats.huntWins:'')+'</div>' +
+    '<div class="lmastery">'+(_learned?'<span class="lc-learned">✓ '+(t.letterLearned||'Learned')+'</span> · ':'')+'👀 '+stats.views+' · 🔊 '+stats.listens+(stats.huntWins?' · 🔍 '+stats.huntWins:'')+'</div>' +
     '<button class="btn btn-secondary btn-sm" onclick="bumpLetterStat(\''+d.l+'\',\'listens\');if(AppState.user)AppState.save();AudioSystem.speakArabic(\''+d.l+'\')" style="margin:0 auto 14px;display:flex">🔊 '+t.listen+'</button>' +
     '<div class="lword-box"><div class="lword-emoji">'+d.e+'</div><div class="lword-ar" data-speak="'+d.w+'">'+d.w+'</div><div class="wphon" style="margin:-2px 0 4px">'+transliterate(d.w)+'</div><div class="lword-mean">'+d.wm[AppState.lang]+'</div><button class="listen-btn" data-speak="'+d.w+'" style="margin:10px auto 0;display:flex">🔊 '+t.listen+'</button></div>' +
     (d.extra && d.extra.length ? '<div class="lextra-grid">' + d.extra.map(function(x) {
@@ -1046,25 +1054,120 @@ function renderLetterDetail(t) {
     (d.forms?'<div class="lforms-title">✍️ '+t.letterForms+'</div><div class="lforms-grid">'+formsHTML+'</div>':'') +
     '<div class="lnav">' +
       '<button class="btn btn-sm btn-ghost" '+(i===0?'disabled':'')+' onclick="AppState.selectedLetter='+(i-1)+';AudioSystem.speakArabic(ALPHABET['+(i-1>=0?i-1:0)+'].l);render();window.scrollTo(0,0)">← '+t.previous+'</button>' +
-      '<button class="btn btn-primary btn-sm" onclick="letterNext('+i+')">'+(i<27?t.next+' →':'✅ '+t.wellDone)+'</button>' +
+      '<button class="btn btn-primary btn-sm" onclick="letterNext('+i+')">'+_nextLbl+'</button>' +
     '</div>' +
   '</div></div>';
 }
 
 function letterNext(i) {
-  markLetterLearned(ALPHABET[i].l); addLesson(); addScore(5); AudioSystem.playSound('correct');
-  // From the guided path, advance to the NEXT path step (could be a quiz or
-  // category, not always the next alphabet letter) so the child doesn't skip
-  // milestones by hitting "next" repeatedly.
+  var l = ALPHABET[i].l;
+  // Pedagogical gate (skipped in toddler mode): a letter must be validated via
+  // the recognition check before it counts as learned and the child moves on.
+  if (letterGateActive() && !AppState.learnedLetters.includes(l)) {
+    startLetterCheck(i);
+    return;
+  }
+  // Toddler mode (exempt) or an already-validated letter → mark + advance.
+  // Score only in toddler mode here; for gated modes the points are awarded
+  // once, on passing the check (prevents re-pressing "Next" to farm points).
+  markLetterLearned(l);
+  if (AppState.difficulty === 'toddler') { addLesson(); addScore(5); }
+  AudioSystem.playSound('correct');
+  _advanceFromLetter(i);
+}
+
+// Move on after a letter is done — to the next guided-path step if we came from
+// the path (could be a quiz/category, not always the next letter), else to the
+// next alphabet letter, else back to the grid. Extracted so both the "Next"
+// button and the recognition check can reuse it.
+function _advanceFromLetter(i) {
   if (AppState._pathOrigin) {
-    const next = LEARNING_PATH[currentPathIndex()];
+    var next = LEARNING_PATH[currentPathIndex()];
     if (next) { goToPathStep(next.id); window.scrollTo(0, 0); return; }
     AppState._pathOrigin = false;
     navigate('path');
     return;
   }
-  if(i<27){AppState.selectedLetter=i+1;AudioSystem.speakArabic(ALPHABET[i+1].l);render();window.scrollTo(0,0);}
+  if (i < 27) { AppState.selectedLetter = i + 1; AudioSystem.speakArabic(ALPHABET[i + 1].l); navigate('letterDetail'); window.scrollTo(0, 0); }
   else navigate('alphabet');
+}
+
+// ── Per-letter recognition gate ───────────────────────────────────────────
+// Active outside toddler mode. To "learn" a letter the child must RECOGNISE it:
+// hear its sound, then tap the right glyph among distractors. Passing a small
+// number of rounds (1 beginner, 2 normal/advanced) marks it learned, scores it
+// and unlocks the next step. This is the single source of `learnedLetters` in
+// gated modes, so the green grid / path progress now reflect real acquisition.
+function letterGateActive() { return AppState.difficulty !== 'toddler'; }
+
+var _letterCheck = null;
+
+function startLetterCheck(i) {
+  var diff = DIFFICULTY[AppState.difficulty || 'normal'];
+  var passRounds = (AppState.difficulty === 'beginner') ? 1 : 2;
+  _letterCheck = { i: i, target: ALPHABET[i].l, optionCount: Math.max(2, diff.options), passRounds: passRounds, round: 0, done: false, options: [] };
+  _buildLetterCheckRound();
+  navigate('letterCheck');
+  setTimeout(function() { AudioSystem.speakArabic(ALPHABET[i].l); }, 350);
+}
+
+function _buildLetterCheckRound() {
+  var lc = _letterCheck; if (!lc) return;
+  var others = ALPHABET.map(function(x) { return x.l; }).filter(function(l) { return l !== lc.target; });
+  others = shuffle(others).slice(0, lc.optionCount - 1);
+  lc.options = shuffle([lc.target].concat(others));
+}
+
+function renderLetterCheck(t) {
+  var lc = _letterCheck;
+  if (!lc) { setTimeout(function() { navigate('alphabet'); }, 0); return '<div class="app"></div>'; }
+  var d = ALPHABET[lc.i];
+  var dots = '';
+  for (var r = 0; r < lc.passRounds; r++) dots += '<span class="lc-dot' + (r < lc.round ? ' on' : '') + '"></span>';
+  return '<div class="bg-deco"></div><div class="app page-in"><div class="lcheck">' +
+    secH(t, '🔤 ' + (t.letterValidateCta || 'I know it!'), "navigate('letterDetail')") +
+    (lc.passRounds > 1 ? '<div class="lc-progress">' + dots + '</div>' : '') +
+    '<div class="lc-q">' + (t.letterCheckQ || 'Tap the letter you hear') + '</div>' +
+    '<button class="btn btn-secondary lc-replay" onclick="AudioSystem.speakArabic(\'' + lc.target + '\')">🔊</button>' +
+    '<div class="lc-grid">' + lc.options.map(function(l) {
+      return '<button class="lc-opt" style="color:' + d.c + '" onclick="_letterCheckAnswer(\'' + l + '\')">' + l + '</button>';
+    }).join('') + '</div>' +
+    '<div id="lcResult" class="lc-result"></div>' +
+  '</div></div>';
+}
+
+function _letterCheckAnswer(l) {
+  var lc = _letterCheck; if (!lc || lc.done) return;
+  var t = AppState.t;
+  var resEl = document.getElementById('lcResult');
+  if (l !== lc.target) {
+    AudioSystem.playSound('wrong'); AudioSystem.vibrate(40);
+    if (resEl) resEl.innerHTML = '<div class="lc-msg bad">💪 ' + (t.traceRetryMsg || 'Try again!') + '</div>';
+    setTimeout(function() { AudioSystem.speakArabic(lc.target); }, 250);
+    return;
+  }
+  AudioSystem.playSound('correct');
+  lc.round++;
+  if (lc.round >= lc.passRounds) { lc.done = true; _letterCheckPass(); return; }
+  _buildLetterCheckRound();
+  render();
+  setTimeout(function() { AudioSystem.speakArabic(lc.target); }, 300);
+}
+
+function _letterCheckPass() {
+  var lc = _letterCheck; var i = lc.i, t = AppState.t;
+  var diff = DIFFICULTY[AppState.difficulty || 'normal'];
+  markLetterLearned(lc.target); addLesson(); addScore(diff.pts || 5);
+  AudioSystem.playSound('correct'); showConfetti();
+  var resEl = document.getElementById('lcResult');
+  if (resEl) resEl.innerHTML = '<div class="lc-msg good">🎉 ' + (t.wellDone || 'Well done!') + '</div>' +
+    '<button class="btn btn-primary" style="margin-top:14px" onclick="_letterCheckContinue()">' + (i < 27 ? (t.next + ' →') : ('✅ ' + t.wellDone)) + '</button>';
+}
+
+function _letterCheckContinue() {
+  var lc = _letterCheck; var i = lc ? lc.i : AppState.selectedLetter;
+  _letterCheck = null;
+  _advanceFromLetter(i);
 }
 
 // ==================== QUIZZES LIST ====================
@@ -3026,7 +3129,10 @@ function _checkTrace() {
   if (_lettersTracedCount % 6 === 0) _adPending = true;
   var stars = pct >= 70 ? 3 : pct >= 50 ? 2 : 1;
   var pts = stars * 5;
-  addScore(pts); markLetterLearned(ALPHABET[i].l); addLesson();
+  // Tracing is production practice (scored), but acquisition is proven by the
+  // recognition check — so a trace no longer flips the "learned" flag on its
+  // own. The letter still turns green only once its check is passed.
+  addScore(pts); addLesson();
   if (stars === 3) { AudioSystem.playSound('correct'); showConfetti(); }
   else AudioSystem.playSound('correct');
   var msgs = [t.keepGoing||'Continue !', t.good||'Bien !', t.perfect||'Parfait ! 🌟'];
