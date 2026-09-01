@@ -44,7 +44,11 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.remoteconfig.ktx.remoteConfig
+import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.google.firebase.ktx.Firebase
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -84,6 +88,7 @@ class MainActivity : AppCompatActivity() {
     private val analytics by lazy { Firebase.analytics }
     private val firestore by lazy { Firebase.firestore }
     private val firebaseAuth by lazy { Firebase.auth }
+    private val remoteConfig by lazy { Firebase.remoteConfig }
 
     // Sound effect IDs
     private var sndCorrect = 0
@@ -122,6 +127,7 @@ class MainActivity : AppCompatActivity() {
         initTts()
         initBilling()
         initFirebaseAuth()
+        initRemoteConfig()
         setupWebView()
 
         // Daily reminder: create channel + schedule once, request POST_NOTIFICATIONS
@@ -382,6 +388,38 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // ── Remote Config ─────────────────────────────────────────────────────────
+    // Server-driven parameters so we can tune behaviour (ad pacing, defaults)
+    // without shipping a new version. Defaults below mirror the hard-coded
+    // values so the app behaves identically until a Firebase Console override
+    // is published. Fetch interval is 1h in prod — Firebase Console can flip
+    // a setting in minutes once devices reach back.
+    private fun initRemoteConfig() {
+        val settings = remoteConfigSettings { minimumFetchIntervalInSeconds = 3600 }
+        remoteConfig.setConfigSettingsAsync(settings)
+        remoteConfig.setDefaultsAsync(
+            mapOf(
+                "ad_warmup_seconds" to 90L,
+                "ad_cooldown_seconds" to 120L,
+                "quiz_options_normal" to 4L,
+                "daily_emphasis" to "balanced",
+                "interstitial_hidden" to true
+            )
+        )
+        remoteConfig.fetchAndActivate()
+            .addOnSuccessListener {
+                Log.d(TAG, "Remote Config activated")
+                runOnUiThread {
+                    try {
+                        binding.webView.evaluateJavascript(
+                            "if(typeof _onRemoteConfigReady==='function')_onRemoteConfigReady()", null
+                        )
+                    } catch (e: Exception) { /* webview may not be ready yet */ }
+                }
+            }
+            .addOnFailureListener { Log.w(TAG, "Remote Config fetch failed: ${it.message}") }
+    }
+
     private fun userKey(name: String, code: String): String {
         val raw = "${name.trim().lowercase()}_$code"
         return raw.toByteArray().fold(0L) { acc, b -> acc * 31 + b.toLong() }
@@ -389,13 +427,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun firestoreSave(name: String, code: String, json: String) {
-        if (firebaseAuth.currentUser == null) {
+        val uid = firebaseAuth.currentUser?.uid
+        if (uid == null) {
             Log.w(TAG, "Firestore save skipped — no auth user yet")
             return
         }
         val key = userKey(name, code)
+        // seenBy is an arrayUnion of every anonymous uid that has saved this
+        // profile. Lets a device that re-installs the app (new uid) bootstrap
+        // its profile list from Firestore via cloudListSeenProfiles().
         firestore.collection("profiles").document(key)
-            .set(mapOf("state" to json, "updatedAt" to System.currentTimeMillis()))
+            .set(
+                mapOf(
+                    "state" to json,
+                    "updatedAt" to System.currentTimeMillis(),
+                    "seenBy" to FieldValue.arrayUnion(uid)
+                ),
+                SetOptions.merge()
+            )
             .addOnSuccessListener { Log.d(TAG, "Firestore save OK key=$key") }
             .addOnFailureListener { Log.w(TAG, "Firestore save failed: ${it.message}") }
     }
@@ -910,6 +959,60 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun isCloudAvailable(): Boolean = firebaseAuth.currentUser != null
+
+        // ── Remote Config accessors ──────────────────────────────────────────
+        @JavascriptInterface
+        fun rcGetString(key: String): String = remoteConfig.getString(key)
+
+        @JavascriptInterface
+        fun rcGetLong(key: String): Long = remoteConfig.getLong(key)
+
+        @JavascriptInterface
+        fun rcGetBoolean(key: String): Boolean = remoteConfig.getBoolean(key)
+
+        // Query every profile this device's anonymous uid has ever saved.
+        // Returns a JSON array of {state: "<json>"} via `_onCloudListSeen`.
+        // Used at boot to detect profiles in the cloud that aren't on this
+        // device yet (re-install scenario or new device).
+        @JavascriptInterface
+        fun cloudListSeenProfiles() {
+            val uid = firebaseAuth.currentUser?.uid
+            if (uid == null) {
+                runOnUiThread {
+                    binding.webView.evaluateJavascript(
+                        "if(typeof _onCloudListSeen==='function')_onCloudListSeen(null)", null
+                    )
+                }
+                return
+            }
+            firestore.collection("profiles")
+                .whereArrayContains("seenBy", uid)
+                .get()
+                .addOnSuccessListener { snap ->
+                    val results = org.json.JSONArray()
+                    for (doc in snap.documents) {
+                        val state = doc.getString("state") ?: continue
+                        results.put(org.json.JSONObject().put("state", state))
+                    }
+                    val payload = results.toString()
+                        .replace("\\", "\\\\")
+                        .replace("'", "\\'")
+                        .replace("\n", "\\n")
+                    runOnUiThread {
+                        binding.webView.evaluateJavascript(
+                            "if(typeof _onCloudListSeen==='function')_onCloudListSeen('$payload')", null
+                        )
+                    }
+                }
+                .addOnFailureListener {
+                    Log.w(TAG, "Firestore listSeen failed: ${it.message}")
+                    runOnUiThread {
+                        binding.webView.evaluateJavascript(
+                            "if(typeof _onCloudListSeen==='function')_onCloudListSeen(null)", null
+                        )
+                    }
+                }
+        }
 
         // ── Analytics ─────────────────────────────────────────────────────────
         @JavascriptInterface
