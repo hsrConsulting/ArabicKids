@@ -22,8 +22,13 @@ const AudioSystem = {
   // form — matches how tools/generate_audio.py produces the manifest.
   _audioUrl(text) {
     if (typeof _AUDIO_DICT === 'undefined' || !text) return null;
+    // Exact match first \u2014 letters and letter+haraka syllables have their own
+    // IPA-forced MP3s keyed by the exact string harakaSpeakable() produces.
     if (_AUDIO_DICT[text]) return 'audio/' + _AUDIO_DICT[text] + '.mp3';
     var bare = text.replace(/[\u064B-\u0652\u0670]/g, '');
+    // No bare fallback for single letters: it would make every haraka of a
+    // letter play the same bare-letter MP3. Let TTS handle unknown combos.
+    if (bare.length <= 1) return null;
     if (bare !== text && _AUDIO_DICT[bare]) return 'audio/' + _AUDIO_DICT[bare] + '.mp3';
     return null;
   },
@@ -32,14 +37,18 @@ const AudioSystem = {
     var url = this._audioUrl(text);
     if (!url) { onError(); return; }
     var self = this;
+    // onerror AND play().catch can both fire for the same failure — guard so
+    // the TTS fallback runs once (double speakArabic with QUEUE_FLUSH stutters).
+    var failed = false;
+    var fail = function() { if (!failed) { failed = true; onError(); } };
     try {
       if (this._current) { try { this._current.pause(); } catch(e) {} this._current = null; }
       var a = new Audio(url);
       this._current = a;
       a.onplay = function() { self._silentCount = 0; }; // playback started → success
-      a.onerror = function() { onError(); };
-      a.play().catch(function() { onError(); });
-    } catch(e) { onError(); }
+      a.onerror = fail;
+      a.play().catch(fail);
+    } catch(e) { fail(); }
   },
 
   // Called when no audio path produced playback for a speakArabic() request.

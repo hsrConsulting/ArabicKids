@@ -39,7 +39,7 @@ From the repo root:
 # dry run: list what will be generated
 python3 tools/generate_audio.py --dry-run
 
-# full generation (writes ~280 MP3s to app/src/main/assets/audio/)
+# full generation (writes ~280 MP3s to app/src/main/assets/web/audio/)
 python3 tools/generate_audio.py
 
 # re-run after adding new words — skips files already on disk
@@ -51,7 +51,7 @@ python3 tools/generate_audio.py --voice Hala --overwrite
 
 ## 4. What it produces
 
-- `app/src/main/assets/audio/<hash>.mp3` — one short MP3 per Arabic string.
+- `app/src/main/assets/web/audio/<hash>.mp3` — one short MP3 per Arabic string.
   Hash is first 10 chars of md5(ar) so regenerations are idempotent.
 - `app/src/main/assets/web/js/audio_manifest.js` — auto-included by
   `index.html`. Maps each Arabic string (with and without harakat) to its

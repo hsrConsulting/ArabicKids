@@ -702,6 +702,20 @@ var HARAKAT = [
   { mark: '\u064D', name: 'Tanwin Kasr', nameAr: 'تَنْوِين كَسْر', sound: 'in', color: '#ec4899' }
 ];
 
+// TTS misreads an isolated letter followed by tanwin/shadda/sukun (adds w/y
+// glides). Build a properly-spelled syllable that also matches the IPA-forced
+// MP3 keys from tools/generate_audio.py; the UI keeps showing letter+mark.
+function harakaSpeakable(letter, mark) {
+  switch (mark) {
+    case '\u064B': return letter + '\u064E\u0646\u0652'; // tanwin fath -> Xan
+    case '\u064C': return letter + '\u064F\u0646\u0652'; // tanwin damm -> Xoun
+    case '\u064D': return letter + '\u0650\u0646\u0652'; // tanwin kasr -> Xin
+    case '\u0651': return '\u0623\u064E' + letter + '\u0651\u064E'; // shadda -> aXXa
+    case '\u0652': return '\u0623\u064E' + letter + '\u0652'; // sukun -> aX
+    default: return letter + mark; // fatha/damma/kasra read fine as-is
+  }
+}
+
 function renderLetterDetail(t) {
   var i=AppState.selectedLetter, d=ALPHABET[i];
   // Count this view (one per navigation, not per re-render — guard via a flag)
@@ -718,14 +732,11 @@ function renderLetterDetail(t) {
     return '<div class="lform-card" data-speak="'+fm.ex+'" style="cursor:pointer"><div class="lform-label">'+t[fn]+'</div><div class="lform-char" style="color:'+d.c+'">'+fm.f+'</div><div class="lform-ex"><div class="lform-ex-ar">'+fm.ex+'</div><div class="lform-ex-tr">'+fm.exm[AppState.lang]+'</div></div></div>';
   }).join('') : '';
 
-  // Build harakat section. Sukun and Shadda are unvoiceable alone, so the
-  // text passed to TTS gets a helper vowel (alif-fatha prefix for sukun,
-  // fatha suffix for shadda) — display stays the raw combined form.
+  // Build harakat section — harakaSpeakable() gives TTS/MP3 a pronounceable
+  // syllable; display stays the raw combined form.
   var harakatHTML = HARAKAT.map(function(h) {
     var combined = d.l + h.mark;
-    var speak = combined;
-    if (h.mark === '\u0652') speak = (d.l === 'أ' || d.l === 'ا') ? 'أَا' : 'أَ' + d.l + '\u0652';
-    else if (h.mark === '\u0651') speak = d.l + '\u0651\u064E';
+    var speak = harakaSpeakable(d.l, h.mark);
     return '<div class="haraka-card" data-speak="'+speak+'" style="border-color:'+h.color+'30;background:'+h.color+'08">' +
       '<div class="haraka-char" style="color:'+h.color+'">'+combined+'</div>' +
       '<div class="haraka-name">'+h.nameAr+'</div>' +
@@ -1478,7 +1489,7 @@ function quizAnswer(i) {
     if(qd.current<qd.questions.length-1){
       qd.current++;qd.selected=null;render();
       if(qd.type==='audio')setTimeout(()=>AudioSystem.speakArabic(qd.questions[qd.current].arabic),400);
-      if(qd.type==='harakat')setTimeout(()=>AudioSystem.speakArabic(qd.questions[qd.current].combined),400);
+      if(qd.type==='harakat')setTimeout(()=>AudioSystem.speakArabic(qd.questions[qd.current].speak),400);
     }
     else{qd.done=true;addQuiz();if(qd.results.every(r=>r))awardBadge('perfectQuiz');showConfetti();render();}
   },1200);
@@ -2209,6 +2220,7 @@ function startQuizHarakat() {
       var others = shuffle(harakatPool.filter(function(h) { return h.mark !== correctH.mark; })).slice(0, diff.options - 1);
       return {
         letter: letter.l, combined: combined, correctMark: correctH.mark,
+        speak: harakaSpeakable(letter.l, correctH.mark),
         correctName: correctH.nameAr, correctLatin: correctH.name,
         options: shuffle([
           { label: correctH.nameAr, latin: correctH.name, correct: true }
@@ -2220,7 +2232,7 @@ function startQuizHarakat() {
     current: 0, selected: null, results: [], done: false
   };
   navigate('quizHarakat');
-  setTimeout(function() { AudioSystem.speakArabic(AppState.quizData.questions[0].combined); }, 400);
+  setTimeout(function() { AudioSystem.speakArabic(AppState.quizData.questions[0].speak); }, 400);
 }
 
 function renderQuizHarakat(t) {
@@ -2234,8 +2246,8 @@ function renderQuizHarakat(t) {
     }).join('') + '</div>' +
     '<p class="qq">' + t.questionOf + ' ' + (qd.current + 1) + ' ' + t.of + ' ' + qd.questions.length + ' ' + getDiffBadge(AppState.difficulty, t) + '</p>' +
     '<p style="color:var(--text-light);margin-bottom:4px">' + (t.identifyHaraka || 'Quel est le signe diacritique ?') + '</p>' +
-    '<div class="qprompt" style="font-size:5rem;direction:rtl;font-family:var(--font-arabic)" data-speak="' + q.combined + '">' + q.combined + '</div>' +
-    '<button class="btn btn-secondary btn-sm" data-speak="' + q.combined + '" style="margin:0 auto 12px;display:flex">🔊 ' + t.listen + '</button>' +
+    '<div class="qprompt" style="font-size:5rem;direction:rtl;font-family:var(--font-arabic)" data-speak="' + q.speak + '">' + q.combined + '</div>' +
+    '<button class="btn btn-secondary btn-sm" data-speak="' + q.speak + '" style="margin:0 auto 12px;display:flex">🔊 ' + t.listen + '</button>' +
     '<div class="qoptions">' + q.options.map(function(o, i) {
       return '<button class="qopt ' + (qd.selected === i ? (o.correct ? 'correct' : 'incorrect') : (qd.selected !== null ? 'dis' : '')) +
         '" style="flex-direction:column;gap:2px" onclick="quizAnswer(' + i + ')"><span style="font-family:var(--font-arabic);font-size:1.2rem">' +
