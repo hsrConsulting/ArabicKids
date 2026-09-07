@@ -146,6 +146,13 @@ NAME_IPA = {
     "\u064a": "ja\u02d0\u0294",
 }
 
+# Letter names where Zeina renders the IPA badly — speak the fully vocalized
+# Arabic name as plain text instead (these are ordinary words she reads well).
+NAME_TEXT = {
+    "\u0623": "\u0623\u064e\u0644\u0650\u0641",          # alif
+    "\u0642": "\u0642\u064e\u0627\u0641",                # qaf
+}
+
 FATHA, DAMMA, KASRA = "\u064e", "\u064f", "\u0650"
 SHADDA, SUKUN = "\u0651", "\u0652"
 NOON, ALIF_FATHA = "\u0646", "\u0623\u064e"
@@ -163,9 +170,13 @@ def syllable_tasks() -> list[tuple[str, str, str]]:
         ipa = LETTER_IPA.get(letter.replace("\u0640", ""))
         if not ipa:
             continue
-        # Tapping the bare letter speaks its name — IPA-forced
-        name_ph = NAME_IPA.get(letter.replace("\u0640", ""))
-        if name_ph:
+        # Tapping the bare letter speaks its name — IPA-forced, except the
+        # few names Zeina renders badly in IPA (plain vocalized text wins).
+        bare_letter = letter.replace("\u0640", "")
+        name_ph = NAME_IPA.get(bare_letter)
+        if bare_letter in NAME_TEXT:
+            tasks.append((letter, NAME_TEXT[bare_letter], "text"))
+        elif name_ph:
             tasks.append((letter,
                           '<speak><phoneme alphabet="ipa" ph="' + name_ph
                           + '">' + name + "</phoneme></speak>", "ssml"))
