@@ -16,12 +16,12 @@ val keystoreProperties = Properties().apply {
 
 android {
     namespace = "com.hsrconsulting.arabickids"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.hsrconsulting.arabickids"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 18
         versionName = "2.3.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
