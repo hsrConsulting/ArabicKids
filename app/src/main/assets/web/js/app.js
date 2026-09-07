@@ -2816,20 +2816,73 @@ function renderLetterTraceLesson(t) {
 }
 
 var _TRACE_W = 320;
+var _traceWaypoints = [];    // live guide points, lit up as the child passes them
+var _traceAutoDone = false;  // one-shot guard for auto-validation
 
 function _initTraceCanvas() {
   const gc = document.getElementById('traceGuide');
   const uc = document.getElementById('traceUser');
   if (!gc || !uc) return;
-  _traceGuideCtx = gc.getContext('2d');
-  _traceCtx = uc.getContext('2d');
+  // Render at devicePixelRatio for crisp strokes on high-density screens;
+  // all drawing keeps using logical 320x320 coordinates via ctx.scale.
+  var dpr = Math.min(window.devicePixelRatio || 1, 3);
+  [gc, uc].forEach(function(c) { c.width = _TRACE_W * dpr; c.height = _TRACE_W * dpr; });
+  _traceGuideCtx = gc.getContext('2d'); _traceGuideCtx.scale(dpr, dpr);
+  _traceCtx = uc.getContext('2d'); _traceCtx.scale(dpr, dpr);
   _tracePath = [];
   _traceDrawing = _traceCompleted = _traceGuideRunning = false;
   if (_traceAnimTimer) { clearTimeout(_traceAnimTimer); _traceAnimTimer = null; }
   const i = AppState.selectedLetter || 0;
+  _resetTraceWaypoints(i);
   _drawTraceTemplate(i);
   _setupTraceEvents(uc);
+  // Canvas text does not trigger @font-face loading — make sure the bundled
+  // Arabic face is in, then redraw so guide, glyph and scorer all share it.
+  if (document.fonts && document.fonts.load) {
+    document.fonts.load('180px "AK Naskh"').then(function() {
+      if (AppState.screen === 'letterTraceLesson' && !_traceCompleted) _drawTraceTemplate(AppState.selectedLetter || 0);
+    }).catch(function() {});
+  }
   _traceAnimTimer = setTimeout(() => _runTraceGuide(), 600);
+}
+
+function _resetTraceWaypoints(idx) {
+  var sd = TRACE_STROKES[idx], S = _TRACE_W / 100;
+  _traceWaypoints = [];
+  _traceAutoDone = false;
+  if (!sd) return;
+  sd.strokes.forEach(function(pts) {
+    pts.forEach(function(p) { _traceWaypoints.push({ x: p.x * S, y: p.y * S, hit: false }); });
+  });
+  sd.dots.forEach(function(d) { _traceWaypoints.push({ x: d.x * S, y: d.y * S, hit: false }); });
+}
+
+// Light up guide waypoints the finger passes over; when the whole letter is
+// covered, validate automatically — small kids don't need the Check button.
+function _markTraceWaypoints(p) {
+  if (_traceCompleted || !_traceWaypoints.length) return;
+  var tol = document.body.classList.contains('mode-toddler') ? 30 : 22;
+  var tolSq = tol * tol, allHit = true;
+  for (var k = 0; k < _traceWaypoints.length; k++) {
+    var w = _traceWaypoints[k];
+    if (!w.hit) {
+      var dx = p.x - w.x, dy = p.y - w.y;
+      if (dx * dx + dy * dy <= tolSq) {
+        w.hit = true;
+        if (_traceGuideCtx) {
+          _traceGuideCtx.beginPath();
+          _traceGuideCtx.arc(w.x, w.y, 6, 0, Math.PI * 2);
+          _traceGuideCtx.fillStyle = '#22c55e';
+          _traceGuideCtx.fill();
+        }
+      }
+    }
+    if (!w.hit) allHit = false;
+  }
+  if (allHit && !_traceAutoDone) {
+    _traceAutoDone = true;
+    setTimeout(function() { if (!_traceCompleted) _checkTrace(); }, 250);
+  }
 }
 
 function _drawTraceTemplate(idx) {
@@ -2840,7 +2893,7 @@ function _drawTraceTemplate(idx) {
 
   // Big faded letter background — use Arabic font, centered
   ctx.save();
-  ctx.font = '180px "Noto Naskh Arabic", serif';
+  ctx.font = '180px "AK Naskh", "Noto Naskh Arabic", serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.direction = 'rtl';
@@ -2916,7 +2969,8 @@ function _setupTraceEvents(canvas) {
   var overlay = document.getElementById('traceOverlay');
   function pos(e) {
     var r = canvas.getBoundingClientRect();
-    var sx = canvas.width / r.width, sy = canvas.height / r.height;
+    // Logical 320x320 coordinates — canvas.width is scaled by dpr, don't use it.
+    var sx = _TRACE_W / r.width, sy = _TRACE_W / r.height;
     var src = e.touches ? e.touches[0] : e;
     return { x: (src.clientX - r.left) * sx, y: (src.clientY - r.top) * sy };
   }
@@ -2927,6 +2981,7 @@ function _setupTraceEvents(canvas) {
     _traceDrawing = true;
     var p = pos(e);
     _tracePath.push(p);
+    _markTraceWaypoints(p);
     _traceCtx.beginPath();
     _traceCtx.moveTo(p.x, p.y);
   }
@@ -2935,6 +2990,7 @@ function _setupTraceEvents(canvas) {
     if (!_traceDrawing || _traceCompleted) return;
     var p = pos(e);
     _tracePath.push(p);
+    _markTraceWaypoints(p);
     _traceCtx.lineTo(p.x, p.y);
     _traceCtx.strokeStyle = '#6366F1';
     _traceCtx.lineWidth = 14;  // thick line for kids
@@ -2960,6 +3016,7 @@ function _clearTrace() {
   _traceCompleted = false;
   _traceGuideRunning = false;
   if (_traceAnimTimer) { clearTimeout(_traceAnimTimer); _traceAnimTimer = null; }
+  _resetTraceWaypoints(AppState.selectedLetter || 0);
   _drawTraceTemplate(AppState.selectedLetter || 0);
   var res = document.getElementById('traceResult'), nav = document.getElementById('traceNav'), ov = document.getElementById('traceOverlay');
   if (res) res.style.display = 'none';
@@ -2973,6 +3030,7 @@ function _runTraceGuide() {
   if (_traceAnimTimer) { clearTimeout(_traceAnimTimer); _traceAnimTimer = null; }
   if (_traceCtx) _traceCtx.clearRect(0, 0, _TRACE_W, _TRACE_W);
   _tracePath = []; _traceCompleted = false;
+  _resetTraceWaypoints(AppState.selectedLetter || 0);
   var ov = document.getElementById('traceOverlay'), res = document.getElementById('traceResult'), nav = document.getElementById('traceNav');
   if (ov) ov.style.display = 'none';
   if (res) res.style.display = 'none';
@@ -3055,7 +3113,7 @@ function _scoreTraceByGlyph(letter) {
   var c = document.createElement('canvas');
   c.width = W; c.height = W;
   var cx = c.getContext('2d');
-  cx.font = '180px "Noto Naskh Arabic", serif';
+  cx.font = '180px "AK Naskh", "Noto Naskh Arabic", serif';
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
   cx.direction = 'rtl';
@@ -3072,7 +3130,8 @@ function _scoreTraceByGlyph(letter) {
   }
   if (lp.length === 0) return 0;
 
-  var TOL = 24, TOL_SQ = TOL * TOL;
+  // Wider tolerance for toddler mode — little fingers, big strokes.
+  var TOL = document.body.classList.contains('mode-toddler') ? 32 : 24, TOL_SQ = TOL * TOL;
 
   // Coverage: how much of the letter the user drew over.
   var covered = 0;
@@ -3121,7 +3180,7 @@ function _checkTrace() {
 
   // Minimum threshold — below this, nothing is awarded. Kid gets an
   // encouragement message and can redo the tracing from scratch.
-  var MIN_PCT = 30;
+  var MIN_PCT = document.body.classList.contains('mode-toddler') ? 20 : 30;
   if (pct < MIN_PCT) {
     AudioSystem.playSound('wrong');
     var resElLo = document.getElementById('traceResult');
@@ -3141,6 +3200,8 @@ function _checkTrace() {
   if (_lettersTracedCount % 6 === 0) _adPending = true;
   var stars = pct >= 70 ? 3 : pct >= 50 ? 2 : 1;
   var pts = stars * 5;
+  // Reinforce: say the letter's name on success (IPA-forced MP3).
+  setTimeout(function() { AudioSystem.speakArabic(ALPHABET[i].l); }, 600);
   // Tracing is production practice (scored), but acquisition is proven by the
   // recognition check — so a trace no longer flips the "learned" flag on its
   // own. The letter still turns green only once its check is passed.

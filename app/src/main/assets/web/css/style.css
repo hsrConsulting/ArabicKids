@@ -5,6 +5,16 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Fredoka:wght@300;400;500;600;700&display=swap');
 
+/* Bundled Arabic font — the tracing canvas and its glyph-mask scorer must use
+   the exact same glyph geometry on every device (Samsung swaps the system
+   Arabic font, and the Google Fonts CDN is unreachable offline). */
+@font-face {
+  font-family: 'AK Naskh';
+  src: url('../fonts/NotoNaskhArabic-Regular.ttf') format('truetype');
+  font-weight: 400 700;
+  font-display: swap;
+}
+
 /* ==================== VARIABLES ==================== */
 :root {
   --primary: #FF6B6B;
@@ -35,7 +45,7 @@
   --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.15);
   --font-main: 'Fredoka', 'Baloo 2', sans-serif;
-  --font-arabic: 'Noto Naskh Arabic', serif;
+  --font-arabic: 'AK Naskh', 'Noto Naskh Arabic', serif;
   --transition: all 0.3s ease;
 }
 
