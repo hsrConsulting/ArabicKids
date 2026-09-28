@@ -41,6 +41,7 @@ const TRANSLATIONS = {
     blendPick: "Qu'est-ce que c'est ?",
     stepPractice: "Pratiquer",
     catchUp: "À rattraper",
+    continuePath: "Continuer mon parcours",
     tapFirstLetter: "Quelle est la première lettre de ce mot ?",
     logoutTitle: "Se déconnecter ?",
     logoutMessage: "Tu pourras te reconnecter avec ton prénom et ton code.",
@@ -328,6 +329,7 @@ const TRANSLATIONS = {
     blendPick: "What is it?",
     stepPractice: "Practice",
     catchUp: "To catch up",
+    continuePath: "Continue my path",
     tapFirstLetter: "Which letter does this word start with?",
     logoutTitle: "Log out?",
     logoutMessage: "You can log back in with your name and code.",
@@ -615,6 +617,7 @@ const TRANSLATIONS = {
     blendPick: "¿Qué es?",
     stepPractice: "Practicar",
     catchUp: "Para recuperar",
+    continuePath: "Continuar mi camino",
     tapFirstLetter: "¿Con qué letra empieza esta palabra?",
     logoutTitle: "¿Cerrar sesión?",
     logoutMessage: "Podrás volver a entrar con tu nombre y código.",
@@ -878,6 +881,7 @@ const TRANSLATIONS = {
     blendPick: "Was ist das?",
     stepPractice: "Üben",
     catchUp: "Nachholen",
+    continuePath: "Meinen Weg fortsetzen",
     tapFirstLetter: "Mit welchem Buchstaben beginnt dieses Wort?",
     logoutTitle: "Abmelden?",
     logoutMessage: "Du kannst dich mit deinem Namen und Code wieder anmelden.",
@@ -1141,6 +1145,7 @@ const TRANSLATIONS = {
     blendPick: "Bu ne?",
     stepPractice: "Pratik yap",
     catchUp: "Telafi et",
+    continuePath: "Yoluma devam et",
     tapFirstLetter: "Bu kelime hangi harfle başlıyor?",
     logoutTitle: "Çıkış yapılsın mı?",
     logoutMessage: "Adın ve kodunla tekrar giriş yapabilirsin.",
@@ -1404,6 +1409,7 @@ const TRANSLATIONS = {
     blendPick: "यह क्या है?",
     stepPractice: "अभ्यास",
     catchUp: "पूरा करना बाकी",
+    continuePath: "मेरा पथ जारी रखें",
     tapFirstLetter: "यह शब्द किस अक्षर से शुरू होता है?",
     logoutTitle: "लॉग आउट?",
     logoutMessage: "अपना नाम और कोड डालकर फिर से लॉग इन कर सकते हैं।",
@@ -1667,6 +1673,7 @@ const TRANSLATIONS = {
     blendPick: "Apa ini?",
     stepPractice: "Latihan",
     catchUp: "Untuk dikejar",
+    continuePath: "Lanjutkan jalurku",
     tapFirstLetter: "Kata ini diawali dengan huruf apa?",
     logoutTitle: "Keluar?",
     logoutMessage: "Kamu bisa masuk lagi dengan nama dan kodemu.",
@@ -1930,6 +1937,7 @@ const TRANSLATIONS = {
     blendPick: "Che cos'è?",
     stepPractice: "Esercitati",
     catchUp: "Da recuperare",
+    continuePath: "Continua il mio percorso",
     tapFirstLetter: "Con quale lettera inizia questa parola?",
     logoutTitle: "Disconnettersi?",
     logoutMessage: "Potrai accedere di nuovo con il tuo nome e codice.",
@@ -2193,6 +2201,7 @@ const TRANSLATIONS = {
     blendPick: "Wat is het?",
     stepPractice: "Oefenen",
     catchUp: "In te halen",
+    continuePath: "Verder met mijn pad",
     tapFirstLetter: "Met welke letter begint dit woord?",
     logoutTitle: "Uitloggen?",
     logoutMessage: "Je kunt opnieuw inloggen met je naam en code.",
@@ -2456,6 +2465,7 @@ const TRANSLATIONS = {
     blendPick: "O que é?",
     stepPractice: "Praticar",
     catchUp: "Por recuperar",
+    continuePath: "Continuar o meu percurso",
     tapFirstLetter: "Com que letra começa esta palavra?",
     logoutTitle: "Sair?",
     logoutMessage: "Podes voltar a entrar com o teu nome e código.",
@@ -3702,8 +3712,12 @@ function getLevelName(level, t) {
   return t.beginner;
 }
 
+// Deduped by `ar`: a few words live in two categories (شَمْس, مَطَر…) and
+// would otherwise show up twice in the same quiz.
 function getAllWords() {
-  return Object.values(WORD_CATEGORIES).filter(cat => !cat.hidden).flatMap(cat => cat.words);
+  const seen = new Set();
+  return Object.values(WORD_CATEGORIES).filter(cat => !cat.hidden).flatMap(cat => cat.words)
+    .filter(w => !seen.has(w.ar) && seen.add(w.ar));
 }
 
 // Arabic → Latin phonetic transliteration (with vowel-inserted dictionary)

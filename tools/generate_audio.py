@@ -84,9 +84,10 @@ SSML_OVERRIDES = {
     "\u062f\u064e\u0644\u0652\u0648":
         '<speak><phoneme alphabet="ipa" ph="dalw">'
         "\u062f\u0644\u0648</phoneme></speak>",
-    # maama (maman)
+    # maama (maman) — long stressed vowels; plain "mama" came out clipped
+    # (~0.5s, whisper heard "mm"). ˈmaːmaː is recognized as ماما / "Mama".
     "مَامَا":
-        '<speak><phoneme alphabet="ipa" ph="mama">'
+        '<speak><phoneme alphabet="ipa" ph="\u02c8ma\u02d0ma\u02d0">'
         "ماما</phoneme></speak>",
 }
 

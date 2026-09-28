@@ -1117,6 +1117,18 @@ function letterNext(i) {
 // the path (could be a quiz/category, not always the next letter), else to the
 // next alphabet letter, else back to the grid. Extracted so both the "Next"
 // button and the recognition check can reuse it.
+// "Continue my path" on a quiz results screen: chain straight into the next
+// step like letters do — unless that step is the skill just failed (< 50%),
+// where the path map is shown instead of silently relaunching the same quiz.
+function _continuePath() {
+  var justDone = AppState.quizData && AppState.quizData.type;
+  var next = LEARNING_PATH[currentPathIndex()];
+  AppState.quizData = null;
+  if (next && !(next.type === 'skill' && next.target === justDone)) { goToPathStep(next.id); window.scrollTo(0, 0); return; }
+  AppState._pathOrigin = false;
+  navigate('path');
+}
+
 function _advanceFromLetter(i) {
   if (AppState._pathOrigin) {
     var next = LEARNING_PATH[currentPathIndex()];
@@ -1723,7 +1735,8 @@ function startQuizListen() {
   const diff = DIFFICULTY[AppState.difficulty || 'normal'];
   const all = (diff.catKeys ? diff.catKeys.flatMap(k => WORD_CATEGORIES[k].words) : getAllWords())
     .filter(w => w && w.emoji);
-  const picked = shuffle(all).slice(0, diff.questionCount);
+  const pickedEmojis = new Set();
+  const picked = shuffle(all).filter(w => !pickedEmojis.has(w.emoji) && pickedEmojis.add(w.emoji)).slice(0, diff.questionCount);
   AppState.quizData = {
     type: 'listen', pts: diff.pts,
     questions: picked.map(w => {
@@ -1841,7 +1854,7 @@ function goToPathStep(id) {
   } else if (step.type === 'category') {
     openCategory(step.target);
   } else if (step.type === 'skill') {
-    window[SKILLS[step.target].start]();
+    SKILLS[step.target].start();
   } else if (step.type === 'quiz') {
     const learned = AppState.learnedLetters || [];
     const pool = ALPHABET.filter(l => learned.includes(l.l));
@@ -2029,9 +2042,12 @@ function renderQuizResults(t) {
     <div class="results"><div class="results-score">${correct}/${total}</div><div class="results-msg">${msg}</div>
     <p style="color:var(--light);margin-bottom:6px">+${correct*pts} ${t.points}</p>
     <div style="margin-bottom:16px">${getDiffBadge(AppState.difficulty,t)}</div>
-    <div style="display:flex;gap:10px;justify-content:center">
-      <button class="btn btn-ghost" onclick="goHome()">🏠 ${t.home}</button>
-      <button class="btn btn-primary" onclick="${replay}">🔄 ${t.replay}</button>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      ${AppState._pathOrigin
+        ? `<button class="btn btn-ghost" onclick="${replay}">🔄 ${t.replay}</button>
+      <button class="btn btn-primary" onclick="_continuePath()">🗺️ ${t.continuePath || 'Continue my path'}</button>`
+        : `<button class="btn btn-ghost" onclick="goHome()">🏠 ${t.home}</button>
+      <button class="btn btn-primary" onclick="${replay}">🔄 ${t.replay}</button>`}
     </div></div>
   </div></div>`;
 }
@@ -3628,12 +3644,15 @@ function startQuizOddOneOut() {
     .filter(k => WORD_CATEGORIES[k].words.length >= 3);
   if (catKeys.length < 2) return;
   const questions = [];
+  const usedIntruders = new Set();
   for (let i = 0; i < diff.questionCount; i++) {
     const mainCat = catKeys[Math.floor(Math.random() * catKeys.length)];
     const otherPool = catKeys.filter(c => c !== mainCat);
     const otherCat = otherPool[Math.floor(Math.random() * otherPool.length)];
     const mainWords = shuffle(WORD_CATEGORIES[mainCat].words.slice()).slice(0, 3);
-    const intruder = shuffle(WORD_CATEGORIES[otherCat].words.slice())[0];
+    const intruders = shuffle(WORD_CATEGORIES[otherCat].words.slice());
+    const intruder = intruders.find(w => !usedIntruders.has(w.ar)) || intruders[0];
+    usedIntruders.add(intruder.ar);
     const options = shuffle([
       ...mainWords.map(w => ({ label: w.ar, emoji: w.emoji, tr: w[AppState.lang] || w.en, correct: false })),
       { label: intruder.ar, emoji: intruder.emoji, tr: intruder[AppState.lang] || intruder.en, correct: true }
@@ -3670,8 +3689,9 @@ function startQuizCounting() {
   const visualEmojis = ['⭐','🍎','🍌','🐝','🌸','🐠','🍓','🎈','🌟','🦋'];
   const maxN = (AppState.difficulty === 'toddler') ? 5 : 10;
   const questions = [];
-  for (let i = 0; i < diff.questionCount; i++) {
-    const n = 1 + Math.floor(Math.random() * maxN);
+  // Each number at most once per quiz (questionCount never exceeds maxN).
+  const ns = shuffle(Array.from({ length: maxN }, (_, i) => i + 1)).slice(0, diff.questionCount);
+  for (const n of ns) {
     const correctWord = nums[n - 1];
     const visual = visualEmojis[Math.floor(Math.random() * visualEmojis.length)];
     const wrongs = shuffle(nums.filter((_, idx) => idx !== (n - 1))).slice(0, diff.options - 1);
@@ -4290,13 +4310,18 @@ function startQuizTwins() {
   var ordered = shuffle(fams).sort(function(a, b) {
     return b.filter(function(l) { return learned.includes(l); }).length - a.filter(function(l) { return learned.includes(l); }).length;
   });
-  var questions = [];
-  for (var i = 0; i < diff.questionCount; i++) {
-    var fam = ordered[i % ordered.length];
-    var target = fam[Math.floor(Math.random() * fam.length)];
-    var info = ALPHABET.find(function(a) { return a.l === target; });
-    questions.push({ letter: target, speak: target, name: info.na + ' — ' + info.n,
-      options: shuffle(fam.map(function(l) { return { label: l, correct: l === target }; })) });
+  // Round-robin over families, one not-yet-asked letter each time: every
+  // target letter appears at most once (fewer questions if the pool is small).
+  var questions = [], remaining = ordered.map(function(f) { return shuffle(f); });
+  while (questions.length < diff.questionCount && remaining.some(function(r) { return r.length; })) {
+    for (var i = 0; i < ordered.length && questions.length < diff.questionCount; i++) {
+      var target = remaining[i].shift();
+      if (!target) continue;
+      var fam = ordered[i];
+      var info = ALPHABET.find(function(a) { return a.l === target; });
+      questions.push({ letter: target, speak: target, name: info.na + ' — ' + info.n,
+        options: shuffle(fam.map(function(l) { return { label: l, correct: l === target }; })) });
+    }
   }
   AppState.quizData = { type: 'twins', pts: diff.pts, autoSpeak: true, questions: shuffle(questions), current: 0, selected: null, results: [], done: false };
   navigate('quizTwins');
@@ -4373,15 +4398,20 @@ function _startSoundQuiz(type) {
   var pool = _practiceLetters(3).filter(function(a) { return a.l !== 'أ'; });
   if (pool.length < 3) pool = ALPHABET.slice(1, 11);
   var nOpts = Math.min(diff.options, 3);
-  var picked = shuffle(pool).slice(0, diff.questionCount);
-  while (picked.length < diff.questionCount) picked.push(_pick(pool));
-  var questions = picked.map(function(letter, qi) {
-    var b = cfg.build(letter.l, qi);
+  // Cycle through the letters (reshuffled each round) and keep only target
+  // syllables not asked yet, so a small pool never repeats a question.
+  var questions = [], used = {}, order = [];
+  for (var attempt = 0; questions.length < diff.questionCount && attempt < 200; attempt++) {
+    if (!order.length) order = shuffle(pool);
+    var letter = order.shift();
+    var b = cfg.build(letter.l, questions.length);
+    if (used[b.label]) continue;
+    used[b.label] = 1;
     var others = [];
     b.others.forEach(function(o) { if (o !== b.label && others.indexOf(o) < 0 && others.length < nOpts - 1) others.push(o); });
-    return { letter: letter.l, combined: b.label, speak: b.speak,
-      options: shuffle([{ label: b.label, correct: true }].concat(others.map(function(o) { return { label: o, correct: false }; }))) };
-  });
+    questions.push({ letter: letter.l, combined: b.label, speak: b.speak,
+      options: shuffle([{ label: b.label, correct: true }].concat(others.map(function(o) { return { label: o, correct: false }; }))) });
+  }
   AppState.quizData = { type: type, pts: diff.pts, autoSpeak: true, questions: questions, current: 0, selected: null, results: [], done: false };
   navigate(cfg.screen);
   setTimeout(function() { AudioSystem.speakArabic(questions[0].speak); }, 400);
@@ -4510,12 +4540,12 @@ function renderQuizSunMoon(t) {
 
 // ==================== SKILLS (learning path) ====================
 var SKILLS = {
-  syllables: { icon: '🗣️', title: 'quizSyllables', start: 'startQuizSyllables' },
-  twins:     { icon: '👯', title: 'quizTwins',     start: 'startQuizTwins' },
-  long:      { icon: '🐍', title: 'quizLong',      start: 'startQuizLong' },
-  blend:     { icon: '🧱', title: 'blendTitle',    start: 'startBlend' },
-  tanwin:    { icon: '✨', title: 'quizTanwin',    start: 'startQuizTanwin' },
-  sunmoon:   { icon: '🌞', title: 'quizSunMoon',   start: 'startQuizSunMoon' }
+  syllables: { icon: '🗣️', title: 'quizSyllables', start: startQuizSyllables },
+  twins:     { icon: '👯', title: 'quizTwins',     start: startQuizTwins },
+  long:      { icon: '🐍', title: 'quizLong',      start: startQuizLong },
+  blend:     { icon: '🧱', title: 'blendTitle',    start: startBlend },
+  tanwin:    { icon: '✨', title: 'quizTanwin',    start: startQuizTanwin },
+  sunmoon:   { icon: '🌞', title: 'quizSunMoon',   start: startQuizSunMoon }
 };
 // A skill counts as done once its quiz is finished with at least half right.
 function _markSkillDone(qd) {
