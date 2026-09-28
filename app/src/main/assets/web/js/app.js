@@ -9,6 +9,8 @@ const AppState = {
   streak: { current: 0, longest: 0, lastActive: null },
   dailyDone: null,
   letterStats: {}, // { "ب": {views, listens, huntWins}, ... } — per-letter mastery counters
+  skillsDone: [],  // skill quizzes passed (learning path 'skill' steps)
+  review: {},      // { "L:ب"|"W:بَاب": {b: box 0-3, due: yyyy-mm-dd} } — spaced review of mistakes
   selectedLetter: null, selectedCategory: null, quizData: null,
   save() {
     if (!this.user) return;
@@ -17,14 +19,15 @@ const AppState = {
       lessons:this.lessons,quizzes:this.quizzes,learnedLetters:this.learnedLetters,earnedBadges:this.earnedBadges,visitedCategories:this.visitedCategories,ratingDone:this.ratingDone,
       difficulty:this.difficulty, premium:this.premium,
       streak:this.streak, dailyDone:this.dailyDone,
-      letterStats:this.letterStats
+      letterStats:this.letterStats, review:this.review, skillsDone:this.skillsDone,
+      dailyReviewDay:this.dailyReviewDay, dailyIsReview:this.dailyIsReview
     });
     try { localStorage.setItem('ak_' + this.user.name, json); } catch(e) {}
     // Sync to cloud
     try { if (typeof Android !== 'undefined' && Android.cloudSave) Android.cloudSave(this.user.name, this.user.code, json); } catch(e) {}
   },
   load(name) {
-    try { const r=localStorage.getItem('ak_'+name); if(r){Object.assign(this,JSON.parse(r));return true;} } catch(e) {}
+    try { const r=localStorage.getItem('ak_'+name); if(r){_resetProgress();Object.assign(this,JSON.parse(r));return true;} } catch(e) {}
     return false;
   },
   get t() { return this.lang ? TRANSLATIONS[this.lang] : TRANSLATIONS.en; },
@@ -99,6 +102,13 @@ function render() {
     quizHarakat: renderQuizHarakat,
     quizPositions: renderQuizPositions,
     quizListen: renderQuizListen,
+    quizSyllables: renderSoundQuiz,
+    quizLong: renderSoundQuiz,
+    quizTanwin: renderSoundQuiz,
+    quizSunMoon: renderQuizSunMoon,
+    blend: renderBlend,
+    quizTwins: renderQuizTwins,
+    quizReview: renderQuizReview,
     path: renderPath,
     onboarding: renderOnboarding,
     storiesList: renderStoriesList,
@@ -229,6 +239,14 @@ function _todayStr() { return new Date().toISOString().slice(0, 10); }
 
 function getDailyChallenge() {
   const day = _todayStr();
+  // Mistakes due for review at the first look of the day win the day. The
+  // choice is frozen for the day so the challenge never swaps mid-day.
+  if (AppState.dailyReviewDay !== day) {
+    AppState.dailyReviewDay = day;
+    AppState.dailyIsReview = reviewDueCount() > 0;
+    AppState.save();
+  }
+  if (AppState.dailyIsReview) return { id: 'review', type: 'review', emoji: '🔁', label: 'review' };
   // djb2-style hash of yyyy-mm-dd → deterministic per day
   let h = 5381;
   for (let i = 0; i < day.length; i++) h = ((h << 5) + h + day.charCodeAt(i)) >>> 0;
@@ -265,6 +283,8 @@ function startDailyChallenge() {
     openCategory(d.target);
   } else if (d.type === 'quiz_listen') {
     startQuizListen();
+  } else if (d.type === 'review') {
+    startReview();
   }
 }
 
@@ -281,6 +301,7 @@ function dailyAutoCheck() {
   if (d.type === 'letter') done = (AppState.learnedLetters || []).includes(d.target);
   else if (d.type === 'category') done = (AppState.visitedCategories || []).includes(d.target);
   else if (d.type === 'quiz_listen') done = (AppState._lastQuizType === 'listen');
+  else if (d.type === 'review') done = (AppState._lastQuizType === 'review');
   if (done) markDailyDone();
 }
 
@@ -504,6 +525,7 @@ function doRegister() {
       return;
     }
   } catch(e) {}
+  _resetProgress();
   AppState.user={name:n,avatar:selectedAvatarEmoji,code:c};AppState.score=0;AppState.level=1;AppState.lessons=0;AppState.quizzes=0;AppState.learnedLetters=[];AppState.earnedBadges=[];AppState.visitedCategories=[];AppState.difficulty='normal';AppState.premium=false;
   AppState._firstTime=true;
   try{localStorage.setItem('ak_lastUser',n);}catch(e){}
@@ -541,6 +563,7 @@ function _onCloudLoad(json) {
     try {
       var data = typeof json === 'string' ? JSON.parse(json) : json;
       if (data && data.user && data.user.code === window._pendingLoginCode) {
+        _resetProgress();
         Object.assign(AppState, data);
         try { localStorage.setItem('ak_' + data.user.name, json); } catch(e) {}
         try { localStorage.setItem('ak_lastUser', data.user.name); } catch(e) {}
@@ -901,6 +924,7 @@ function renderDailyCard(t) {
   let headline;
   if (d.type === 'letter')        headline = `${t.stepLearn || 'Learn'} <span class="arabic" style="font-family:var(--font-arabic)">${d.label}</span>`;
   else if (d.type === 'category') headline = `${t.stepExplore || 'Explore'} ${t[d.target] || d.target}`;
+  else if (d.type === 'review')   headline = (t.reviewDue || '{n} to review').replace('{n}', reviewDueCount() || '✓');
   else                            headline = t.quizListen || 'Listen';
   const cls = done ? 'daily-card daily-done' : 'daily-card';
   const action = done
@@ -920,6 +944,7 @@ function renderDashboard(t) {
   return `<div class="bg-deco"></div>${flLetters()}<div class="app page-in">${navHTML(t)}
     <div class="dash-header"><h1>${greeting} ${AppState.user?.avatar||'👋'}</h1>${renderStreakBadge(t)}</div>
     ${renderDailyCard(t)}
+    ${renderReviewCard(t)}
     <div class="stats-row">
       <div class="stat"><div class="stat-icon">⭐</div><div class="stat-val" style="color:var(--primary)">${AppState.score}</div><div class="stat-lbl">${t.totalScore}</div></div>
       <div class="stat"><div class="stat-icon">📖</div><div class="stat-val" style="color:var(--secondary)">${AppState.lessons}</div><div class="stat-lbl">${t.lessonsCompleted}</div></div>
@@ -946,6 +971,7 @@ function renderDashboard(t) {
       <div class="menu-item menu-item-stories" onclick="navigate('storiesList')"><span class="menu-icon">📖</span><span class="menu-lbl">${t.stories||'Stories'}</span></div>
       <div class="menu-item menu-item-forms" onclick="navigate('letterForms')"><span class="menu-icon">✍️</span><span class="menu-lbl">${t.letterForms}</span></div>
       <div class="menu-item menu-item-trace" onclick="navigate('letterTraceMenu')"><span class="menu-icon">✏️</span><span class="menu-lbl">${t.tracing||'Écriture'}</span></div>
+      <div class="menu-item menu-item-reading" onclick="startBlend()"><span class="menu-icon">🧱</span><span class="menu-lbl">${t.blendTitle||'Guided reading'}</span></div>
       <div class="menu-item menu-item-reading" onclick="startReadingWords()"><span class="menu-icon">🎙️</span><span class="menu-lbl">${t.readingWords||'Lecture'}</span></div>
       ${AppState.difficulty==='advanced'?`<div class="menu-item menu-item-reading" onclick="startReadingText()"><span class="menu-icon">📖</span><span class="menu-lbl">${t.readingText||'Textes'}</span></div>`:''}
       <div class="menu-item" onclick="startLetterHuntFromHome()"><span class="menu-icon">🔍</span><span class="menu-lbl">${t.letterHunt||'Hunt'}</span></div>
@@ -1187,12 +1213,18 @@ function _letterCheckContinue() {
 // Premium quizzes (chrono/spelling/expert) are temporarily hidden from the
 // hub — keep their start functions in place for when premium is re-enabled.
 function renderQuizzesList(t) {
+  const due = reviewDueCount();
   const sections = [
+    { title: '🔁 ' + (t.reviewTitle || 'Review'), items: [
+      { ico: '🔁', lbl: (t.reviewTitle || 'Review') + (due ? ' (' + due + ')' : ''), fn: 'startReview()' }
+    ]},
     { title: '🔤 ' + (t.quizCatLetters || 'Lettres'), items: [
       { ico: '🎯',  lbl: t.quizLetters,                       fn: 'startQuizLetters()' },
       { ico: '🔡',  lbl: t.quizFirstLetter || 'First letter', fn: 'startQuizFirstLetter()' },
       { ico: '📍',  lbl: t.quizPositions   || 'Positions',    fn: 'startQuizPositions()' },
       { ico: '◌َ',  lbl: t.quizHarakat     || 'Harakat',      fn: 'startQuizHarakat()' },
+      { ico: '👯', lbl: t.quizTwins       || 'Twin letters', fn: 'startQuizTwins()' },
+      { ico: '🌞', lbl: t.quizSunMoon     || 'Sun & moon',   fn: 'startQuizSunMoon()' },
       { ico: '🅰️', lbl: t.quizAnagram     || 'Anagram',      fn: 'startAnagram()' }
     ]},
     { title: '📝 ' + (t.quizCatWords || 'Mots'), items: [
@@ -1204,7 +1236,13 @@ function renderQuizzesList(t) {
     ]},
     { title: '🔊 ' + (t.quizCatSound || 'Sons'), items: [
       { ico: '🎧', lbl: t.quizAudio,                          fn: 'startQuizAudio()' },
-      { ico: '👂', lbl: t.quizListen      || 'Écoute',        fn: 'startQuizListen()' }
+      { ico: '👂', lbl: t.quizListen      || 'Écoute',        fn: 'startQuizListen()' },
+      { ico: '🗣️', lbl: t.quizSyllables   || 'Syllables',    fn: 'startQuizSyllables()' },
+      { ico: '🐍', lbl: t.quizLong        || 'Long vowels',  fn: 'startQuizLong()' },
+      { ico: '✨', lbl: t.quizTanwin      || 'Tanwin',       fn: 'startQuizTanwin()' }
+    ]},
+    { title: '📖 ' + (t.blendTitle || 'Reading'), items: [
+      { ico: '🧱', lbl: t.blendTitle      || 'Guided reading', fn: 'startBlend()' }
     ]},
     { title: '🎮 ' + (t.quizCatGames || 'Jeux'), items: [
       { ico: '🔗', lbl: t.quizMatch,                          fn: 'startQuizMatch()' },
@@ -1610,7 +1648,7 @@ function renderStoryQuiz(t) {
     <div class="quiz-dots">${qd.questions.map((_, i) => `<div class="qdot ${i === qd.current ? 'active' : i < qd.current ? (qd.results[i] ? 'done' : 'wrong') : ''}"></div>`).join('')}</div>
     <p class="qq">${t.questionOf} ${qd.current + 1} ${t.of} ${qd.questions.length}</p>
     <div class="qprompt" style="font-size:1.2rem">${q.prompt}</div>
-    <div class="qoptions">${q.options.map((o, i) => `<button class="qopt ${qd.selected === i ? (o.correct ? 'correct' : 'incorrect') : (qd.selected !== null ? 'dis' : '')}" onclick="quizAnswer(${i})"><span style="font-size:2rem;display:block">${o.emoji}</span><span class="arabic" style="font-family:var(--font-arabic);font-size:1.25rem">${o.label}</span></button>`).join('')}</div>
+    <div class="qoptions">${q.options.map((o, i) => `<button class="qopt ${_optCls(qd,o,i)}" onclick="quizAnswer(${i})"><span style="font-size:2rem;display:block">${o.emoji}</span><span class="arabic" style="font-family:var(--font-arabic);font-size:1.25rem">${o.label}</span></button>`).join('')}</div>
     ${qd.selected !== null ? `<div class="qfeedback ${q.options[qd.selected].correct ? 'correct' : 'incorrect'}">${q.options[qd.selected].correct ? t.correct : t.incorrect}</div>` : ''}
   </div></div>`;
 }
@@ -1676,7 +1714,7 @@ function renderQuizFirstLetter(t) {
       <div class="arabic" data-speak="${q.arabic}" style="font-size:2.2rem;font-weight:700;margin-top:8px;cursor:pointer">${q.arabic}</div>
     </div>
     <button class="btn btn-secondary btn-sm" data-speak="${q.arabic}" style="margin:0 auto 16px;display:flex">🔊 ${t.listen}</button>
-    <div class="qoptions">${q.options.map((o, i) => `<button class="qopt ${qd.selected === i ? (o.correct ? 'correct' : 'incorrect') : (qd.selected !== null ? 'dis' : '')}" style="font-family:var(--font-arabic);font-size:2.2rem;font-weight:600;padding:18px" onclick="quizAnswer(${i})">${o.letter}</button>`).join('')}</div>
+    <div class="qoptions">${q.options.map((o, i) => `<button class="qopt ${_optCls(qd,o,i)}" style="font-family:var(--font-arabic);font-size:2.2rem;font-weight:600;padding:18px" onclick="quizAnswer(${i})">${o.letter}</button>`).join('')}</div>
     ${qd.selected !== null ? `<div class="qfeedback ${q.options[qd.selected].correct ? 'correct' : 'incorrect'}">${q.options[qd.selected].correct ? t.correct : t.incorrect}</div>` : ''}
   </div></div>`;
 }
@@ -1720,7 +1758,7 @@ function renderQuizListen(t) {
     <p style="color:var(--text-light);margin-bottom:4px">${t.tapToHear || 'Tap 🔊 to hear'}</p>
     <div class="quiz-audio-icon" data-speak="${q.arabic}" style="font-size:3rem;text-align:center;margin:12px 0;cursor:pointer">🔊</div>
     <button class="btn btn-secondary btn-sm" data-speak="${q.arabic}" style="margin:0 auto 16px;display:flex">🔊 ${t.listen}</button>
-    <div class="qoptions qoptions-emoji">${q.options.map((o, i) => `<button class="qopt ${qd.selected === i ? (o.correct ? 'correct' : 'incorrect') : (qd.selected !== null ? 'dis' : '')}" style="font-size:3rem;padding:20px" onclick="quizAnswer(${i})">${o.emoji}</button>`).join('')}</div>
+    <div class="qoptions qoptions-emoji">${q.options.map((o, i) => `<button class="qopt ${_optCls(qd,o,i)}" style="font-size:3rem;padding:20px" onclick="quizAnswer(${i})">${o.emoji}</button>`).join('')}</div>
     ${qd.selected !== null ? `<div class="qfeedback ${q.options[qd.selected].correct ? 'correct' : 'incorrect'}">${q.options[qd.selected].correct ? t.correct : t.incorrect}</div>` : ''}
   </div></div>`;
 }
@@ -1731,12 +1769,23 @@ function isPathStepDone(step) {
   if (step.type === 'letter')   return (AppState.learnedLetters || []).includes(step.target);
   if (step.type === 'category') return (AppState.visitedCategories || []).includes(step.target);
   if (step.type === 'quiz')     return (AppState.quizzes || 0) >= step.target;
+  if (step.type === 'skill')    return (AppState.skillsDone || []).includes(step.target);
+  return false;
+}
+
+// A skill step left behind by a child who already progressed past it (skill
+// steps were added after launch, and letters can be learned out of order) is a
+// "catch-up": shown and playable, but it never blocks or pulls the child back.
+function isPathCatchUp(i) {
+  const step = LEARNING_PATH[i];
+  if (step.type !== 'skill' || isPathStepDone(step)) return false;
+  for (let j = i + 1; j < LEARNING_PATH.length; j++) if (isPathStepDone(LEARNING_PATH[j])) return true;
   return false;
 }
 
 function currentPathIndex() {
   for (let i = 0; i < LEARNING_PATH.length; i++) {
-    if (!isPathStepDone(LEARNING_PATH[i])) return i;
+    if (!isPathStepDone(LEARNING_PATH[i]) && !isPathCatchUp(i)) return i;
   }
   return LEARNING_PATH.length;
 }
@@ -1745,27 +1794,30 @@ function pathStepLabel(step, t) {
   if (step.type === 'letter')   return `${t.stepLearn || 'Learn'} <span class="arabic" style="font-family:var(--font-arabic);font-size:1.4rem">${step.target}</span>`;
   if (step.type === 'category') return `${t.stepExplore || 'Explore'} ${WORD_CATEGORIES[step.target]?.emoji||''} ${t[step.target] || step.target}`;
   if (step.type === 'quiz')     return `${t.stepPassQuiz || 'Pass'} ${step.target} ${t.quizzesPassed || 'quiz'}`;
+  if (step.type === 'skill')    { const sk = SKILLS[step.target]; return `${t.stepPractice || 'Practice'} ${sk.icon} ${t[sk.title] || step.target}`; }
   return step.id;
 }
 
 function renderPath(t) {
   const current = currentPathIndex();
   const total = LEARNING_PATH.length;
-  const pct = Math.round((current / total) * 100);
-  if (current === total && !AppState._pathCompletedShown) {
+  const doneCount = LEARNING_PATH.filter(isPathStepDone).length;
+  const pct = Math.round((doneCount / total) * 100);
+  if (doneCount === total && !AppState._pathCompletedShown) {
     AppState._pathCompletedShown = true; AppState.save();
     setTimeout(() => showBigConfetti(), 400);
   }
   const items = LEARNING_PATH.map((step, i) => {
-    const done = i < current;
+    const catchUp = i < current && isPathCatchUp(i);
+    const done = i < current && !catchUp;
     const isCurrent = i === current;
     const locked = i > current;
-    const icon = done ? '✅' : isCurrent ? '🟢' : '🔒';
-    const cls = done ? 'path-done' : isCurrent ? 'path-current' : 'path-locked';
+    const icon = catchUp ? '⭐' : done ? '✅' : isCurrent ? '🟢' : '🔒';
+    const cls = catchUp ? 'path-catchup' : done ? 'path-done' : isCurrent ? 'path-current' : 'path-locked';
     const onclick = locked ? '' : `onclick="goToPathStep('${step.id}')"`;
     return `<div class="path-item ${cls}" ${onclick}>
       <span class="path-icon">${icon}</span>
-      <span class="path-label">${pathStepLabel(step, t)}</span>
+      <span class="path-label">${pathStepLabel(step, t)}${catchUp ? ` <small class="path-catchup-tag">${t.catchUp || 'To catch up'}</small>` : ''}</span>
     </div>`;
   }).join('');
   return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}
@@ -1788,6 +1840,8 @@ function goToPathStep(id) {
     }
   } else if (step.type === 'category') {
     openCategory(step.target);
+  } else if (step.type === 'skill') {
+    window[SKILLS[step.target].start]();
   } else if (step.type === 'quiz') {
     const learned = AppState.learnedLetters || [];
     const pool = ALPHABET.filter(l => learned.includes(l.l));
@@ -1865,7 +1919,7 @@ function startQuizLetters(poolOverride) {
   const diff=DIFFICULTY[AppState.difficulty||'normal'];
   let pool = (Array.isArray(poolOverride) && poolOverride.length)
     ? poolOverride.slice()
-    : ALPHABET.slice(0, diff.letterCount);
+    : _practiceLetters(diff.options);
   // Guarantee enough letters for option distractors.
   if (pool.length < diff.options) {
     const extras = ALPHABET.filter(l => !pool.includes(l));
@@ -1902,7 +1956,7 @@ function renderQuizLetters(t) {
     <p style="color:var(--light);margin-bottom:4px">${t.selectAnswer}</p>
     ${promptHTML}
     ${listenBtn}
-    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${qd.selected===i?(o.correct?'correct':'incorrect'):(qd.selected!==null?'dis':'')}" ${optStyle} onclick="quizAnswer(${i})">${o.label}</button>`).join('')}</div>
+    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${_optCls(qd,o,i)}" ${optStyle} onclick="quizAnswer(${i})">${o.label}</button>`).join('')}</div>
     ${qd.selected!==null?`<div class="qfeedback ${q.options[qd.selected].correct?'correct':'incorrect'}">${q.options[qd.selected].correct?t.correct:t.incorrect}</div>`:''}
   </div></div>`;
 }
@@ -1931,7 +1985,7 @@ function renderQuizWords(t) {
     <p style="color:var(--light);margin-bottom:4px">${t.matchImage}</p>
     <div class="qprompt" data-speak="${q.arabic}">${qd.hideEmoji?'':q.emoji+' '}${q.arabic}</div>
     <button class="btn btn-secondary btn-sm" data-speak="${q.arabic}" style="margin:0 auto 12px;display:flex">🔊 ${t.listen}</button>
-    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${qd.selected===i?(o.correct?'correct':'incorrect'):(qd.selected!==null?'dis':'')}" onclick="quizAnswer(${i})">${qd.hideEmoji?'':o.emoji+' '}${o.label}</button>`).join('')}</div>
+    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${_optCls(qd,o,i)}" onclick="quizAnswer(${i})">${qd.hideEmoji?'':o.emoji+' '}${o.label}</button>`).join('')}</div>
     ${qd.selected!==null?`<div class="qfeedback ${q.options[qd.selected].correct?'correct':'incorrect'}">${q.options[qd.selected].correct?t.correct:t.incorrect}</div>`:''}
   </div></div>`;
 }
@@ -1939,16 +1993,24 @@ function renderQuizWords(t) {
 function quizAnswer(i) {
   const qd=AppState.quizData; if(qd.selected!==null)return;
   qd.selected=i; const q=qd.questions[qd.current]; const ok=q.options[i].correct;
-  if(ok){AudioSystem.playSound('correct');addScore(qd.pts||10);}else AudioSystem.playSound('wrong');
+  if(ok){AudioSystem.playSound('correct');addScore(qd.pts||10);}
+  else{
+    AudioSystem.playSound('wrong');
+    // Corrective feedback: the right option is revealed (_optCls) and the
+    // prompt is replayed so the child pairs the sound with the right answer.
+    const say=q.speak||q.arabic||q.letter;
+    if(say)setTimeout(()=>AudioSystem.speakArabic(say),600);
+  }
+  _reviewRecord(_reviewKey(qd,q),ok);
   qd.results.push(ok); render();
   setTimeout(()=>{
     if(qd.current<qd.questions.length-1){
       qd.current++;qd.selected=null;render();
       if(qd.type==='audio')setTimeout(()=>AudioSystem.speakArabic(qd.questions[qd.current].arabic),400);
-      if(qd.type==='harakat')setTimeout(()=>AudioSystem.speakArabic(qd.questions[qd.current].speak),400);
+      if(qd.type==='harakat'||qd.autoSpeak)setTimeout(()=>AudioSystem.speakArabic(qd.questions[qd.current].speak),400);
     }
-    else{qd.done=true;addQuiz();if(qd.results.every(r=>r))awardBadge('perfectQuiz');if(qd.type==='oddOneOut')awardBadge('first_intruder');if(qd.type==='counting')awardBadge('first_counting');showConfetti();render();}
-  },1200);
+    else{qd.done=true;_markSkillDone(qd);addQuiz();if(qd.results.every(r=>r))awardBadge('perfectQuiz');if(qd.type==='oddOneOut')awardBadge('first_intruder');if(qd.type==='counting')awardBadge('first_counting');showConfetti();render();}
+  },ok?1200:2600);
 }
 
 function renderQuizResults(t) {
@@ -1957,9 +2019,9 @@ function renderQuizResults(t) {
   const correct=qd.results.filter(r=>r).length;
   const pct=Math.round((correct/total)*100);
   const msg=pct===100?t.perfect:pct>=75?t.great:pct>=50?t.good:t.keepGoing;
-  const icons={letters:'🎯',words:'🧩',forms:'✍️',audio:'🎧',categories:'📂',phrases:'💬',match:'🔗',harakat:'◌َ',positions:'📍',story:'📖',listen:'👂',oddOneOut:'🆎',counting:'🧮',anagram:'🅰️',fallingLetters:'🎯',firstLetter:'🔡'};
+  const icons={letters:'🎯',words:'🧩',forms:'✍️',audio:'🎧',categories:'📂',phrases:'💬',match:'🔗',harakat:'◌َ',positions:'📍',story:'📖',listen:'👂',oddOneOut:'🆎',counting:'🧮',anagram:'🅰️',fallingLetters:'🎯',firstLetter:'🔡',syllables:'🗣️',twins:'👯',review:'🔁',long:'🐍',tanwin:'✨',sunmoon:'🌞',blend:'🧱'};
   const icon=icons[qd.type]||'🎯';
-  const replays={letters:'startQuizLetters()',words:'startQuizWords()',forms:'startQuizForms()',audio:'startQuizAudio()',categories:'startQuizCategories()',phrases:'startQuizPhrases()',match:'startQuizMatch()',harakat:'startQuizHarakat()',positions:'startQuizPositions()',story:'startStoryQuiz()',listen:'startQuizListen()',firstLetter:'startQuizFirstLetter()',oddOneOut:'startQuizOddOneOut()',counting:'startQuizCounting()',anagram:'startAnagram()',fallingLetters:'startFallingLetters()'};
+  const replays={letters:'startQuizLetters()',words:'startQuizWords()',forms:'startQuizForms()',audio:'startQuizAudio()',categories:'startQuizCategories()',phrases:'startQuizPhrases()',match:'startQuizMatch()',harakat:'startQuizHarakat()',positions:'startQuizPositions()',story:'startStoryQuiz()',listen:'startQuizListen()',firstLetter:'startQuizFirstLetter()',oddOneOut:'startQuizOddOneOut()',counting:'startQuizCounting()',anagram:'startAnagram()',fallingLetters:'startFallingLetters()',syllables:'startQuizSyllables()',twins:'startQuizTwins()',review:'startReview()',long:'startQuizLong()',tanwin:'startQuizTanwin()',sunmoon:'startQuizSunMoon()',blend:'startBlend()'};
   const replay=replays[qd.type]||'goHome()';
   const pts=qd.pts||10;
   return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}<div class="quiz-c">
@@ -2006,7 +2068,7 @@ function renderQuizForms(t) {
     <p style="color:var(--text-light);margin-bottom:4px">${t.selectForm}</p>
     <div class="qprompt" data-speak="${q.letter}">${q.letter}</div>
     <p style="font-weight:700;font-size:1.1rem;color:var(--purple);margin-bottom:12px">${t[q.formName]}</p>
-    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${qd.selected===i?(o.correct?'correct':'incorrect'):(qd.selected!==null?'dis':'')}" style="font-family:var(--font-arabic);font-size:1.8rem" onclick="quizAnswer(${i})">${o.label}</button>`).join('')}</div>
+    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${_optCls(qd,o,i)}" style="font-family:var(--font-arabic);font-size:1.8rem" onclick="quizAnswer(${i})">${o.label}</button>`).join('')}</div>
     ${qd.selected!==null?`<div class="qfeedback ${q.options[qd.selected].correct?'correct':'incorrect'}">${q.options[qd.selected].correct?t.correct:t.incorrect}</div>`:''}
   </div></div>`;
 }
@@ -2032,7 +2094,7 @@ function startQuizPositions() {
       return true;
     });
   }
-  const pool = ALPHABET.slice(0, diff.letterCount).filter(a => a.forms);
+  const pool = _practiceLetters(3).filter(a => a.forms);
   const rich = pool.filter(a => distinctPositions(a).length >= 2);
   if (!rich.length) { startQuizForms(); return; }
   const picked = shuffle(rich).slice(0, diff.questionCount);
@@ -2062,7 +2124,7 @@ function renderQuizPositions(t) {
     <div class="quiz-dots">${qd.questions.map((_, i) => `<div class="qdot ${i === qd.current ? 'active' : i < qd.current ? (qd.results[i] ? 'done' : 'wrong') : ''}"></div>`).join('')}</div>
     <p class="qq">${t.questionOf} ${qd.current + 1} ${t.of} ${qd.questions.length}</p>
     <div class="qprompt" style="font-size:1.15rem;line-height:1.5">${prompt}</div>
-    <div class="qoptions">${q.options.map((o, i) => `<button class="qopt ${qd.selected === i ? (o.correct ? 'correct' : 'incorrect') : (qd.selected !== null ? 'dis' : '')}" style="font-family:var(--font-arabic);font-size:2.3rem" onclick="quizAnswer(${i})">${o.label}</button>`).join('')}</div>
+    <div class="qoptions">${q.options.map((o, i) => `<button class="qopt ${_optCls(qd,o,i)}" style="font-family:var(--font-arabic);font-size:2.3rem" onclick="quizAnswer(${i})">${o.label}</button>`).join('')}</div>
     ${qd.selected !== null ? `<div class="qfeedback ${q.options[qd.selected].correct ? 'correct' : 'incorrect'}">${q.options[qd.selected].correct ? t.correct : t.incorrect}</div>` : ''}
   </div></div>`;
 }
@@ -2091,7 +2153,7 @@ function renderQuizAudio(t) {
     <p style="color:var(--text-light);margin-bottom:4px">${t.listenAndChoose}</p>
     <div class="quiz-audio-icon" data-speak="${q.arabic}">🔊</div>
     <button class="btn btn-secondary btn-sm" data-speak="${q.arabic}" style="margin:0 auto 12px;display:flex">🔊 ${t.listen}</button>
-    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${qd.selected===i?(o.correct?'correct':'incorrect'):(qd.selected!==null?'dis':'')}" style="font-family:var(--font-arabic);font-size:1.4rem" onclick="quizAnswer(${i})">${o.label}</button>`).join('')}</div>
+    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${_optCls(qd,o,i)}" style="font-family:var(--font-arabic);font-size:1.4rem" onclick="quizAnswer(${i})">${o.label}</button>`).join('')}</div>
     ${qd.selected!==null?`<div class="qfeedback ${q.options[qd.selected].correct?'correct':'incorrect'}">${q.options[qd.selected].correct?t.correct:t.incorrect}</div>`:''}
   </div></div>`;
 }
@@ -2120,7 +2182,7 @@ function renderQuizCategories(t) {
     <p class="qq">${t.questionOf} ${qd.current+1} ${t.of} ${qd.questions.length}</p>
     <p style="color:var(--text-light);margin-bottom:4px">${t.whichCategory}</p>
     <div style="margin:16px 0"><span style="font-size:2.5rem">${q.emoji}</span><div class="qprompt" style="font-size:2.5rem;margin:8px 0" data-speak="${q.arabic}">${q.arabic}</div></div>
-    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${qd.selected===i?(o.correct?'correct':'incorrect'):(qd.selected!==null?'dis':'')}" onclick="quizAnswer(${i})">${WORD_CATEGORIES[o.label].emoji} ${t[o.label]}</button>`).join('')}</div>
+    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${_optCls(qd,o,i)}" onclick="quizAnswer(${i})">${WORD_CATEGORIES[o.label].emoji} ${t[o.label]}</button>`).join('')}</div>
     ${qd.selected!==null?`<div class="qfeedback ${q.options[qd.selected].correct?'correct':'incorrect'}">${q.options[qd.selected].correct?t.correct:t.incorrect}</div>`:''}
   </div></div>`;
 }
@@ -2151,7 +2213,7 @@ function renderQuizPhrases(t) {
     <p style="color:var(--text-light);margin-bottom:4px">${t.completeSentence}</p>
     <div class="phrase-text" dir="rtl">${q.phrase.replace('___','<span class="phrase-blank">___</span>')}</div>
     <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:12px;font-style:italic">${q.translation}</p>
-    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${qd.selected===i?(o.correct?'correct':'incorrect'):(qd.selected!==null?'dis':'')}" style="font-family:var(--font-arabic);font-size:1.3rem" onclick="quizAnswer(${i})">${o.label}</button>`).join('')}</div>
+    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${_optCls(qd,o,i)}" style="font-family:var(--font-arabic);font-size:1.3rem" onclick="quizAnswer(${i})">${o.label}</button>`).join('')}</div>
     ${qd.selected!==null?`<div class="qfeedback ${q.options[qd.selected].correct?'correct':'incorrect'}">${q.options[qd.selected].correct?t.correct:t.incorrect}</div>`:''}
   </div></div>`;
 }
@@ -2654,7 +2716,7 @@ function renderQuizSpelling(t) {
     <p style="color:var(--text-light);margin-bottom:6px">${t.spellInstruct||'Choisis la bonne orthographe'}</p>
     <div class="qprompt" style="font-size:3rem;line-height:1.1">${q.emoji}</div>
     <div style="font-size:1.1rem;font-weight:600;color:var(--text);margin:6px 0 14px">${q.translation}</div>
-    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${qd.selected===i?(o.correct?'correct':'incorrect'):(qd.selected!==null?'dis':'')}" style="font-family:var(--font-arabic);font-size:1.6rem;direction:rtl" onclick="quizAnswer(${i})">${o.label}</button>`).join('')}</div>
+    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${_optCls(qd,o,i)}" style="font-family:var(--font-arabic);font-size:1.6rem;direction:rtl" onclick="quizAnswer(${i})">${o.label}</button>`).join('')}</div>
     ${qd.selected!==null?`<div class="qfeedback ${q.options[qd.selected].correct?'correct':'incorrect'}">${q.options[qd.selected].correct?t.correct:t.incorrect} <span style="font-family:var(--font-arabic);font-size:1.1rem">${q.correct}</span></div>`:''}
   </div></div>`;
 }
@@ -2663,7 +2725,7 @@ function renderQuizSpelling(t) {
 
 function startQuizHarakat() {
   var diff = DIFFICULTY[AppState.difficulty || 'normal'];
-  var pool = ALPHABET.slice(0, diff.letterCount);
+  var pool = _practiceLetters(3);
   // Use only main harakat for beginner (Fatha, Damma, Kasra), all for others
   var harakatPool = AppState.difficulty === 'beginner' ? HARAKAT.slice(0, 3) : HARAKAT.slice(0, 5);
   var picked = shuffle(pool).slice(0, diff.questionCount);
@@ -2705,7 +2767,7 @@ function renderQuizHarakat(t) {
     '<div class="qprompt" style="font-size:5rem;direction:rtl;font-family:var(--font-arabic)" data-speak="' + q.speak + '">' + q.combined + '</div>' +
     '<button class="btn btn-secondary btn-sm" data-speak="' + q.speak + '" style="margin:0 auto 12px;display:flex">🔊 ' + t.listen + '</button>' +
     '<div class="qoptions">' + q.options.map(function(o, i) {
-      return '<button class="qopt ' + (qd.selected === i ? (o.correct ? 'correct' : 'incorrect') : (qd.selected !== null ? 'dis' : '')) +
+      return '<button class="qopt ' + _optCls(qd, o, i) +
         '" style="flex-direction:column;gap:2px" onclick="quizAnswer(' + i + ')"><span style="font-family:var(--font-arabic);font-size:1.2rem">' +
         o.label + '</span><span style="font-size:0.7rem;opacity:0.7">' + o.latin + '</span></button>';
     }).join('') + '</div>' +
@@ -2745,7 +2807,7 @@ function renderQuizExpert(t) {
     <p style="color:var(--text-light);margin-bottom:4px">${t.expertInstruct||'Identifie la lettre'}</p>
     <div class="qprompt" style="font-size:3.8rem;direction:rtl;font-family:var(--font-arabic)">${q.formChar}</div>
     <p style="color:var(--purple);font-weight:700;font-size:0.88rem;margin-bottom:14px">— ${t[q.formName]||q.formName} —</p>
-    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${qd.selected===i?(o.correct?'correct':'incorrect'):(qd.selected!==null?'dis':'')}" style="font-family:var(--font-arabic);font-size:1.8rem;flex-direction:column;gap:2px" onclick="quizAnswer(${i})"><span>${o.label}</span><span style="font-size:0.65rem;font-family:inherit;opacity:0.7">${o.name}</span></button>`).join('')}</div>
+    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${_optCls(qd,o,i)}" style="font-family:var(--font-arabic);font-size:1.8rem;flex-direction:column;gap:2px" onclick="quizAnswer(${i})"><span>${o.label}</span><span style="font-size:0.65rem;font-family:inherit;opacity:0.7">${o.name}</span></button>`).join('')}</div>
     ${qd.selected!==null?`<div class="qfeedback ${q.options[qd.selected].correct?'correct':'incorrect'}">${q.options[qd.selected].correct?t.correct:t.incorrect} <span style="font-family:var(--font-arabic)">${q.correctLetter}</span> · ${q.correctName}</div>`:''}
   </div></div>`;
 }
@@ -3592,7 +3654,7 @@ function renderQuizOddOneOut(t) {
     <p class="qq">${t.questionOf} ${qd.current+1} ${t.of} ${qd.questions.length}</p>
     <p style="color:var(--text-light);margin-bottom:14px">${t.findTheIntruder || 'Find the odd one out'}</p>
     <div class="qoptions" style="grid-template-columns:repeat(2,1fr);display:grid;gap:10px">
-      ${q.options.map((o,i)=>`<button class="qopt ${qd.selected===i?(o.correct?'correct':'incorrect'):(qd.selected!==null?'dis':'')}" style="flex-direction:column;padding:14px 8px;display:flex;align-items:center;gap:4px" onclick="quizAnswer(${i})">
+      ${q.options.map((o,i)=>`<button class="qopt ${_optCls(qd,o,i)}" style="flex-direction:column;padding:14px 8px;display:flex;align-items:center;gap:4px" onclick="quizAnswer(${i})">
         <span style="font-size:2.2rem;line-height:1">${o.emoji||'•'}</span>
         <span style="font-family:var(--font-arabic);font-size:1.2rem">${o.label}</span>
       </button>`).join('')}
@@ -3634,7 +3696,7 @@ function renderQuizCounting(t) {
     <p class="qq">${t.questionOf} ${qd.current+1} ${t.of} ${qd.questions.length}</p>
     <p style="color:var(--text-light);margin-bottom:8px">${t.howMany || 'How many?'}</p>
     <div style="background:rgba(0,0,0,0.04);border-radius:14px;padding:18px;margin-bottom:14px;text-align:center;line-height:1.7">${visualsHtml}</div>
-    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${qd.selected===i?(o.correct?'correct':'incorrect'):(qd.selected!==null?'dis':'')}" style="font-family:var(--font-arabic);font-size:1.3rem" onclick="quizAnswer(${i})">${o.label}</button>`).join('')}</div>
+    <div class="qoptions">${q.options.map((o,i)=>`<button class="qopt ${_optCls(qd,o,i)}" style="font-family:var(--font-arabic);font-size:1.3rem" onclick="quizAnswer(${i})">${o.label}</button>`).join('')}</div>
     ${qd.selected!==null?`<div class="qfeedback ${q.options[qd.selected].correct?'correct':'incorrect'}">${q.options[qd.selected].correct?t.correct:t.incorrect}</div>`:''}
   </div></div>`;
 }
@@ -3932,8 +3994,17 @@ function renderParentChildDetail(t) {
     return b ? `<span class="parent-badge-chip" title="${(b.name[AppState.lang]||b.name.en||id).replace(/"/g,'&quot;')}">${b.emoji}</span>` : '';
   }).join(' ') || '<span style="color:var(--text-light)">—</span>';
   const streak = data.streak || {};
+  // Items the child got wrong and hasn't yet re-mastered (spaced review deck).
+  const weak = Object.keys(data.review || {}).map(k => k.slice(2));
+  const weakRow = weak.length
+    ? weak.map(x => `<span class="parent-cat-chip" style="font-family:var(--font-arabic);font-size:1.1rem">${x}</span>`).join(' ')
+    : '<span style="color:var(--text-light)">—</span>';
   return `<div class="bg-deco"></div><div class="app page-in">${navHTML(t)}
     ${secH(t, avatar+' '+name, '_backToParentDash()')}
+    <div class="parent-section">
+      <h3 class="parent-section-title">🔁 ${t.reviewTitle || 'Review'} (${weak.length})</h3>
+      <div class="parent-cats-row">${weakRow}</div>
+    </div>
     <div class="parent-section">
       <h3 class="parent-section-title">🔥 ${t.streakDays || 'Streak'}</h3>
       <div class="parent-section-body">${(t.streakDays||'Days')} ${streak.current||0} · ${t.longestStreak||'Best'} ${streak.longest||0} · ❄️ ${streak.freezes||0} · ${t.parentLastActive||'Last'} : ${_formatLastActive(streak.lastActive, t)}</div>
@@ -4043,6 +4114,416 @@ function _acceptCloudRecover() {
   _closeCloudRecover();
   // If we're on the welcome picker, refresh it so the new profiles appear.
   if (AppState.screen === 'welcome') render();
+}
+
+// ==================== PROFILE RESET ====================
+// Clear per-child progress before loading / creating a profile. Without this,
+// fields missing from an older saved profile (streak, letterStats, review…)
+// silently inherit the previously active child's values.
+function _resetProgress() {
+  Object.assign(AppState, {
+    score: 0, level: 1, lessons: 0, quizzes: 0,
+    learnedLetters: [], earnedBadges: [], visitedCategories: [], ratingDone: false,
+    difficulty: 'normal', premium: false,
+    streak: { current: 0, longest: 0, lastActive: null, freezes: 0 },
+    dailyDone: null, letterStats: {}, review: {}, skillsDone: [], _pathCompletedShown: false,
+    dailyReviewDay: null, dailyIsReview: false
+  });
+}
+
+// ==================== SPACED REVIEW (Leitner) ====================
+// Every wrong answer on a letter or word enters the review deck (box 0, due
+// today). Answering it right once it is due moves it up a box and pushes the
+// next review further out; after the last box the item leaves the deck.
+// Correct answers before the due date don't count — spacing is the point.
+var _REVIEW_GAPS = [1, 3, 7];                 // days before the next review, per box reached
+var _REVIEW_LETTER_TYPES = { letters: 1, positions: 1, forms: 1, twins: 1, syllables: 1 };
+var _REVIEW_WORD_TYPES = { words: 1, audio: 1, listen: 1, categories: 1, firstLetter: 1, blend: 1 };
+
+function _reviewKey(qd, q) {
+  if (q.reviewKey) return q.reviewKey;
+  if (_REVIEW_LETTER_TYPES[qd.type] && q.letter) return 'L:' + q.letter;
+  if (_REVIEW_WORD_TYPES[qd.type] && q.arabic) return 'W:' + q.arabic;
+  return null;
+}
+
+function _addDays(n) { return new Date(Date.now() + n * 86400000).toISOString().slice(0, 10); }
+
+function _reviewRecord(key, ok) {
+  if (!key) return;
+  if (!AppState.review) AppState.review = {};
+  var r = AppState.review[key];
+  if (!ok) { AppState.review[key] = { b: 0, due: _todayStr() }; return; }
+  if (!r || r.due > _todayStr()) return;
+  if (r.b >= _REVIEW_GAPS.length) { delete AppState.review[key]; return; }
+  AppState.review[key] = { b: r.b + 1, due: _addDays(_REVIEW_GAPS[r.b]) };
+}
+
+function _reviewItem(key) {
+  var v = key.slice(2);
+  if (key[0] === 'L') { var l = ALPHABET.find(function(a) { return a.l === v; }); return l ? { kind: 'L', letter: l } : null; }
+  var w = getAllWords().find(function(x) { return x.ar === v; });
+  return w ? { kind: 'W', word: w } : null;
+}
+
+function reviewDueKeys() {
+  var today = _todayStr(), rv = AppState.review || {};
+  return Object.keys(rv)
+    .filter(function(k) { return rv[k].due <= today && _reviewItem(k); })
+    .sort(function(a, b) { return rv[a].b - rv[b].b || (rv[a].due < rv[b].due ? -1 : 1); });
+}
+function reviewDueCount() { return reviewDueKeys().length; }
+
+function renderReviewCard(t) {
+  var n = reviewDueCount();
+  if (!n || getDailyChallenge().type === 'review') return '';
+  return '<div class="daily-card review-card">' +
+    '<div class="daily-head">🔁 <strong>' + (t.reviewTitle || 'Review') + '</strong></div>' +
+    '<div class="daily-body">' + (t.reviewDue || '{n} to review').replace('{n}', n) + '</div>' +
+    '<button class="btn btn-primary btn-sm" onclick="startReview()">▶ ' + (t.letsStart || 'Go') + '</button>' +
+  '</div>';
+}
+
+function startReview() {
+  var diff = DIFFICULTY[AppState.difficulty || 'normal'];
+  var keys = reviewDueKeys().slice(0, Math.max(diff.questionCount, 5));
+  if (!keys.length) { _showReviewEmpty(); return; }
+  var lang = AppState.lang;
+  var questions = keys.map(function(k) {
+    var it = _reviewItem(k);
+    if (it.kind === 'L') {
+      var others = shuffle(ALPHABET.filter(function(a) { return a.l !== it.letter.l; })).slice(0, diff.options - 1);
+      return { reviewKey: k, kind: 'L', letter: it.letter.l, speak: it.letter.l,
+        options: shuffle([{ label: it.letter.n, correct: true }].concat(others.map(function(o) { return { label: o.n, correct: false }; }))) };
+    }
+    var w = it.word, all = getAllWords(), seen = {}, opts = [];
+    seen[w.emoji] = 1;
+    shuffle(all.filter(function(x) { return x.ar !== w.ar; })).forEach(function(x) {
+      if (opts.length < diff.options - 1 && !seen[x.emoji]) { seen[x.emoji] = 1; opts.push(x); }
+    });
+    return { reviewKey: k, kind: 'W', arabic: w.ar, speak: w.ar,
+      options: shuffle([{ label: w[lang], emoji: w.emoji, correct: true }].concat(opts.map(function(o) { return { label: o[lang], emoji: o.emoji, correct: false }; }))) };
+  });
+  AppState.quizData = { type: 'review', pts: diff.pts, autoSpeak: true, questions: questions, current: 0, selected: null, results: [], done: false };
+  navigate('quizReview');
+  setTimeout(function() { AudioSystem.speakArabic(questions[0].speak); }, 400);
+}
+
+function _showReviewEmpty() {
+  var t = AppState.t;
+  document.body.insertAdjacentHTML('beforeend',
+    '<div class="badge-overlay" id="rvo" onclick="_closeReviewEmpty()"></div>' +
+    '<div class="badge-popup" id="rvp"><div class="badge-popup-emoji">🎉</div>' +
+    '<p style="font-size:1.1rem;font-weight:600;margin:8px 0 16px">' + (t.reviewEmpty || 'Nothing to review — great job!') + '</p>' +
+    '<button class="btn btn-primary" onclick="_closeReviewEmpty()">OK</button></div>');
+}
+function _closeReviewEmpty() { ['rvo', 'rvp'].forEach(function(id) { var e = document.getElementById(id); if (e) e.remove(); }); }
+
+function _quizDots(qd) {
+  return '<div class="quiz-dots">' + qd.questions.map(function(_, i) {
+    return '<div class="qdot ' + (i === qd.current ? 'active' : i < qd.current ? (qd.results[i] ? 'done' : 'wrong') : '') + '"></div>';
+  }).join('') + '</div>';
+}
+
+function _quizFeedback(qd, q, t, extra) {
+  if (qd.selected === null) return '';
+  var ok = q.options[qd.selected].correct;
+  return '<div class="qfeedback ' + (ok ? 'correct' : 'incorrect') + '">' + (ok ? t.correct : t.incorrect) + (extra || '') + '</div>';
+}
+
+function renderQuizReview(t) {
+  var qd = AppState.quizData; if (!qd) return renderDashboard(t);
+  if (qd.done) return renderQuizResults(t);
+  var q = qd.questions[qd.current];
+  var prompt = q.kind === 'L'
+    ? '<div class="qprompt" data-speak="' + q.speak + '">' + q.letter + '</div>'
+    : '<div class="qprompt" data-speak="' + q.speak + '">' + q.arabic + '</div>';
+  return '<div class="bg-deco"></div><div class="app page-in">' + navHTML(t) + '<div class="quiz-c">' +
+    secH(t, '🔁 ' + (t.reviewTitle || 'Review'), 'sectionBack()') + _quizDots(qd) +
+    '<p class="qq">' + t.questionOf + ' ' + (qd.current + 1) + ' ' + t.of + ' ' + qd.questions.length + '</p>' +
+    prompt +
+    '<button class="btn btn-secondary btn-sm" data-speak="' + q.speak + '" style="margin:0 auto 12px;display:flex">🔊 ' + t.listen + '</button>' +
+    '<div class="qoptions">' + q.options.map(function(o, i) {
+      return '<button class="qopt ' + _optCls(qd, o, i) + '" onclick="quizAnswer(' + i + ')">' + (o.emoji ? o.emoji + ' ' : '') + o.label + '</button>';
+    }).join('') + '</div>' + _quizFeedback(qd, q, t) +
+  '</div></div>';
+}
+
+// Option state after an answer: the tapped one turns green/red and, on a
+// mistake, the right answer is revealed so the child learns from the error.
+function _optCls(qd, o, i) {
+  if (qd.selected === null) return '';
+  if (qd.selected === i) return o.correct ? 'correct' : 'incorrect';
+  return o.correct ? 'dis reveal' : 'dis';
+}
+
+// Letters the child has validated (plus letters pending review), or the
+// difficulty's default slice when too few are known to build a quiz — quizzes
+// test what was taught instead of all 28 letters.
+function _practiceLetters(min) {
+  var diff = DIFFICULTY[AppState.difficulty || 'normal'];
+  var rv = AppState.review || {};
+  var learned = ALPHABET.filter(function(a) { return (AppState.learnedLetters || []).includes(a.l) || rv['L:' + a.l]; });
+  return learned.length >= min ? learned : ALPHABET.slice(0, diff.letterCount);
+}
+
+// ==================== QUIZ TWIN LETTERS ====================
+// Look-alike letters that differ only by dots (ب ت ث ن) or by a sound close
+// to another (س ش). Hear one, pick it among its family — trains attention to
+// dots, the #1 reading confusion for young learners.
+var TWIN_FAMILIES = [
+  ['ب', 'ت', 'ث', 'ن'], ['ج', 'ح', 'خ'], ['د', 'ذ'], ['ر', 'ز'], ['س', 'ش'],
+  ['ص', 'ض'], ['ط', 'ظ'], ['ع', 'غ'], ['ف', 'ق']
+];
+function _twinFamily(l) {
+  return TWIN_FAMILIES.find(function(f) { return f.indexOf(l) >= 0; }) || [];
+}
+
+function startQuizTwins() {
+  var diff = DIFFICULTY[AppState.difficulty || 'normal'];
+  var allowed = ALPHABET.slice(0, diff.letterCount).map(function(a) { return a.l; });
+  var fams = TWIN_FAMILIES
+    .map(function(f) { return f.filter(function(l) { return allowed.indexOf(l) >= 0; }).slice(0, Math.max(diff.options, 2)); })
+    .filter(function(f) { return f.length >= 2; });
+  var learned = AppState.learnedLetters || [];
+  // Favour families containing letters the child has already learned.
+  var ordered = shuffle(fams).sort(function(a, b) {
+    return b.filter(function(l) { return learned.includes(l); }).length - a.filter(function(l) { return learned.includes(l); }).length;
+  });
+  var questions = [];
+  for (var i = 0; i < diff.questionCount; i++) {
+    var fam = ordered[i % ordered.length];
+    var target = fam[Math.floor(Math.random() * fam.length)];
+    var info = ALPHABET.find(function(a) { return a.l === target; });
+    questions.push({ letter: target, speak: target, name: info.na + ' — ' + info.n,
+      options: shuffle(fam.map(function(l) { return { label: l, correct: l === target }; })) });
+  }
+  AppState.quizData = { type: 'twins', pts: diff.pts, autoSpeak: true, questions: shuffle(questions), current: 0, selected: null, results: [], done: false };
+  navigate('quizTwins');
+  setTimeout(function() { AudioSystem.speakArabic(AppState.quizData.questions[0].speak); }, 400);
+}
+
+function renderQuizTwins(t) {
+  var qd = AppState.quizData; if (!qd) return renderDashboard(t);
+  if (qd.done) return renderQuizResults(t);
+  var q = qd.questions[qd.current];
+  return '<div class="bg-deco"></div><div class="app page-in">' + navHTML(t) + '<div class="quiz-c">' +
+    secH(t, '👯 ' + (t.quizTwins || 'Twin letters'), 'sectionBack()') + _quizDots(qd) +
+    '<p class="qq">' + t.questionOf + ' ' + (qd.current + 1) + ' ' + t.of + ' ' + qd.questions.length + ' ' + getDiffBadge(AppState.difficulty, t) + '</p>' +
+    '<p style="color:var(--light);margin-bottom:8px">' + (t.twinsPrompt || 'Look at the dots! Tap the letter you hear') + '</p>' +
+    '<button class="btn btn-primary" data-speak="' + q.speak + '" style="margin:0 auto 16px;display:flex;font-size:2rem;padding:14px 28px">🔊</button>' +
+    '<div class="qoptions">' + q.options.map(function(o, i) {
+      return '<button class="qopt ' + _optCls(qd, o, i) + '" style="font-family:var(--font-arabic);font-size:3rem" onclick="quizAnswer(' + i + ')">' + o.label + '</button>';
+    }).join('') + '</div>' +
+    _quizFeedback(qd, q, t, ' <span style="font-family:var(--font-arabic)">' + q.name + '</span>') +
+  '</div></div>';
+}
+
+// ==================== SOUND QUIZZES (decoding) ====================
+// One engine for "hear a sound, tap how it is written": short-vowel syllables,
+// long vowels (madd) and tanwin. Each builder returns the correct {label, speak}
+// and distractor labels for one letter; the engine dedupes and shuffles.
+var _SHORT_VOWELS = ['َ', 'ُ', 'ِ'];
+var _TANWINS = ['ً', 'ٌ', 'ٍ'];
+var _MADD = { 'َ': 'ا', 'ُ': 'و', 'ِ': 'ي' };
+function _longSyl(l, v) { return l + v + _MADD[v]; }
+function _pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+var SOUND_QUIZZES = {
+  // Even questions: vowel discrimination (بَ / بُ / بِ). Odd: consonant
+  // discrimination with the same vowel, look-alike letters first (بَ / تَ / ثَ).
+  syllables: { screen: 'quizSyllables', icon: '🗣️', title: 'quizSyllables', prompt: 'syllablesPrompt',
+    build: function(l, qi) {
+      var v = _pick(_SHORT_VOWELS);
+      if (qi % 2 === 0) return { label: l + v, speak: l + v, others: _SHORT_VOWELS.filter(function(x) { return x !== v; }).map(function(x) { return l + x; }) };
+      var fam = _twinFamily(l);
+      var cands = shuffle(ALPHABET.filter(function(a) { return a.l !== l && a.l !== 'أ'; }));
+      cands.sort(function(a, b) { return (fam.indexOf(b.l) >= 0) - (fam.indexOf(a.l) >= 0); });
+      return { label: l + v, speak: l + v, others: cands.map(function(a) { return a.l + v; }) };
+    } },
+  // Short vs long of the same vowel first (بَ / بَا), then the three longs (بَا / بُو / بِي).
+  long: { screen: 'quizLong', icon: '🐍', title: 'quizLong', prompt: 'longPrompt',
+    build: function(l, qi) {
+      var v = _pick(_SHORT_VOWELS);
+      var isLong = qi % 2 === 0 || Math.random() < 0.5;
+      if (qi % 2 === 0) {
+        var shortS = l + v, longS = _longSyl(l, v);
+        var other = _longSyl(l, _pick(_SHORT_VOWELS.filter(function(x) { return x !== v; })));
+        return isLong ? { label: longS, speak: longS, others: [shortS, other] }
+                      : { label: shortS, speak: shortS, others: [longS, other] };
+      }
+      return { label: _longSyl(l, v), speak: _longSyl(l, v),
+        others: _SHORT_VOWELS.filter(function(x) { return x !== v; }).map(function(x) { return _longSyl(l, x); }) };
+    } },
+  // The three tanwins (بً / بٌ / بٍ), or a tanwin against its plain vowel (بُ / بٌ).
+  tanwin: { screen: 'quizTanwin', icon: '✨', title: 'quizTanwin', prompt: 'tanwinPrompt',
+    build: function(l, qi) {
+      var k = Math.floor(Math.random() * 3), tw = _TANWINS[k], sv = _SHORT_VOWELS[k];
+      var target = { label: l + tw, speak: harakaSpeakable(l, tw) };
+      if (qi % 2 === 0) target.others = _TANWINS.filter(function(x) { return x !== tw; }).map(function(x) { return l + x; });
+      else if (Math.random() < 0.5) target.others = [l + sv, l + _TANWINS[(k + 1) % 3]];
+      else return { label: l + sv, speak: l + sv, others: [l + tw, l + _SHORT_VOWELS[(k + 1) % 3]] };
+      return target;
+    } }
+};
+
+function _startSoundQuiz(type) {
+  var cfg = SOUND_QUIZZES[type];
+  var diff = DIFFICULTY[AppState.difficulty || 'normal'];
+  var pool = _practiceLetters(3).filter(function(a) { return a.l !== 'أ'; });
+  if (pool.length < 3) pool = ALPHABET.slice(1, 11);
+  var nOpts = Math.min(diff.options, 3);
+  var picked = shuffle(pool).slice(0, diff.questionCount);
+  while (picked.length < diff.questionCount) picked.push(_pick(pool));
+  var questions = picked.map(function(letter, qi) {
+    var b = cfg.build(letter.l, qi);
+    var others = [];
+    b.others.forEach(function(o) { if (o !== b.label && others.indexOf(o) < 0 && others.length < nOpts - 1) others.push(o); });
+    return { letter: letter.l, combined: b.label, speak: b.speak,
+      options: shuffle([{ label: b.label, correct: true }].concat(others.map(function(o) { return { label: o, correct: false }; }))) };
+  });
+  AppState.quizData = { type: type, pts: diff.pts, autoSpeak: true, questions: questions, current: 0, selected: null, results: [], done: false };
+  navigate(cfg.screen);
+  setTimeout(function() { AudioSystem.speakArabic(questions[0].speak); }, 400);
+}
+function startQuizSyllables() { _startSoundQuiz('syllables'); }
+function startQuizLong() { _startSoundQuiz('long'); }
+function startQuizTanwin() { _startSoundQuiz('tanwin'); }
+
+function renderSoundQuiz(t) {
+  var qd = AppState.quizData; if (!qd) return renderDashboard(t);
+  if (qd.done) return renderQuizResults(t);
+  var cfg = SOUND_QUIZZES[qd.type];
+  var q = qd.questions[qd.current];
+  return '<div class="bg-deco"></div><div class="app page-in">' + navHTML(t) + '<div class="quiz-c">' +
+    secH(t, cfg.icon + ' ' + (t[cfg.title] || qd.type), 'sectionBack()') + _quizDots(qd) +
+    '<p class="qq">' + t.questionOf + ' ' + (qd.current + 1) + ' ' + t.of + ' ' + qd.questions.length + ' ' + getDiffBadge(AppState.difficulty, t) + '</p>' +
+    '<p style="color:var(--light);margin-bottom:8px">' + (t[cfg.prompt] || '') + '</p>' +
+    '<button class="btn btn-primary" data-speak="' + q.speak + '" style="margin:0 auto 16px;display:flex;font-size:2rem;padding:14px 28px">🔊</button>' +
+    '<div class="qoptions">' + q.options.map(function(o, i) {
+      return '<button class="qopt ' + _optCls(qd, o, i) + '" style="font-family:var(--font-arabic);font-size:2.6rem;direction:rtl" onclick="quizAnswer(' + i + ')">' + o.label + '</button>';
+    }).join('') + '</div>' +
+    _quizFeedback(qd, q, t, ' <span style="font-family:var(--font-arabic);font-size:1.3rem">' + q.combined + '</span>') +
+  '</div></div>';
+}
+
+// ==================== GUIDED READING (blending) ====================
+// The child taps each syllable in reading order (right → left) and hears it,
+// then the syllables merge into the whole word, which is spoken; finally the
+// child picks the matching picture — decoding first, then meaning.
+function startBlend() {
+  var diff = DIFFICULTY[AppState.difficulty || 'normal'];
+  var words = getAllWords();
+  var source = AppState.difficulty === 'beginner' || AppState.difficulty === 'toddler' ? BLEND_WORDS.slice(0, 11) : BLEND_WORDS;
+  var picked = shuffle(source).slice(0, Math.min(diff.questionCount, 5));
+  var questions = picked.map(function(b) {
+    var w = words.find(function(x) { return x.ar === b.ar; });
+    var seen = {}, opts = [];
+    seen[w.emoji] = 1;
+    shuffle(words.filter(function(x) { return x.emoji && x.ar !== w.ar; })).forEach(function(x) {
+      if (opts.length < Math.min(diff.options, 3) - 1 && !seen[x.emoji]) { seen[x.emoji] = 1; opts.push(x); }
+    });
+    return { arabic: w.ar, speak: w.ar, syl: b.syl, tapped: 0, label: w[AppState.lang] || w.en, emoji: w.emoji,
+      options: shuffle([{ emoji: w.emoji, correct: true }].concat(opts.map(function(o) { return { emoji: o.emoji, correct: false }; }))) };
+  });
+  AppState.quizData = { type: 'blend', pts: diff.pts, questions: questions, current: 0, selected: null, results: [], done: false };
+  navigate('blend');
+}
+
+function blendTap(i) {
+  var qd = AppState.quizData, q = qd.questions[qd.current];
+  if (i !== q.tapped) { AudioSystem.playSound('wrong'); return; }
+  AudioSystem.speakArabic(q.syl[i]);
+  q.tapped++;
+  render();
+  if (q.tapped === q.syl.length) setTimeout(function() { AudioSystem.speakArabic(q.arabic); }, 900);
+}
+
+function renderBlend(t) {
+  var qd = AppState.quizData; if (!qd) return renderDashboard(t);
+  if (qd.done) return renderQuizResults(t);
+  var q = qd.questions[qd.current];
+  var complete = q.tapped >= q.syl.length;
+  var tiles = q.syl.map(function(s, i) {
+    var st = i < q.tapped ? 'done' : i === q.tapped ? 'next' : '';
+    return '<button class="blend-tile ' + st + '" onclick="blendTap(' + i + ')">' + s + '</button>';
+  }).join('<span class="blend-plus">+</span>');
+  var body = complete
+    ? '<div class="blend-word" data-speak="' + q.arabic + '">= ' + q.arabic + '</div>' +
+      '<p style="color:var(--light);margin:4px 0 8px">' + (t.blendPick || 'What is it?') + '</p>' +
+      '<div class="qoptions qoptions-emoji">' + q.options.map(function(o, i) {
+        return '<button class="qopt ' + _optCls(qd, o, i) + '" style="font-size:3rem;padding:18px" onclick="quizAnswer(' + i + ')">' + o.emoji + '</button>';
+      }).join('') + '</div>' +
+      _quizFeedback(qd, q, t, ' ' + q.emoji + ' ' + q.label)
+    : '<p style="color:var(--light);margin-top:12px">' + (t.blendPrompt || 'Tap each syllable in order') + '</p>';
+  return '<div class="bg-deco"></div><div class="app page-in">' + navHTML(t) + '<div class="quiz-c">' +
+    secH(t, '🧱 ' + (t.blendTitle || 'Guided reading'), 'sectionBack()') + _quizDots(qd) +
+    '<p class="qq">' + t.questionOf + ' ' + (qd.current + 1) + ' ' + t.of + ' ' + qd.questions.length + '</p>' +
+    '<div class="blend-row">' + tiles + '</div>' + body +
+  '</div></div>';
+}
+
+// ==================== SUN & MOON LETTERS ====================
+// Hear "al + word": is the ل pronounced (moon, الْقَمَر) or swallowed with a
+// doubled first letter (sun, الشَّمْس)? After the answer the ل is greyed or
+// highlighted to show why.
+function startQuizSunMoon() {
+  var diff = DIFFICULTY[AppState.difficulty || 'normal'];
+  var words = getAllWords();
+  var sun = shuffle(SUN_MOON_WORDS.filter(function(w) { return w.sun; }));
+  var moon = shuffle(SUN_MOON_WORDS.filter(function(w) { return !w.sun; }));
+  var picked = [];
+  for (var i = 0; picked.length < diff.questionCount; i++) picked.push(i % 2 ? moon[i >> 1] : sun[i >> 1]);
+  var questions = shuffle(picked).map(function(w) {
+    var base = words.find(function(x) { return x.ar === w.base; }) || {};
+    return { arabic: w.ar, speak: w.ar, sun: w.sun, emoji: base.emoji || '', first: w.base.charAt(0),
+      options: [{ label: '🌞 ' + (AppState.t.sunLabel || 'Sun'), correct: w.sun }, { label: '🌙 ' + (AppState.t.moonLabel || 'Moon'), correct: !w.sun }] };
+  });
+  AppState.quizData = { type: 'sunmoon', pts: diff.pts, autoSpeak: true, questions: questions, current: 0, selected: null, results: [], done: false };
+  navigate('quizSunMoon');
+  setTimeout(function() { AudioSystem.speakArabic(questions[0].speak); }, 400);
+}
+
+function renderQuizSunMoon(t) {
+  var qd = AppState.quizData; if (!qd) return renderDashboard(t);
+  if (qd.done) return renderQuizResults(t);
+  var q = qd.questions[qd.current];
+  var answered = qd.selected !== null;
+  // Split "ال" from the rest so the ل can be styled once the child has answered.
+  var word = answered
+    ? 'ا<span class="' + (q.sun ? 'lam-silent' : 'lam-spoken') + '">ل' + (q.sun ? '' : 'ْ') + '</span>' + q.arabic.slice(q.sun ? 2 : 3)
+    : q.arabic;
+  var explain = (q.sun ? (t.sunExplain || '{l}: sun letter, the ل is silent') : (t.moonExplain || '{l}: moon letter, the ل is heard'))
+    .replace('{l}', '<span style="font-family:var(--font-arabic)">' + q.first + '</span>');
+  return '<div class="bg-deco"></div><div class="app page-in">' + navHTML(t) + '<div class="quiz-c">' +
+    secH(t, '🌞 ' + (t.quizSunMoon || 'Sun & moon letters'), 'sectionBack()') + _quizDots(qd) +
+    '<p class="qq">' + t.questionOf + ' ' + (qd.current + 1) + ' ' + t.of + ' ' + qd.questions.length + '</p>' +
+    '<p style="color:var(--light);margin-bottom:4px">' + (t.sunMoonPrompt || 'Is the ل of ال pronounced?') + '</p>' +
+    '<div class="qprompt" data-speak="' + q.speak + '">' + (q.emoji ? q.emoji + ' ' : '') + word + '</div>' +
+    '<button class="btn btn-secondary btn-sm" data-speak="' + q.speak + '" style="margin:0 auto 12px;display:flex">🔊 ' + t.listen + '</button>' +
+    '<div class="qoptions">' + q.options.map(function(o, i) {
+      return '<button class="qopt ' + _optCls(qd, o, i) + '" onclick="quizAnswer(' + i + ')">' + o.label + '</button>';
+    }).join('') + '</div>' +
+    _quizFeedback(qd, q, t, '<br><small>' + explain + '</small>') +
+  '</div></div>';
+}
+
+// ==================== SKILLS (learning path) ====================
+var SKILLS = {
+  syllables: { icon: '🗣️', title: 'quizSyllables', start: 'startQuizSyllables' },
+  twins:     { icon: '👯', title: 'quizTwins',     start: 'startQuizTwins' },
+  long:      { icon: '🐍', title: 'quizLong',      start: 'startQuizLong' },
+  blend:     { icon: '🧱', title: 'blendTitle',    start: 'startBlend' },
+  tanwin:    { icon: '✨', title: 'quizTanwin',    start: 'startQuizTanwin' },
+  sunmoon:   { icon: '🌞', title: 'quizSunMoon',   start: 'startQuizSunMoon' }
+};
+// A skill counts as done once its quiz is finished with at least half right.
+function _markSkillDone(qd) {
+  if (!SKILLS[qd.type]) return;
+  var ok = qd.results.filter(function(r) { return r; }).length;
+  if (ok * 2 < qd.results.length) return;
+  if (!AppState.skillsDone) AppState.skillsDone = [];
+  if (AppState.skillsDone.indexOf(qd.type) < 0) { AppState.skillsDone.push(qd.type); AppState.save(); }
 }
 
 // ==================== INIT ====================

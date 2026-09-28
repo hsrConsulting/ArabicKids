@@ -3662,3 +3662,44 @@ body.theme-dark .onboard-dot.active { background: var(--primary); }
 body.mode-toddler .lc-opt { font-size: 3.6rem; padding: 28px 0; }
 body.theme-dark .lc-opt { border-color: rgba(255,255,255,0.08); }
 body.theme-dark .lc-dot { background: rgba(255,255,255,0.15); }
+
+/* Right answer revealed after a mistake (corrective feedback) */
+.qopt.reveal {
+  opacity: 1;
+  border-color: var(--green);
+  border-style: dashed;
+  background: rgba(52, 211, 153, 0.12);
+  animation: cpulse 0.6s ease 0.3s 2;
+}
+
+.review-card {
+  background: linear-gradient(135deg, #F59E0B, #EA580C);
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.25);
+}
+
+/* Guided reading (blend) */
+.blend-row {
+  display: flex; flex-direction: row-reverse; justify-content: center; align-items: center;
+  flex-wrap: wrap; gap: 8px; margin: 18px 0 10px;
+}
+.blend-tile {
+  font-family: var(--font-arabic); font-size: 2.4rem; line-height: 1.3;
+  min-width: 78px; padding: 10px 14px; border-radius: 18px;
+  border: 3px dashed var(--border); background: var(--bg-card); color: var(--text-muted);
+  cursor: pointer;
+}
+.blend-tile.next { border-style: solid; border-color: var(--purple); color: var(--text-dark); animation: cpulse 1.2s ease infinite; }
+.blend-tile.done { border-style: solid; border-color: var(--green); background: rgba(52, 211, 153, 0.12); color: var(--text-dark); }
+.blend-plus { font-size: 1.4rem; color: var(--text-muted); }
+.blend-word {
+  font-family: var(--font-arabic); font-size: 3rem; text-align: center; margin: 6px 0;
+  color: var(--primary); cursor: pointer; animation: cpulse 0.6s ease;
+}
+
+/* Sun / moon letters: the ل of ال after the answer */
+.lam-silent { opacity: 0.3; text-decoration: line-through; }
+.lam-spoken { color: var(--green); }
+
+/* Learning path: skill step the child skipped past (never blocking) */
+.path-catchup { opacity: 0.95; border-style: dashed; }
+.path-catchup-tag { font-size: 0.72rem; color: var(--orange); font-weight: 600; }

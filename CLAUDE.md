@@ -150,6 +150,20 @@ Pour publier : Firebase Console → Remote Config → ajouter param → publier.
 - Story-card affiche chip 🔀 "Interactive" si `s.interactive`.
 - Première story livrée : `market` (Ahmad au marché → fruits/légumes → 4 fins possibles).
 
+## Pedagogy: corrective feedback + spaced review
+
+- **Corrective feedback** — all MCQ quizzes go through `quizAnswer` + `_optCls(qd,o,i)`. On a mistake the right option gets `.reveal` (dashed green pulse), the prompt audio is replayed (`q.speak||q.arabic||q.letter`), and the pause is 2.6s instead of 1.2s.
+- **Review deck (Leitner)** — `AppState.review = {"L:ب"|"W:<ar>": {b, due}}`. Wrong answer → box 0, due today. Correct answer *once due* → box+1, next due +1/+3/+7 days; past last box → removed. Key derived by `_reviewKey` from `_REVIEW_LETTER_TYPES` / `_REVIEW_WORD_TYPES` (or `q.reviewKey`). Surfaces: orange dashboard card (`renderReviewCard`, only when due), 🔁 tile at top of quiz hub, 🔁 section in parent child detail.
+- **Sound quizzes** — one engine `SOUND_QUIZZES` + `_startSoundQuiz(type)` + `renderSoundQuiz`: 🗣️ `syllables` (short vowels, alternating vowel / consonant discrimination), 🐍 `long` (بَ vs بَا, بَا/بُو/بِي), ✨ `tanwin`. Long-vowel keys `L+V+madd` have IPA MP3s (generator `syllable_tasks`, not for alif).
+- **Twin letters quiz** 👯 (`startQuizTwins`) — `TWIN_FAMILIES` (ب ت ث ن, ج ح خ, …): hear one, pick among look-alikes.
+- **Guided reading** 🧱 (`startBlend`, screen `blend`) — `BLEND_WORDS` in data.js (`ar` + explicit `syl[]`, easiest first; every `ar` must exist in WORD_CATEGORIES). Tap syllables right→left, word merges + plays, then pick the emoji. Syllable MP3s: `blend_syllable_tasks()` + `syllable_ipa()` in the generator.
+- **Sun & moon letters** 🌞 (`startQuizSunMoon`) — `SUN_MOON_WORDS` (`ar` with ال, `base` = category word, `sun` bool). After answer the ل is greyed (`.lam-silent`) or green.
+- **Adaptive pools** — `_practiceLetters(min)` = learned letters + letters in the review deck (fallback: difficulty slice). Used by letters, harakat, positions and sound quizzes.
+- **Daily challenge** — if review items are due at the first look of the day, the challenge is 🔁 review (`dailyReviewDay`/`dailyIsReview` persisted, frozen for the day).
+- **Learning path skills** — step `type:'skill'` (`SKILLS` map in app.js); done when the quiz ends ≥50% (`AppState.skillsDone`). An undone skill step with a later step done is a **catch-up** (`isPathCatchUp`): shown ⭐, playable, never blocks → advanced kids aren't pushed back. Progress % = done steps / total.
+- Adding Arabic content ⇒ run `python3 tools/generate_audio.py` (skips existing MP3s). New `ar:` strings + blend syllables are picked up automatically.
+- `_resetProgress()` runs before `load()` / register / cloud load so a profile never inherits the previous child's streak/letterStats/review.
+
 ## Streak freeze
 
 - `AppState.streak.freezes` (entier, max `MAX_FREEZES=2`).

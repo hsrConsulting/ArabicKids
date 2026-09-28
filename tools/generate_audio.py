@@ -36,6 +36,50 @@ MANIFEST_JS = REPO_ROOT / "app/src/main/assets/web/js/audio_manifest.js"
 # maama into "meme"). Keyed by the vocalized form; value is full SSML using
 # IPA phonemes to force the pronunciation.
 SSML_OVERRIDES = {
+    # Short words Zeina reads unclearly as plain text (whisper-verified)
+    # Sun-letter words: make sure the swallowed lam + doubled letter is clear
+    "\u0627\u0644\u062b\u064e\u0651\u0644\u0652\u062c":
+        '<speak><phoneme alphabet="ipa" ph="\u0294a\u03b8\u03b8ald\u0292">'
+        "\u0627\u0644\u062b\u0644\u062c</phoneme></speak>",
+    "\u0627\u0644\u0633\u064e\u0651\u0627\u0639\u064e\u0629":
+        '<speak><phoneme alphabet="ipa" ph="\u0294assa\u02d0\u0295a">'
+        "\u0627\u0644\u0633\u0627\u0639\u0629</phoneme></speak>",
+    "\u0623\u064f\u062e\u0652\u062a":
+        '<speak><phoneme alphabet="ipa" ph="\u0294uxt">'
+        "\u0623\u062e\u062a</phoneme></speak>",
+    "\u062d\u0650\u0641\u0652\u0638":
+        '<speak><phoneme alphabet="ipa" ph="\u0127if\u00f0\u02e4">'
+        "\u062d\u0641\u0638</phoneme></speak>",
+    "\u062f\u0650\u0645\u064e\u0627\u063a":
+        '<speak><phoneme alphabet="ipa" ph="dima\u02d0\u0263">'
+        "\u062f\u0645\u0627\u063a</phoneme></speak>",
+    "\u0637\u064e\u0627\u0626\u0650\u0631\u064e\u0629":
+        '<speak><phoneme alphabet="ipa" ph="t\u02e4a\u02d0\u0294ira">'
+        "\u0637\u0627\u0626\u0631\u0629</phoneme></speak>",
+    "\u0637\u064e\u0639\u064e\u0627\u0645":
+        '<speak><phoneme alphabet="ipa" ph="t\u02e4a\u0295a\u02d0m">'
+        "\u0637\u0639\u0627\u0645</phoneme></speak>",
+    "\u0637\u0650\u0641\u0652\u0644":
+        '<speak><phoneme alphabet="ipa" ph="t\u02e4ifl">'
+        "\u0637\u0641\u0644</phoneme></speak>",
+    "\u063a\u064e\u0632\u064e\u0627\u0644":
+        '<speak><phoneme alphabet="ipa" ph="\u0263aza\u02d0l">'
+        "\u063a\u0632\u0627\u0644</phoneme></speak>",
+    "\u0641\u064e\u0645":
+        '<speak><phoneme alphabet="ipa" ph="fam">'
+        "\u0641\u0645</phoneme></speak>",
+    "\u0641\u0650\u0636\u0650\u0651\u064a\u0651":
+        '<speak><phoneme alphabet="ipa" ph="fid\u02e4d\u02e4i\u02d0j">'
+        "\u0641\u0636\u064a</phoneme></speak>",
+    "\u0642\u064f\u0646\u0652\u0641\u064f\u0630":
+        '<speak><phoneme alphabet="ipa" ph="qunfu\u00f0">'
+        "\u0642\u0646\u0641\u0630</phoneme></speak>",
+    "\u0642\u0650\u0637\u0651":
+        '<speak><phoneme alphabet="ipa" ph="qit\u02e4t\u02e4">'
+        "\u0642\u0637</phoneme></speak>",
+    "\u0647\u064e\u0648\u064e\u0627\u0621":
+        '<speak><phoneme alphabet="ipa" ph="hawa\u02d0\u0294">'
+        "\u0647\u0648\u0627\u0621</phoneme></speak>",
     # dalw (seau) — Zeina garbles the final "lw" cluster
     "\u062f\u064e\u0644\u0652\u0648":
         '<speak><phoneme alphabet="ipa" ph="dalw">'
@@ -95,7 +139,7 @@ def extract_strings() -> list[str]:
     out = set()
     for s in strings:
         c = clean(s)
-        if c and len(re.sub(r"[ً-ْٰ]", "", c)) > 1:
+        if c and len(re.sub(r"[ً-ْٰـ]", "", c)) > 1:
             out.add(c)
     return sorted(out)
 
@@ -197,8 +241,60 @@ def syllable_tasks() -> list[tuple[str, str, str]]:
             (ALIF_FATHA + letter + SHADDA + FATHA, "\u0294a" + ipa + ipa + "a"),  # shadda
             (ALIF_FATHA + letter + SUKUN,          "\u0294a" + ipa),              # sukun
         ]
+        # Long vowels (madd): baa / buu / bii — app.js startQuizLong keys.
+        # Not for alif: أَا is spelled آ and never quizzed.
+        if bare_letter != "\u0623":
+            combos += [
+                (letter + FATHA + "\u0627", ipa + "a\u02d0"),
+                (letter + DAMMA + "\u0648", ipa + "u\u02d0"),
+                (letter + KASRA + "\u064a", ipa + "i\u02d0"),
+            ]
         for key, ph in combos:
             tasks.append((key, ssml(ph, key), "ssml"))
+    return tasks
+
+
+VOWEL_IPA = {FATHA: "a", DAMMA: "u", KASRA: "i", SUKUN: ""}
+MADD = {("a", "\u0627"), ("u", "\u0648"), ("i", "\u064a")}
+
+
+def syllable_ipa(syl: str) -> str:
+    """IPA of one written syllable (بَ, تَاب, رِير, ثَعْ, جَة, مَاء…)."""
+    out, last_vowel = [], ""
+    chars = list(syl)
+    for i, ch in enumerate(chars):
+        nxt = chars[i + 1] if i + 1 < len(chars) else ""
+        if ch in VOWEL_IPA:
+            out.append(VOWEL_IPA[ch])
+            last_vowel = VOWEL_IPA[ch]
+        elif ch == "\u0629":            # ta marbuta, pausal: the fatha carries the "a"
+            continue
+        elif (last_vowel, ch) in MADD and nxt not in VOWEL_IPA:
+            out.append("\u02d0")        # madd letter lengthens the vowel
+            last_vowel = ""
+        elif ch == "\u0621":
+            out.append("\u0294")
+        else:
+            out.append(LETTER_IPA[ch])
+            last_vowel = ""
+    return "".join(out)
+
+
+def blend_syllable_tasks() -> list[tuple[str, str, str]]:
+    """Syllables of BLEND_WORDS (guided reading), IPA-forced like harakat."""
+    text = DATA_JS.read_text(encoding="utf-8")
+    m = re.search(r"const BLEND_WORDS = \[(.*?)\n\];", text, re.S)
+    if not m:
+        return []
+    tasks, seen = [], set()
+    for arr in re.findall(r"syl:\s*\[([^\]]*)\]", m.group(1)):
+        for syl in re.findall(r'"([^"]+)"', arr):
+            if syl in seen:
+                continue
+            seen.add(syl)
+            ph = syllable_ipa(syl)
+            tasks.append((syl, '<speak><phoneme alphabet="ipa" ph="' + ph + '">'
+                          + syl + "</phoneme></speak>", "ssml"))
     return tasks
 
 
@@ -270,6 +366,10 @@ def main() -> None:
         file_id = short_id(speak)
         out = OUT_DIR / f"{file_id}.mp3"
         manifest[speak] = file_id
+        # Also key the bare source form: words the runtime IIFE leaves
+        # unvocalized (e.g. numbers with digits) are spoken bare.
+        if s != speak:
+            manifest[s] = file_id
         if out.exists() and not args.overwrite:
             skipped += 1
             continue
@@ -289,7 +389,7 @@ def main() -> None:
             print(f"  FAIL  {s}: {e}", file=sys.stderr)
 
     # Letter names + harakat syllables (IPA-forced, device-TTS-free)
-    for key, synth_text, ttype in syllable_tasks():
+    for key, synth_text, ttype in syllable_tasks() + blend_syllable_tasks():
         file_id = short_id(key)
         out = OUT_DIR / f"{file_id}.mp3"
         manifest[key] = file_id
