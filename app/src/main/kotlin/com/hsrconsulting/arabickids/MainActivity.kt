@@ -9,6 +9,8 @@ import android.media.MediaPlayer
 import android.media.SoundPool
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.speech.RecognitionListener
@@ -50,6 +52,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.google.firebase.ktx.Firebase
+import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
@@ -198,8 +201,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Banner retry: a failed load (typically offline at launch) never recovers
+    // on its own, so retry with backoff 30s → 60s → … capped at 5 min.
+    private val bannerHandler = Handler(Looper.getMainLooper())
+    private var bannerRetryDelayMs = 30_000L
+    private val bannerRetry = Runnable { loadBannerAd() }
+
     private fun loadBannerAd() {
         try {
+            binding.adView.adListener = object : AdListener() {
+                override fun onAdLoaded() {
+                    Log.i(TAG, "Banner ad: loaded")
+                    bannerRetryDelayMs = 30_000L
+                }
+                override fun onAdFailedToLoad(error: LoadAdError) {
+                    Log.w(TAG, "Banner ad: failed (code=${error.code}) — ${error.message}; retry in ${bannerRetryDelayMs / 1000}s")
+                    bannerHandler.removeCallbacks(bannerRetry)
+                    bannerHandler.postDelayed(bannerRetry, bannerRetryDelayMs)
+                    bannerRetryDelayMs = (bannerRetryDelayMs * 2).coerceAtMost(300_000L)
+                }
+            }
             binding.adView.loadAd(AdRequest.Builder().build())
             Log.i(TAG, "Banner ad: load() called")
         } catch (e: Exception) {
@@ -1073,6 +1094,7 @@ class MainActivity : AppCompatActivity() {
         try { onlinePlayer?.release(); onlinePlayer = null } catch (_: Exception) {}
         if (::billingClient.isInitialized) billingClient.endConnection()
         speechRecognizer?.destroy(); speechRecognizer = null
+        bannerHandler.removeCallbacks(bannerRetry)
         try { binding.adView.destroy() } catch (_: Exception) {}
         binding.webView.destroy()
         super.onDestroy()
