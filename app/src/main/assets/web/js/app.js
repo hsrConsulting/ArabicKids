@@ -1171,11 +1171,12 @@ function renderLetterCheck(t) {
   var lc = _letterCheck;
   if (!lc) { setTimeout(function() { navigate('alphabet'); }, 0); return '<div class="app"></div>'; }
   var d = ALPHABET[lc.i];
+  // Same dots as the other quizzes: current round highlighted, passed ones green.
   var dots = '';
-  for (var r = 0; r < lc.passRounds; r++) dots += '<span class="lc-dot' + (r < lc.round ? ' on' : '') + '"></span>';
+  for (var r = 0; r < lc.passRounds; r++) dots += '<div class="qdot' + (r < lc.round ? ' done' : r === lc.round ? ' active' : '') + '"></div>';
   return '<div class="bg-deco"></div><div class="app page-in"><div class="lcheck">' +
     secH(t, '🔤 ' + (t.letterValidateCta || 'I know it!'), "navigate('letterDetail')") +
-    (lc.passRounds > 1 ? '<div class="lc-progress">' + dots + '</div>' : '') +
+    (lc.passRounds > 1 ? '<div class="quiz-dots" id="lcDots">' + dots + '</div>' : '') +
     '<div class="lc-q">' + (t.letterCheckQ || 'Tap the letter you hear') + '</div>' +
     '<button class="btn btn-secondary lc-replay" onclick="AudioSystem.speakArabic(\'' + lc.target + '\')">🔊</button>' +
     '<div class="lc-grid">' + lc.options.map(function(l) {
@@ -1208,6 +1209,9 @@ function _letterCheckPass() {
   var diff = DIFFICULTY[AppState.difficulty || 'normal'];
   markLetterLearned(lc.target); addLesson(); addScore(diff.pts || 5);
   AudioSystem.playSound('correct'); showConfetti();
+  // No re-render on the final round — light the last dot in place.
+  var dotsEl = document.getElementById('lcDots');
+  if (dotsEl) Array.prototype.forEach.call(dotsEl.children, function(d) { d.className = 'qdot done'; });
   var resEl = document.getElementById('lcResult');
   if (resEl) resEl.innerHTML = '<div class="lc-msg good">🎉 ' + (t.wellDone || 'Well done!') + '</div>' +
     '<button class="btn btn-primary" style="margin-top:14px" onclick="_letterCheckContinue()">' + (i < 27 ? (t.next + ' →') : ('✅ ' + t.wellDone)) + '</button>';
@@ -3941,7 +3945,11 @@ function _readProfile(name) {
 
 function _formatLastActive(ts, t) {
   if (!ts) return '—';
-  const days = Math.floor((Date.now() - ts) / 86400000);
+  // streak.lastActive is a 'YYYY-MM-DD' day string (UTC, see _todayStr);
+  // compare calendar days rather than raw timestamps.
+  const then = typeof ts === 'number' ? ts : Date.parse(ts + 'T00:00:00Z');
+  if (isNaN(then)) return '—';
+  const days = Math.round((Date.parse(_todayStr() + 'T00:00:00Z') - Date.parse(new Date(then).toISOString().slice(0, 10) + 'T00:00:00Z')) / 86400000);
   if (days <= 0) return t.parentToday || 'today';
   if (days === 1) return t.parentYesterday || 'yesterday';
   return (t.parentDaysAgo || '{n} days ago').replace('{n}', days);

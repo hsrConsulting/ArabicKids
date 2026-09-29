@@ -3646,9 +3646,6 @@ body.theme-dark .onboard-dot.active { background: var(--primary); }
 /* ===== Per-letter recognition check (pedagogical gate) ===== */
 .lcheck { display: flex; flex-direction: column; align-items: center; text-align: center; padding-bottom: 24px; }
 .lc-learned { color: var(--green); font-weight: 700; }
-.lc-progress { display: flex; gap: 8px; justify-content: center; margin: 6px 0 14px; }
-.lc-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(0,0,0,0.15); transition: background .2s, transform .2s; }
-.lc-dot.on { background: var(--green); transform: scale(1.15); }
 .lc-q { font-size: 1.2rem; font-weight: 700; color: var(--text-dark); margin: 8px 0 14px; }
 .lc-replay { font-size: 1.6rem; width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 22px; padding: 0; }
 .lc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; width: 100%; max-width: 360px; margin: 0 auto; }
@@ -3661,7 +3658,6 @@ body.theme-dark .onboard-dot.active { background: var(--primary); }
 .lc-msg.bad { color: var(--text-light); }
 body.mode-toddler .lc-opt { font-size: 3.6rem; padding: 28px 0; }
 body.theme-dark .lc-opt { border-color: rgba(255,255,255,0.08); }
-body.theme-dark .lc-dot { background: rgba(255,255,255,0.15); }
 
 /* Right answer revealed after a mistake (corrective feedback) */
 .qopt.reveal {
