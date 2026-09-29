@@ -84,11 +84,14 @@ SSML_OVERRIDES = {
     "\u062f\u064e\u0644\u0652\u0648":
         '<speak><phoneme alphabet="ipa" ph="dalw">'
         "\u062f\u0644\u0648</phoneme></speak>",
-    # maama (maman) — long stressed vowels; plain "mama" came out clipped
-    # (~0.5s, whisper heard "mm"). ˈmaːmaː is recognized as ماما / "Mama".
-    "مَامَا":
-        '<speak><phoneme alphabet="ipa" ph="\u02c8ma\u02d0ma\u02d0">'
-        "ماما</phoneme></speak>",
+}
+
+# Words Zeina cannot get right even with IPA: her /a/ after m drifts to "è"
+# (مَامَا heard as "mème" by French kids, whisper-fr: "Meme"). Synthesized
+# with another voice instead: key -> (voice, engine, language, text).
+VOICE_OVERRIDES = {
+    "\u0645\u064e\u0627\u0645\u064e\u0627":   # maama (maman) — whisper-fr: "Maman"
+        ("Hala", "neural", "ar-AE", "\u0645\u064e\u0627\u0645\u064e\u0627"),
 }
 
 TASHKEEL_RE = re.compile(r"[\u064B-\u0652\u0670]")
@@ -308,13 +311,13 @@ def polly_client(region: str):
 
 
 def synthesize(client, text: str, voice: str, engine: str,
-               text_type: str = "text") -> bytes:
+               text_type: str = "text", language: str = "arb") -> bytes:
     resp = client.synthesize_speech(
         Engine=engine,
         VoiceId=voice,
         OutputFormat="mp3",
         SampleRate="22050",
-        LanguageCode="arb",  # MSA. "arb" for standard; "ar-AE" for Gulf neural.
+        LanguageCode=language,  # MSA. "arb" for standard; "ar-AE" for Gulf neural.
         Text=text,
         TextType=text_type,
     )
@@ -376,7 +379,10 @@ def main() -> None:
             continue
         try:
             ssml = SSML_OVERRIDES.get(speak)
-            if ssml:
+            vo = VOICE_OVERRIDES.get(speak)
+            if vo:
+                data = synthesize(client, vo[3], vo[0], vo[1], "text", vo[2])
+            elif ssml:
                 data = synthesize(client, ssml, args.voice, args.engine, "ssml")
             else:
                 data = synthesize(client, speak, args.voice, args.engine)
