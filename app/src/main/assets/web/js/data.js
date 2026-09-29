@@ -2736,7 +2736,6 @@ const LEARNING_PATH = [
   { id: 'l_sad',     type: 'letter',   target: 'ص' },
   { id: 'l_dad',     type: 'letter',   target: 'ض' },
   { id: 'q_5',       type: 'quiz',     target: 5 },
-  { id: 's_long',    type: 'skill',    target: 'long' },
   { id: 'c_fruits',  type: 'category', target: 'fruits' },
   { id: 'c_veg',     type: 'category', target: 'vegetables' },
   // Module 4 — lettres 16-20 + nourriture + famille
@@ -2771,7 +2770,9 @@ const LEARNING_PATH = [
   { id: 'c_house',   type: 'category', target: 'house' },
   { id: 'c_transport',type: 'category',target: 'transport' },
   { id: 's_sunmoon', type: 'skill',    target: 'sunmoon' },
-  { id: 'q_25',      type: 'quiz',     target: 25 }
+  { id: 'q_25',      type: 'quiz',     target: 25 },
+  // Long vowels last: needs every letter + short vowels first
+  { id: 's_long',    type: 'skill',    target: 'long' }
 ];
 
 // Tracing waypoints for each letter (index matches ALPHABET, coords in 0-100 space → scale to canvas)

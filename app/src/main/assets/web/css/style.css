@@ -3708,3 +3708,7 @@ body.theme-dark .lc-opt { border-color: rgba(255,255,255,0.08); }
 }
 .lc-target-l { font-family: var(--font-arabic); font-size: 4.2rem; line-height: 1.25; color: var(--text-dark); }
 .lc-target-n { font-family: var(--font-arabic); font-size: 1.1rem; color: var(--text-light); }
+
+/* Letter detail — the whole main-word card is tappable (speaks the word) */
+.lword-box { transition: transform .12s ease; -webkit-tap-highlight-color: transparent; }
+.lword-box:active { transform: scale(0.97); }

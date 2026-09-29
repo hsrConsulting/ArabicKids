@@ -88,10 +88,15 @@ SSML_OVERRIDES = {
 
 # Words Zeina cannot get right even with IPA: her /a/ after m drifts to "è"
 # (مَامَا heard as "mème" by French kids, whisper-fr: "Meme"). Synthesized
-# with another voice instead: key -> (voice, engine, language, text).
+# with another voice instead: key -> (voice, engine, language, text, text_type).
 VOICE_OVERRIDES = {
     "\u0645\u064e\u0627\u0645\u064e\u0627":   # maama (maman) — whisper-fr: "Maman"
-        ("Hala", "neural", "ar-AE", "\u0645\u064e\u0627\u0645\u064e\u0627"),
+        ("Hala", "neural", "ar-AE", "\u0645\u064e\u0627\u0645\u064e\u0627", "text"),
+    # bataata (pomme de terre) — Zeina garbles it (whisper-ar: بطلطة)
+    "\u0628\u064e\u0637\u064e\u0627\u0637\u064e\u0627":
+        ("Hala", "neural", "ar-AE",
+         '<speak><phoneme alphabet="ipa" ph="bat\u02e4a\u02d0t\u02e4a\u02d0">'
+         "\u0628\u0637\u0627\u0637\u0627</phoneme></speak>", "ssml"),
 }
 
 TASHKEEL_RE = re.compile(r"[\u064B-\u0652\u0670]")
@@ -381,7 +386,7 @@ def main() -> None:
             ssml = SSML_OVERRIDES.get(speak)
             vo = VOICE_OVERRIDES.get(speak)
             if vo:
-                data = synthesize(client, vo[3], vo[0], vo[1], "text", vo[2])
+                data = synthesize(client, vo[3], vo[0], vo[1], vo[4], vo[2])
             elif ssml:
                 data = synthesize(client, ssml, args.voice, args.engine, "ssml")
             else:

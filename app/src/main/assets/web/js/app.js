@@ -1080,7 +1080,7 @@ function renderLetterDetail(t) {
     '<div class="lname"><span class="arabic" style="font-size:1.2rem">'+d.na+'</span> — '+d.n+'</div>' +
     '<div class="lmastery">'+(_learned?'<span class="lc-learned">✓ '+(t.letterLearned||'Learned')+'</span> · ':'')+'👀 '+stats.views+' · 🔊 '+stats.listens+(stats.huntWins?' · 🔍 '+stats.huntWins:'')+'</div>' +
     '<button class="btn btn-secondary btn-sm" onclick="bumpLetterStat(\''+d.l+'\',\'listens\');if(AppState.user)AppState.save();AudioSystem.speakArabic(\''+d.l+'\')" style="margin:0 auto 14px;display:flex">🔊 '+t.listen+'</button>' +
-    '<div class="lword-box"><div class="lword-emoji">'+d.e+'</div><div class="lword-ar" data-speak="'+d.w+'">'+d.w+'</div><div class="wphon" style="margin:-2px 0 4px">'+transliterate(d.w)+'</div><div class="lword-mean">'+d.wm[AppState.lang]+'</div><button class="listen-btn" data-speak="'+d.w+'" style="margin:10px auto 0;display:flex">🔊 '+t.listen+'</button></div>' +
+    '<div class="lword-box" data-speak="'+d.w+'" style="cursor:pointer"><div class="lword-emoji">'+d.e+'</div><div class="lword-ar">'+d.w+'</div><div class="wphon" style="margin:-2px 0 4px">'+transliterate(d.w)+'</div><div class="lword-mean">'+d.wm[AppState.lang]+'</div><button class="listen-btn" data-speak="'+d.w+'" style="margin:10px auto 0;display:flex">🔊 '+t.listen+'</button></div>' +
     (d.extra && d.extra.length ? '<div class="lextra-grid">' + d.extra.map(function(x) {
       var tr = (x.tr && (x.tr[AppState.lang] || x.tr.en)) || '';
       return '<div class="lextra-card" data-speak="'+x.ar+'" style="cursor:pointer"><div class="lextra-emoji">'+(x.e||'🔤')+'</div><div class="lextra-ar">'+x.ar+'</div><div class="lextra-tr">'+tr+'</div></div>';
