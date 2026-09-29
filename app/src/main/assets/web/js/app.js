@@ -1153,44 +1153,76 @@ var _letterCheck = null;
 
 function startLetterCheck(i) {
   var diff = DIFFICULTY[AppState.difficulty || 'normal'];
-  var passRounds = (AppState.difficulty === 'beginner') ? 1 : 2;
-  _letterCheck = { i: i, target: ALPHABET[i].l, optionCount: Math.max(2, diff.options), passRounds: passRounds, round: 0, done: false, options: [] };
+  // Round 0: hear the letter, tap it (isolated). Next rounds: find its
+  // initial / medial / final form among other letters' forms at the same
+  // position. Non-connectors (ا د ذ ر ز و) only have a distinct final form.
+  var posCount = { beginner: 1, normal: 2, advanced: 3 }[AppState.difficulty] || 2;
+  var positions = shuffle(_letterCheckPositions(ALPHABET[i])).slice(0, posCount);
+  var rounds = [null].concat(positions);
+  _letterCheck = { i: i, target: ALPHABET[i].l, optionCount: Math.max(2, diff.options), rounds: rounds, passRounds: rounds.length, round: 0, done: false, options: [] };
   _buildLetterCheckRound();
   navigate('letterCheck');
   setTimeout(function() { AudioSystem.speakArabic(ALPHABET[i].l); }, 350);
 }
 
+// Positions whose glyph differs from the isolated letter (initial of د is د).
+function _letterCheckPositions(letter) {
+  var f = letter.forms || {}, iso = f.isolated ? f.isolated.f : letter.l;
+  return ['initial', 'medial', 'final'].filter(function(p) { return f[p] && f[p].f !== iso; });
+}
+
 function _buildLetterCheckRound() {
   var lc = _letterCheck; if (!lc) return;
-  var others = ALPHABET.map(function(x) { return x.l; }).filter(function(l) { return l !== lc.target; });
-  others = shuffle(others).slice(0, lc.optionCount - 1);
-  lc.options = shuffle([lc.target].concat(others));
+  var pos = lc.rounds[lc.round];
+  if (!pos) {
+    var others = ALPHABET.map(function(x) { return x.l; }).filter(function(l) { return l !== lc.target; });
+    others = shuffle(others).slice(0, lc.optionCount - 1);
+    lc.options = shuffle([lc.target].concat(others)).map(function(l) { return { label: l, correct: l === lc.target }; });
+    return;
+  }
+  var letter = ALPHABET[lc.i], glyph = letter.forms[pos].f;
+  // One look-alike first (بـ vs تـ vs نـ differ only by dots), then random letters.
+  var fam = _twinFamily(letter.l.replace('\u0640', ''));
+  var cands = shuffle(ALPHABET.filter(function(a) { return a.l !== letter.l && a.forms && a.forms[pos]; }));
+  var twin = cands.filter(function(a) { return fam.indexOf(a.l) >= 0; })[0];
+  cands = (twin ? [twin] : []).concat(cands.filter(function(a) { return fam.indexOf(a.l) < 0; }));
+  var labels = [glyph];
+  cands.forEach(function(a) { var g = a.forms[pos].f; if (labels.length < lc.optionCount && labels.indexOf(g) < 0) labels.push(g); });
+  lc.options = shuffle(labels).map(function(g) { return { label: g, correct: g === glyph }; });
 }
 
 function renderLetterCheck(t) {
   var lc = _letterCheck;
   if (!lc) { setTimeout(function() { navigate('alphabet'); }, 0); return '<div class="app"></div>'; }
   var d = ALPHABET[lc.i];
+  var pos = lc.rounds[lc.round];
   // Same dots as the other quizzes: current round highlighted, passed ones green.
   var dots = '';
   for (var r = 0; r < lc.passRounds; r++) dots += '<div class="qdot' + (r < lc.round ? ' done' : r === lc.round ? ' active' : '') + '"></div>';
   return '<div class="bg-deco"></div><div class="app page-in"><div class="lcheck">' +
     secH(t, '🔤 ' + (t.letterValidateCta || 'I know it!'), "navigate('letterDetail')") +
     (lc.passRounds > 1 ? '<div class="quiz-dots" id="lcDots">' + dots + '</div>' : '') +
-    '<div class="lc-q">' + (t.letterCheckQ || 'Tap the letter you hear') + '</div>' +
+    '<div class="lc-q">' + (pos
+      ? (t.selectPosition || 'Find the {pos} form of {letter}')
+          .replace('{pos}', '<strong>' + (t[pos] || pos) + '</strong>')
+          .replace('{letter}', '<strong>' + d.n + '</strong>')
+      : (t.letterCheckQ || 'Tap the letter you hear')) + '</div>' +
+    // Target letter on its own line, large and high-contrast (inline Arabic in
+    // a Latin sentence was small, pale and got reordered by the bidi algorithm).
+    (pos ? '<div class="lc-target"><span class="lc-target-l">' + d.l.replace('\u0640', '') + '</span><span class="lc-target-n">' + d.na + '</span></div>' : '') +
     '<button class="btn btn-secondary lc-replay" onclick="AudioSystem.speakArabic(\'' + lc.target + '\')">🔊</button>' +
-    '<div class="lc-grid">' + lc.options.map(function(l) {
-      return '<button class="lc-opt" style="color:' + d.c + '" onclick="_letterCheckAnswer(\'' + l + '\')">' + l + '</button>';
+    '<div class="lc-grid">' + lc.options.map(function(o, k) {
+      return '<button class="lc-opt" style="color:' + d.c + '" onclick="_letterCheckAnswer(' + k + ')">' + o.label + '</button>';
     }).join('') + '</div>' +
     '<div id="lcResult" class="lc-result"></div>' +
   '</div></div>';
 }
 
-function _letterCheckAnswer(l) {
+function _letterCheckAnswer(k) {
   var lc = _letterCheck; if (!lc || lc.done) return;
   var t = AppState.t;
   var resEl = document.getElementById('lcResult');
-  if (l !== lc.target) {
+  if (!lc.options[k] || !lc.options[k].correct) {
     AudioSystem.playSound('wrong'); AudioSystem.vibrate(40);
     if (resEl) resEl.innerHTML = '<div class="lc-msg bad">💪 ' + (t.traceRetryMsg || 'Try again!') + '</div>';
     setTimeout(function() { AudioSystem.speakArabic(lc.target); }, 250);

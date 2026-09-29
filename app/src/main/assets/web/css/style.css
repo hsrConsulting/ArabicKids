@@ -3699,3 +3699,12 @@ body.theme-dark .lc-opt { border-color: rgba(255,255,255,0.08); }
 /* Learning path: skill step the child skipped past (never blocking) */
 .path-catchup { opacity: 0.95; border-style: dashed; }
 .path-catchup-tag { font-size: 0.72rem; color: var(--orange); font-weight: 600; }
+
+/* Letter check — target letter shown for the "find its form" rounds */
+.lc-target {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  margin: 4px auto 10px; padding: 8px 26px; width: fit-content;
+  background: var(--bg-card); border: 3px solid var(--border); border-radius: 22px;
+}
+.lc-target-l { font-family: var(--font-arabic); font-size: 4.2rem; line-height: 1.25; color: var(--text-dark); }
+.lc-target-n { font-family: var(--font-arabic); font-size: 1.1rem; color: var(--text-light); }
