@@ -162,6 +162,7 @@ Pour publier : Firebase Console → Remote Config → ajouter param → publier.
 - **Adaptive pools** — `_practiceLetters(min)` = learned letters + letters in the review deck (fallback: difficulty slice). Used by letters, harakat, positions and sound quizzes.
 - **Daily challenge** — if review items are due at the first look of the day, the challenge is 🔁 review (`dailyReviewDay`/`dailyIsReview` persisted, frozen for the day).
 - **Learning path skills** — step `type:'skill'` (`SKILLS` map in app.js); done when the quiz ends ≥50% (`AppState.skillsDone`). An undone skill step with a later step done is a **catch-up** (`isPathCatchUp`): shown ⭐, playable, never blocks → advanced kids aren't pushed back. Progress % = done steps / total.
+- **Path quiz steps** (`q_N`) — chip `🎯 done/N · encore X` (`pathLeft`, `stepQuizN`). `_startPathQuiz` rotates quiz kinds by `AppState.quizzes % kinds.length` (letters, listen, first letter, words, harakat, categories, positions + passed skills; toddler: letters/listen; `q_1` always letters).
 - Adding Arabic content ⇒ run `python3 tools/generate_audio.py` (skips existing MP3s). New `ar:` strings + blend syllables are picked up automatically.
 - `_resetProgress()` runs before `load()` / register / cloud load so a profile never inherits the previous child's streak/letterStats/review.
 

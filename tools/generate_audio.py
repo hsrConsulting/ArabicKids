@@ -97,6 +97,12 @@ VOICE_OVERRIDES = {
         ("Hala", "neural", "ar-AE",
          '<speak><phoneme alphabet="ipa" ph="bat\u02e4a\u02d0t\u02e4a\u02d0">'
          "\u0628\u0637\u0627\u0637\u0627</phoneme></speak>", "ssml"),
+    # laban (yaourt) — /a/ drifts to "é" (heard "Le bin"/"Liban"); open ɑ
+    # keeps both vowels short and is heard "Laban" (fr/es)
+    "\u0644\u064e\u0628\u064e\u0646":
+        ("Hala", "neural", "ar-AE",
+         '<speak><phoneme alphabet="ipa" ph="\u02c8l\u0251b\u0251n">'
+         "\u0644\u0628\u0646</phoneme></speak>", "ssml"),
 }
 
 TASHKEEL_RE = re.compile(r"[\u064B-\u0652\u0670]")

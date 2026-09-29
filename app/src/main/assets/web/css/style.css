@@ -3712,3 +3712,10 @@ body.theme-dark .lc-opt { border-color: rgba(255,255,255,0.08); }
 /* Letter detail — the whole main-word card is tappable (speaks the word) */
 .lword-box { transition: transform .12s ease; -webkit-tap-highlight-color: transparent; }
 .lword-box:active { transform: scale(0.97); }
+
+/* Learning path: progress chip on "pass N quizzes" steps */
+.path-count {
+  display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px;
+  font-size: 0.75rem; font-weight: 700; background: rgba(167, 139, 250, 0.15); color: var(--purple);
+  white-space: nowrap;
+}

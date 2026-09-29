@@ -1842,7 +1842,11 @@ function currentPathIndex() {
 function pathStepLabel(step, t) {
   if (step.type === 'letter')   return `${t.stepLearn || 'Learn'} <span class="arabic" style="font-family:var(--font-arabic);font-size:1.4rem">${step.target}</span>`;
   if (step.type === 'category') return `${t.stepExplore || 'Explore'} ${WORD_CATEGORIES[step.target]?.emoji||''} ${t[step.target] || step.target}`;
-  if (step.type === 'quiz')     return `${t.stepPassQuiz || 'Pass'} ${step.target} ${t.quizzesPassed || 'quiz'}`;
+  if (step.type === 'quiz') {
+    const done = Math.min(AppState.quizzes || 0, step.target), left = step.target - done;
+    const chip = left > 0 ? ` <small class="path-count">🎯 ${done}/${step.target} · ${(t.pathLeft || '{n} to go').replace('{n}', left)}</small>` : '';
+    return `${(t.stepQuizN || 'Pass {n} quizzes').replace('{n}', step.target)}${chip}`;
+  }
   if (step.type === 'skill')    { const sk = SKILLS[step.target]; return `${t.stepPractice || 'Practice'} ${sk.icon} ${t[sk.title] || step.target}`; }
   return step.id;
 }
@@ -1876,6 +1880,21 @@ function renderPath(t) {
   </div>`;
 }
 
+// "Pass N quizzes" steps rotate through quiz kinds instead of always replaying
+// the letters quiz: the first one is the letters quiz, then a different kind
+// each time (index = quizzes passed), including every skill already passed.
+function _startPathQuiz(step) {
+  const learned = AppState.learnedLetters || [];
+  const letters = () => startQuizLetters(ALPHABET.filter(l => learned.includes(l.l)));
+  if (step.target <= 1) { letters(); return; }
+  let kinds = AppState.difficulty === 'toddler'
+    ? [letters, startQuizListen]
+    : [letters, startQuizListen, startQuizFirstLetter, startQuizWords, startQuizHarakat, startQuizCategories, startQuizPositions];
+  if (AppState.difficulty !== 'toddler')
+    (AppState.skillsDone || []).forEach(k => { if (SKILLS[k]) kinds.push(SKILLS[k].start); });
+  kinds[(AppState.quizzes || 0) % kinds.length]();
+}
+
 function goToPathStep(id) {
   const step = LEARNING_PATH.find(s => s.id === id);
   if (!step) return;
@@ -1892,9 +1911,7 @@ function goToPathStep(id) {
   } else if (step.type === 'skill') {
     SKILLS[step.target].start();
   } else if (step.type === 'quiz') {
-    const learned = AppState.learnedLetters || [];
-    const pool = ALPHABET.filter(l => learned.includes(l.l));
-    startQuizLetters(pool);
+    _startPathQuiz(step);
   }
 }
 
