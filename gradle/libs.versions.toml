@@ -11,7 +11,7 @@ webkit = "1.9.0"
 splashscreen = "1.0.1"
 playServicesAds = "23.1.0"
 userMessagingPlatform = "2.2.0"
-billing = "6.1.0"
+billing = "8.0.0"
 firebaseBom = "32.7.0"
 googleServices = "4.4.0"
 crashlyticsPlugin = "2.9.9"
@@ -25,7 +25,7 @@ androidx-webkit = { group = "androidx.webkit", name = "webkit", version.ref = "w
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
 play-services-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "playServicesAds" }
 user-messaging-platform = { group = "com.google.android.ump", name = "user-messaging-platform", version.ref = "userMessagingPlatform" }
-play-billing = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "billing" }
+play-billing = { group = "com.android.billingclient", name = "billing", version.ref = "billing" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 # Pin reCAPTCHA explicitly — Firebase Auth pulls an older transitive version
 # that Play Console flags as vulnerable (CVE in 18.1.2). Keep at 18.4.0+.

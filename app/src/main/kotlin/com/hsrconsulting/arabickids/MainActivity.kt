@@ -36,6 +36,7 @@ import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
 import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
@@ -274,7 +275,9 @@ class MainActivity : AppCompatActivity() {
     private fun initBilling() {
         billingClient = BillingClient.newBuilder(this)
             .setListener(purchasesUpdatedListener)
-            .enablePendingPurchases()
+            .enablePendingPurchases(
+                PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
+            )
             .build()
 
         billingClient.startConnection(object : BillingClientStateListener {
@@ -319,7 +322,8 @@ class MainActivity : AppCompatActivity() {
                 .build()
         )
         val params = QueryProductDetailsParams.newBuilder().setProductList(products).build()
-        billingClient.queryProductDetailsAsync(params) { _, detailsList ->
+        billingClient.queryProductDetailsAsync(params) { _, queryResult ->
+            val detailsList = queryResult.productDetailsList
             detailsList.forEach { productDetailsCache[it.productId] = it }
             Log.d(TAG, "Product details loaded: ${detailsList.size} products")
         }
