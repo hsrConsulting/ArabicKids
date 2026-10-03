@@ -47,12 +47,6 @@ SSML_OVERRIDES = {
     "\u0623\u064f\u062e\u0652\u062a":
         '<speak><phoneme alphabet="ipa" ph="\u0294uxt">'
         "\u0623\u062e\u062a</phoneme></speak>",
-    "\u062d\u0650\u0641\u0652\u0638":
-        '<speak><phoneme alphabet="ipa" ph="\u0127if\u00f0\u02e4">'
-        "\u062d\u0641\u0638</phoneme></speak>",
-    "\u062f\u0650\u0645\u064e\u0627\u063a":
-        '<speak><phoneme alphabet="ipa" ph="dima\u02d0\u0263">'
-        "\u062f\u0645\u0627\u063a</phoneme></speak>",
     "\u0637\u064e\u0627\u0626\u0650\u0631\u064e\u0629":
         '<speak><phoneme alphabet="ipa" ph="t\u02e4a\u02d0\u0294ira">'
         "\u0637\u0627\u0626\u0631\u0629</phoneme></speak>",
@@ -103,6 +97,33 @@ VOICE_OVERRIDES = {
         ("Hala", "neural", "ar-AE",
          '<speak><phoneme alphabet="ipa" ph="\u02c8l\u0251b\u0251n">'
          "\u0644\u0628\u0646</phoneme></speak>", "ssml"),
+    # burkaan (volcan) — Zeina heard "Biroquin"; Hala + IPA heard بركان / "Burkhan"
+    "\u0628\u064f\u0631\u0652\u0643\u064e\u0627\u0646":
+        ("Hala", "neural", "ar-AE",
+         '<speak><phoneme alphabet="ipa" ph="bur\u02c8ka\u02d0n">'
+         "\u0628\u0631\u0643\u0627\u0646</phoneme></speak>", "ssml"),
+    # Whisper audit 2026-10: Zeina misheard (e.g. kitaab -> 'kiitb', rajul ->
+    # 'razul'), Hala transcribed exactly. Plain vocalized text.
+    **{k: ("Hala", "neural", "ar-AE", k, "text") for k in (
+        "\u0623\u064e\u0631\u064f\u0632\u0651",  # الروز
+        "\u0627\u0644\u0631\u0650\u0651\u064a\u064e\u0627\u0636\u064e\u0629",  # رياب
+        "\u062a\u064e\u0627\u0621",  # فهي
+        "\u062d\u0650\u0641\u0652\u0638",  # حيفون
+        "\u062e\u064e\u0648\u0652\u062e",  # حو
+        "\u062f\u064e\u0631\u064e\u0651\u0627\u062c\u064e\u0629",  # ده رجع
+        "\u062f\u0650\u0645\u064e\u0627\u063a",  # دمع
+        "\u0630\u064f\u0631\u064e\u0629",  # ذورا
+        "\u0630\u064e\u0647\u064e\u0628\u0650\u064a\u0651",  # وحبي
+        "\u0630\u064e\u0631\u064e\u0651\u0629",  # ذورا
+        "\u0631\u064e\u062c\u064f\u0644",  # رزول
+        "\u0632\u064e\u0648\u0652\u062c\u064e\u0629",  # زاوزا
+        "\u0633\u064e\u0627\u0639\u064e\u0629",  # سعر
+        "\u0641\u0650\u064a \u0627\u0644\u0645\u064e\u0633\u064e\u0627\u0621\u0650",  # فلماسا
+        "\u0643\u0650\u062a\u064e\u0627\u0628",  # كيتب
+        "\u0644\u0650\u0633\u064e\u0627\u0646",  # إسمع
+        "\u0645\u0650\u0639\u0652\u0637\u064e\u0641",  # 100 طف
+        "\u064a\u064f\u063a\u064e\u0646\u0650\u0651\u064a",  # يوراني
+    )},
 }
 
 TASHKEEL_RE = re.compile(r"[\u064B-\u0652\u0670]")
@@ -143,6 +164,16 @@ def extract_strings() -> list[str]:
     for m in re.finditer(r'\bar:\s*"([^"]+)"', text):
         if ARABIC_RE.search(m.group(1)):
             strings.add(m.group(1))
+
+    # Story lines: each line is tappable (data-speak) and the story's 🔊
+    # button speaks all lines joined with a space (renderStory).
+    m = re.search(r"const STORIES = \[(.*?)\n\];", text, re.S)
+    if m:
+        for arr in re.findall(r"\blines:\s*\[(.*?)\]", m.group(1), re.S):
+            lines = re.findall(r'"([^"]+)"', arr)
+            strings.update(lines)
+            if len(lines) > 1:
+                strings.add(" ".join(lines))
 
     # Strip trailing digits and whitespace (same cleanup speakArabic does)
     def clean(s: str) -> str:
